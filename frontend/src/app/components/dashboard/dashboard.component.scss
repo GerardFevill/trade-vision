@@ -1,0 +1,627 @@
+// MQL5 Dark Theme
+$bg-dark: #0d0d0d;
+$bg-sidebar: #111111;
+$bg-card: #161616;
+$bg-input: #1a1a1a;
+$border: #222222;
+$border-light: #2a2a2a;
+$text: #e0e0e0;
+$text-secondary: #888888;
+$text-muted: #555555;
+$accent: #3b82f6;
+$positive: #22c55e;
+$negative: #ef4444;
+$warning: #f59e0b;
+$bar-blue: #5ba4e6;
+
+// Layout
+.mql-layout {
+  display: flex;
+  min-height: 100vh;
+  background: $bg-dark;
+  color: $text;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+}
+
+// Sidebar
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  background: $bg-sidebar;
+  border-right: 1px solid $border;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid $border;
+}
+
+.sidebar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text;
+  i { color: $accent; margin-right: 8px; }
+}
+
+.stats-summary {
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 12px;
+
+    &.highlight {
+      margin-bottom: 8px;
+      .stat-value { font-size: 18px; font-weight: 600; }
+    }
+  }
+  .stat-label { color: $text-muted; }
+  .stat-value { color: $text; font-weight: 500; }
+}
+
+.account-info {
+  .broker-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: $bg-card;
+    border-radius: 4px;
+    font-size: 11px;
+    i { color: $positive; }
+    .leverage {
+      margin-left: auto;
+      color: $text-secondary;
+      background: $bg-input;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  }
+}
+
+.stats-secondary {
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 11px;
+  }
+  .stat-label { color: $text-muted; }
+  .stat-value { color: $text-secondary; }
+}
+
+.connection-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: $text-muted;
+  i { font-size: 8px; color: $negative; }
+  &.connected i { color: $positive; }
+}
+
+.refresh-section {
+  .btn-refresh {
+    width: 100%;
+    background: $accent;
+    border: none;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) { background: #2563eb; }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    i { font-size: 12px; }
+  }
+
+  .last-update {
+    margin-top: 8px;
+    font-size: 10px;
+    color: $text-muted;
+    text-align: center;
+  }
+}
+
+// Main Content
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+// Top Section (Radar + Bars)
+.top-section {
+  display: flex;
+  gap: 20px;
+  padding: 16px 20px;
+  border-bottom: 1px solid $border;
+}
+
+.radar-section {
+  width: 220px;
+  min-width: 220px;
+}
+
+.radar-container {
+  width: 100%;
+  height: 180px;
+}
+
+.bars-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.progress-item {
+  display: grid;
+  grid-template-columns: 100px 120px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-label {
+  font-size: 12px;
+  color: $text-muted;
+  text-align: right;
+}
+
+.progress-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: $text;
+  text-align: right;
+}
+
+.progress-bar {
+  height: 16px;
+  background: $bg-input;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+
+  &.equity, &.full { background: $bar-blue; }
+  &.profit { background: $positive; }
+  &.deposit { background: $bar-blue; opacity: 0.5; }
+  &.withdrawal { background: $bar-blue; }
+}
+
+// Tabs
+.tabs-nav {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  background: $bg-sidebar;
+  border-bottom: 1px solid $border;
+
+  button {
+    background: none;
+    border: none;
+    color: $text-secondary;
+    padding: 12px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+
+    &:hover { color: $text; }
+    &.active {
+      color: $accent;
+      border-bottom-color: $accent;
+    }
+  }
+}
+
+// Tab Content
+.tab-content {
+  padding: 16px 20px;
+  min-height: 200px;
+}
+
+// Trades Table
+.trades-table {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 4px;
+  overflow: hidden;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid $border;
+    font-size: 12px;
+  }
+
+  th {
+    background: $bg-input;
+    color: $text-muted;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    color: $text-secondary;
+    &.symbol { color: $text; font-weight: 500; }
+    &.buy { color: $positive; }
+    &.sell { color: $negative; }
+    &.empty { text-align: center; padding: 30px; color: $text-muted; }
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr:last-child td { border-bottom: none; }
+}
+
+// Stats Grid
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.stats-block {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 4px;
+  padding: 14px;
+
+  &.wide { grid-column: span 1; }
+
+  .stats-block-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: $text-secondary;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid $border;
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12px;
+
+    span:first-child { color: $text-muted; }
+    span:last-child { color: $text; font-weight: 500; }
+  }
+}
+
+.actions-row {
+  margin-top: 16px;
+
+  .btn-action {
+    background: $bg-input;
+    border: 1px solid $border;
+    color: $text-secondary;
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    i { margin-right: 6px; }
+
+    &:hover { border-color: $border-light; color: $text; }
+  }
+}
+
+// Chart Section
+.chart-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid $border;
+  margin-top: auto;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid $border;
+}
+
+.chart-stats {
+  display: flex;
+  gap: 24px;
+
+  .chart-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .chart-stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: $text;
+  }
+
+  .chart-stat-label {
+    font-size: 10px;
+    color: $text-muted;
+    text-transform: uppercase;
+  }
+}
+
+.chart-toggles {
+  display: flex;
+  gap: 4px;
+
+  button {
+    background: $bg-input;
+    border: 1px solid $border;
+    color: $text-secondary;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover { border-color: $border-light; }
+    &.active {
+      background: $accent;
+      border-color: $accent;
+      color: #fff;
+    }
+  }
+}
+
+.timeframe-bar {
+  display: flex;
+  gap: 2px;
+  padding: 8px 20px;
+  background: $bg-sidebar;
+  border-bottom: 1px solid $border;
+  overflow-x: auto;
+
+  button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: $text-muted;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+      color: $text-secondary;
+      background: $bg-input;
+    }
+    &.active {
+      background: $accent;
+      color: #fff;
+      border-color: $accent;
+    }
+  }
+}
+
+.chart-container {
+  flex: 1;
+  min-height: 250px;
+  padding: 12px 20px;
+}
+
+.chart-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 20px;
+  border-top: 1px solid $border;
+}
+
+// Monthly Growth Section
+.monthly-growth-section {
+  margin-top: 20px;
+}
+
+.monthly-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+
+  .monthly-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: $text-secondary;
+  }
+
+  .monthly-toggles {
+    display: flex;
+    gap: 4px;
+
+    button {
+      background: $bg-input;
+      border: 1px solid $border;
+      color: $text-secondary;
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover { border-color: $border-light; }
+      &.active {
+        background: $accent;
+        border-color: $accent;
+        color: #fff;
+      }
+    }
+  }
+}
+
+.monthly-growth-table {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 4px;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+  }
+
+  th, td {
+    padding: 8px 10px;
+    text-align: center;
+    border-bottom: 1px solid $border;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  th {
+    background: $bg-input;
+    color: $text-muted;
+    font-weight: 500;
+    font-size: 10px;
+  }
+
+  td {
+    color: $text-secondary;
+  }
+
+  .year-col {
+    text-align: left;
+    font-weight: 600;
+    color: $text;
+    width: 60px;
+  }
+
+  .year-total {
+    font-weight: 600;
+    background: rgba(255,255,255,0.02);
+  }
+
+  tbody tr:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  tfoot {
+    .total-row {
+      text-align: right;
+      padding: 12px 16px;
+      border-top: 1px solid $border-light;
+
+      .total-label {
+        color: $text-muted;
+        margin-right: 8px;
+      }
+
+      .total-value {
+        font-weight: 600;
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+// Utility Classes
+.positive { color: $positive !important; }
+.negative { color: $negative !important; }
+.warning { color: $warning !important; }
+
+// Drawdown severity classes
+.dd-low { color: $positive !important; }
+.dd-moderate { color: $warning !important; }
+.dd-warning { color: #f97316 !important; } // orange-500
+.dd-critical { color: $negative !important; }
+
+// Drawdown Chart Section
+.drawdown-chart-section {
+  margin-top: 20px;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 4px;
+  padding: 16px;
+
+  .chart-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: $text-secondary;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid $border;
+  }
+
+  .drawdown-chart-container {
+    height: 200px;
+  }
+}
+
+// Drawdown Table (for daily, weekly, yearly views)
+.drawdown-table {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 4px;
+  overflow-x: auto;
+  max-height: 300px;
+  overflow-y: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid $border;
+    font-size: 12px;
+  }
+
+  th {
+    background: $bg-input;
+    color: $text-muted;
+    font-weight: 500;
+    font-size: 11px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    color: $text-secondary;
+  }
+
+  tbody tr:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .empty {
+    text-align: center;
+    padding: 30px;
+    color: $text-muted;
+  }
+}
