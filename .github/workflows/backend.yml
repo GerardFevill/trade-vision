@@ -1,0 +1,38 @@
+name: Backend CI
+
+on:
+  push:
+    paths: ['backend/**']
+  pull_request:
+    paths: ['backend/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint with Ruff
+        run: ruff check .
+
+      - name: Type check with MyPy
+        run: mypy . --ignore-missing-imports
+
+      - name: Test with pytest
+        run: pytest --cov=. --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: backend/coverage.xml
