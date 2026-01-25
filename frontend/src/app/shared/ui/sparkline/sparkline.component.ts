@@ -1,7 +1,10 @@
 import { Component, input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartType } from 'chart.js';
+import { ChartConfiguration, ChartType, Chart, CategoryScale, LinearScale, LineController, LineElement, PointElement, Filler } from 'chart.js';
+
+// Register Chart.js components
+Chart.register(CategoryScale, LinearScale, LineController, LineElement, PointElement, Filler);
 
 /**
  * Reusable sparkline chart component

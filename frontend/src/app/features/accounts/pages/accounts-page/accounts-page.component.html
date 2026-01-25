@@ -1,44 +1,56 @@
-<div class="accounts-page">
-  <!-- Header -->
-  <app-accounts-header
-    [totalAccounts]="accounts().length"
-    [connectedCount]="connectedCount()"
-    [loading]="loading()"
-    (onRefresh)="refresh()"
-  />
+<div class="signals-page">
+  <!-- Header Bar -->
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title"><i class="fa fa-signal"></i> Mes Signaux</h1>
+      <span class="signals-count">{{ connectedCount() }}/{{ accounts().length }} connectés</span>
+    </div>
+    <div class="header-right">
+      <div class="view-toggle">
+        <button class="btn-view" [class.active]="viewMode() === 'grid'" (click)="setViewMode('grid')">
+          <i class="fa fa-th-large"></i>
+        </button>
+        <button class="btn-view" [class.active]="viewMode() === 'list'" (click)="setViewMode('list')">
+          <i class="fa fa-list"></i>
+        </button>
+      </div>
+      <button class="btn-refresh" (click)="refresh()" [disabled]="loading()">
+        <i class="fa fa-sync" [class.fa-spin]="loading()"></i>
+        Actualiser
+      </button>
+    </div>
+  </header>
 
-  <!-- Totals -->
-  <div class="totals-section">
-    <div class="total-card eur">
-      <div class="total-icon"><i class="fa fa-euro-sign"></i></div>
-      <div class="total-info">
-        <span class="total-label">Total EUR</span>
-        <span class="total-value">{{ fmt.formatCurrency(totalEUR(), 'EUR') }}</span>
-        <div class="total-details">
-          <span [class]="fmt.getProfitClass(totalProfitEUR())">{{ fmt.formatCurrency(totalProfitEUR(), 'EUR') }}</span>
-          <span [class]="fmt.getProfitClass(globalGrowthEUR())">({{ fmt.formatPercentSigned(globalGrowthEUR()) }})</span>
-        </div>
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-icon eur"><i class="fa fa-euro-sign"></i></div>
+      <div class="summary-content">
+        <span class="summary-label">Balance EUR</span>
+        <span class="summary-value">{{ fmt.formatCurrency(totalEUR(), 'EUR') }}</span>
+        <span class="summary-growth" [class]="fmt.getProfitClass(globalGrowthEUR())">
+          <i class="fa" [class.fa-arrow-up]="globalGrowthEUR() >= 0" [class.fa-arrow-down]="globalGrowthEUR() < 0"></i>
+          {{ fmt.formatPercentSigned(globalGrowthEUR()) }}
+        </span>
       </div>
     </div>
-    <div class="total-card usd">
-      <div class="total-icon"><i class="fa fa-dollar-sign"></i></div>
-      <div class="total-info">
-        <span class="total-label">Total USD</span>
-        <span class="total-value">{{ fmt.formatCurrency(totalUSD(), 'USD') }}</span>
-        <div class="total-details">
-          <span [class]="fmt.getProfitClass(totalProfitUSD())">{{ fmt.formatCurrency(totalProfitUSD(), 'USD') }}</span>
-          <span [class]="fmt.getProfitClass(globalGrowthUSD())">({{ fmt.formatPercentSigned(globalGrowthUSD()) }})</span>
-        </div>
+    <div class="summary-card">
+      <div class="summary-icon usd"><i class="fa fa-dollar-sign"></i></div>
+      <div class="summary-content">
+        <span class="summary-label">Balance USD</span>
+        <span class="summary-value">{{ fmt.formatCurrency(totalUSD(), 'USD') }}</span>
+        <span class="summary-growth" [class]="fmt.getProfitClass(globalGrowthUSD())">
+          <i class="fa" [class.fa-arrow-up]="globalGrowthUSD() >= 0" [class.fa-arrow-down]="globalGrowthUSD() < 0"></i>
+          {{ fmt.formatPercentSigned(globalGrowthUSD()) }}
+        </span>
       </div>
     </div>
-    <div class="total-card stats">
-      <div class="total-icon"><i class="fa fa-chart-pie"></i></div>
-      <div class="total-info">
-        <span class="total-label">Statistiques</span>
-        <span class="total-value">{{ totalTrades() }} trades</span>
-        <div class="total-details">
-          <span class="winrate-badge"><i class="fa fa-trophy"></i> Win Rate: {{ globalWinRate().toFixed(1) }}%</span>
-        </div>
+    <div class="summary-card">
+      <div class="summary-icon trades"><i class="fa fa-exchange-alt"></i></div>
+      <div class="summary-content">
+        <span class="summary-label">Total Trades</span>
+        <span class="summary-value">{{ totalTrades() }}</span>
+        <span class="summary-sub"><i class="fa fa-trophy"></i> {{ globalWinRate().toFixed(1) }}% Win</span>
       </div>
     </div>
   </div>
@@ -50,57 +62,165 @@
 
   <!-- Loading -->
   @if (loading() && accounts().length === 0) {
-    <div class="loading-state"><i class="fa fa-spinner fa-spin"></i><p>Chargement...</p></div>
+    <div class="loading-state"><i class="fa fa-spinner fa-spin"></i><p>Chargement des signaux...</p></div>
   }
 
-  <!-- Grid View -->
+  <!-- Signals Grid View -->
   @if (viewMode() === 'grid') {
-    <div class="accounts-grid">
+    <div class="signals-grid">
       @for (account of filteredAccounts(); track account.id) {
-        <div class="account-card" (click)="openAccount(account)" [class.disconnected]="!account.connected" [class]="fmt.getPerformanceClass(account.profit_percent)">
-          <button class="favorite-btn" (click)="toggleFavorite(account.id, $event)" [class.active]="storage.isFavorite(account.id)">
+        <article class="signal-card"
+                 (click)="openAccount(account)"
+                 [class.disconnected]="!account.connected">
+
+          <!-- Favorite -->
+          <button class="btn-favorite" (click)="toggleFavorite(account.id, $event)" [class.active]="storage.isFavorite(account.id)">
             <i class="fa fa-star"></i>
           </button>
-          <div class="card-header">
-            <div class="account-avatar"><i class="fa fa-wallet"></i></div>
-            <div class="account-info">
-              <h3>{{ account.name }}</h3>
-              <span class="account-id">#{{ account.id }}</span>
+
+          <!-- Card Header -->
+          <header class="signal-header">
+            <div class="signal-avatar">
+              <i class="fa fa-chart-line"></i>
             </div>
-            <div class="connection-status" [class.connected]="account.connected">
+            <div class="signal-identity">
+              <h3 class="signal-name">{{ account.name }}</h3>
+              <span class="signal-id">#{{ account.id }}</span>
+            </div>
+            <div class="signal-status" [class.online]="account.connected">
               <i class="fa fa-circle"></i>
-              {{ account.connected ? 'Connecté' : 'Déconnecté' }}
+            </div>
+          </header>
+
+          <!-- Growth (Hero Metric) -->
+          <div class="signal-growth" [class]="fmt.getProfitClass(account.profit_percent)">
+            <span class="growth-value">{{ fmt.formatPercentSigned(account.profit_percent) }}</span>
+            <span class="growth-label">Croissance</span>
+          </div>
+
+          <!-- Sparkline -->
+          @if (getSparklineData(account.id).length > 1) {
+            <div class="signal-sparkline">
+              <app-sparkline [data]="getSparklineData(account.id)" [height]="45"></app-sparkline>
+            </div>
+          }
+
+          <!-- Key Stats -->
+          <div class="signal-stats">
+            <div class="stat-item">
+              <span class="stat-value">{{ fmt.formatCurrency(account.balance, account.currency) }}</span>
+              <span class="stat-label">Solde</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" [class]="fmt.getProfitClass(account.profit)">{{ fmt.formatCurrency(account.profit, account.currency) }}</span>
+              <span class="stat-label">Profit</span>
             </div>
           </div>
-          <div class="balance-badge">
-            <span class="balance-value">{{ fmt.formatCurrency(account.balance, account.currency) }}</span>
-            <div class="growth-small" [class]="fmt.getProfitClass(account.profit_percent)">
-              <i class="fa" [class.fa-arrow-up]="account.profit_percent >= 0" [class.fa-arrow-down]="account.profit_percent < 0"></i>
-              {{ fmt.formatPercentSigned(account.profit_percent) }}
+
+          <!-- Metrics Row -->
+          <div class="signal-metrics">
+            <div class="metric">
+              <i class="fa fa-trophy"></i>
+              <span>{{ account.win_rate.toFixed(1) }}%</span>
             </div>
-            @if (getSparklineData(account.id).length > 1) {
-              <div class="sparkline-container">
-                <app-sparkline [data]="getSparklineData(account.id)" [height]="80"></app-sparkline>
-              </div>
-            }
+            <div class="metric">
+              <i class="fa fa-chart-bar"></i>
+              <span>{{ account.trades }}</span>
+            </div>
+            <div class="metric" [class]="fmt.getDrawdownClass(account.drawdown)">
+              <i class="fa fa-arrow-down"></i>
+              <span>{{ account.drawdown.toFixed(1) }}%</span>
+            </div>
           </div>
-          <div class="card-stats">
-            <div class="stat-item"><span class="stat-label">Win Rate</span><span class="stat-value winrate">{{ account.win_rate.toFixed(1) }}%</span></div>
-            <div class="stat-item"><span class="stat-label">Drawdown</span><span class="stat-value" [class]="fmt.getDrawdownClass(account.drawdown)">{{ account.drawdown.toFixed(2) }}%</span></div>
-            <div class="stat-item"><span class="stat-label">Trades</span><span class="stat-value">{{ account.trades }}</span></div>
-            <div class="stat-item"><span class="stat-label">Profit</span><span class="stat-value" [class]="fmt.getProfitClass(account.profit)">{{ fmt.formatCurrency(account.profit, account.currency) }}</span></div>
-          </div>
-          <div class="card-footer">
-            <div class="footer-item"><i class="fa fa-building"></i> {{ account.broker }}</div>
-            <div class="footer-item"><i class="fa fa-balance-scale"></i> 1:{{ account.leverage }}</div>
-          </div>
-        </div>
+
+          <!-- Footer -->
+          <footer class="signal-footer">
+            <span class="broker"><i class="fa fa-building"></i> {{ account.broker }}</span>
+            <span class="leverage">1:{{ account.leverage }}</span>
+          </footer>
+        </article>
       }
     </div>
   }
 
-  <!-- Empty -->
+  <!-- Signals Table View -->
+  @if (viewMode() === 'list') {
+    <div class="signals-table-wrapper">
+      <table class="signals-table">
+        <thead>
+          <tr>
+            <th class="th-fav"></th>
+            <th class="th-name sortable" (click)="sortBy('name')">
+              Signal <i class="fa" [class]="getSortIcon('name')"></i>
+            </th>
+            <th class="th-growth sortable" (click)="sortBy('profit_percent')">
+              Croissance <i class="fa" [class]="getSortIcon('profit_percent')"></i>
+            </th>
+            <th class="th-balance sortable" (click)="sortBy('balance')">
+              Balance <i class="fa" [class]="getSortIcon('balance')"></i>
+            </th>
+            <th class="th-profit sortable" (click)="sortBy('profit')">
+              Profit <i class="fa" [class]="getSortIcon('profit')"></i>
+            </th>
+            <th class="th-winrate sortable" (click)="sortBy('win_rate')">
+              Win Rate <i class="fa" [class]="getSortIcon('win_rate')"></i>
+            </th>
+            <th class="th-dd sortable" (click)="sortBy('drawdown')">
+              DD <i class="fa" [class]="getSortIcon('drawdown')"></i>
+            </th>
+            <th class="th-trades sortable" (click)="sortBy('trades')">
+              Trades <i class="fa" [class]="getSortIcon('trades')"></i>
+            </th>
+            <th class="th-sparkline">Tendance</th>
+            <th class="th-broker">Broker</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (account of filteredAccounts(); track account.id) {
+            <tr (click)="openAccount(account)" [class.disconnected]="!account.connected">
+              <td class="td-fav">
+                <button class="btn-fav-small" (click)="toggleFavorite(account.id, $event)" [class.active]="storage.isFavorite(account.id)">
+                  <i class="fa fa-star"></i>
+                </button>
+              </td>
+              <td class="td-name">
+                <div class="name-cell">
+                  <span class="status-dot" [class.online]="account.connected"></span>
+                  <div class="name-info">
+                    <span class="name">{{ account.name }}</span>
+                    <span class="id">#{{ account.id }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="td-growth" [class]="fmt.getProfitClass(account.profit_percent)">
+                {{ fmt.formatPercentSigned(account.profit_percent) }}
+              </td>
+              <td class="td-balance">{{ fmt.formatCurrency(account.balance, account.currency) }}</td>
+              <td class="td-profit" [class]="fmt.getProfitClass(account.profit)">
+                {{ fmt.formatCurrency(account.profit, account.currency) }}
+              </td>
+              <td class="td-winrate">{{ account.win_rate.toFixed(1) }}%</td>
+              <td class="td-dd" [class]="fmt.getDrawdownClass(account.drawdown)">
+                {{ account.drawdown.toFixed(1) }}%
+              </td>
+              <td class="td-trades">{{ account.trades }}</td>
+              <td class="td-sparkline">
+                @if (getSparklineData(account.id).length > 1) {
+                  <app-sparkline [data]="getSparklineData(account.id)" [height]="30"></app-sparkline>
+                }
+              </td>
+              <td class="td-broker">
+                <span class="broker-badge">{{ account.broker }}</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Empty State -->
   @if (!loading() && filteredAccounts().length === 0 && !error()) {
-    <div class="empty-state"><i class="fa fa-wallet"></i><p>Aucun compte trouvé</p></div>
+    <div class="empty-state"><i class="fa fa-signal"></i><p>Aucun signal trouvé</p></div>
   }
 </div>
