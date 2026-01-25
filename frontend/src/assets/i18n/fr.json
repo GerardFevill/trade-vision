@@ -1,0 +1,97 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "refresh": "Actualiser",
+    "export": "Exporter",
+    "search": "Rechercher",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "nav": {
+    "accounts": "Comptes",
+    "dashboard": "Tableau de bord",
+    "alerts": "Alertes",
+    "settings": "Paramètres"
+  },
+  "accounts": {
+    "title": "Comptes MT5",
+    "balance": "Balance",
+    "equity": "Équité",
+    "profit": "Profit",
+    "drawdown": "Drawdown",
+    "trades": "Trades",
+    "winRate": "Taux de réussite",
+    "leverage": "Levier",
+    "connect": "Connecter",
+    "connected": "Connecté",
+    "disconnected": "Déconnecté",
+    "noAccounts": "Aucun compte configuré"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "overview": "Vue d'ensemble",
+    "statistics": "Statistiques",
+    "history": "Historique",
+    "risks": "Risques",
+    "positions": "Positions ouvertes",
+    "monthlyGrowth": "Croissance mensuelle",
+    "tradeHistory": "Historique des trades"
+  },
+  "stats": {
+    "totalTrades": "Trades totaux",
+    "winningTrades": "Trades gagnants",
+    "losingTrades": "Trades perdants",
+    "winRate": "Taux de réussite",
+    "profitFactor": "Profit Factor",
+    "bestTrade": "Meilleur trade",
+    "worstTrade": "Pire trade",
+    "avgProfit": "Profit moyen",
+    "avgLoss": "Perte moyenne",
+    "grossProfit": "Profit brut",
+    "grossLoss": "Perte brute",
+    "consecutiveWins": "Gains consécutifs max",
+    "consecutiveLosses": "Pertes consécutives max"
+  },
+  "risk": {
+    "maxDrawdown": "Drawdown max",
+    "currentDrawdown": "Drawdown actuel",
+    "sharpeRatio": "Ratio de Sharpe",
+    "sortinoRatio": "Ratio de Sortino",
+    "calmarRatio": "Ratio de Calmar",
+    "expectancy": "Espérance",
+    "recoveryFactor": "Facteur de récupération",
+    "marginLevel": "Niveau de marge",
+    "depositLoad": "Charge du dépôt"
+  },
+  "alerts": {
+    "title": "Alertes",
+    "active": "Actives",
+    "triggered": "Déclenchées",
+    "disabled": "Désactivées",
+    "createAlert": "Créer une alerte",
+    "alertType": "Type d'alerte",
+    "condition": "Condition",
+    "threshold": "Seuil",
+    "noAlerts": "Aucune alerte configurée"
+  },
+  "export": {
+    "exportCsv": "Exporter en CSV",
+    "exportExcel": "Exporter en Excel",
+    "exportHistory": "Exporter l'historique"
+  },
+  "time": {
+    "hour": "Heure",
+    "day": "Jour",
+    "week": "Semaine",
+    "month": "Mois",
+    "year": "Année",
+    "all": "Tout"
+  }
+}

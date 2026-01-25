@@ -1,10 +1,12 @@
-"""MT5 Monitor API - Entry Point"""
+"""Trade Vision API - Entry Point"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from services import mt5_connector
 from api import api_router
 from config.settings import settings
+
+__version__ = "1.0.0"
 
 
 @asynccontextmanager
@@ -16,8 +18,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="MT5 Monitor API",
-    version="2.0.0",
+    title="Trade Vision API",
+    description="MT5 Trading Accounts Monitoring Dashboard",
+    version=__version__,
     lifespan=lifespan
 )
 

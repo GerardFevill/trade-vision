@@ -1,0 +1,97 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "refresh": "Refresh",
+    "export": "Export",
+    "search": "Search",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "accounts": "Accounts",
+    "dashboard": "Dashboard",
+    "alerts": "Alerts",
+    "settings": "Settings"
+  },
+  "accounts": {
+    "title": "MT5 Accounts",
+    "balance": "Balance",
+    "equity": "Equity",
+    "profit": "Profit",
+    "drawdown": "Drawdown",
+    "trades": "Trades",
+    "winRate": "Win Rate",
+    "leverage": "Leverage",
+    "connect": "Connect",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "noAccounts": "No accounts configured"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Overview",
+    "statistics": "Statistics",
+    "history": "History",
+    "risks": "Risks",
+    "positions": "Open Positions",
+    "monthlyGrowth": "Monthly Growth",
+    "tradeHistory": "Trade History"
+  },
+  "stats": {
+    "totalTrades": "Total Trades",
+    "winningTrades": "Winning Trades",
+    "losingTrades": "Losing Trades",
+    "winRate": "Win Rate",
+    "profitFactor": "Profit Factor",
+    "bestTrade": "Best Trade",
+    "worstTrade": "Worst Trade",
+    "avgProfit": "Avg Profit",
+    "avgLoss": "Avg Loss",
+    "grossProfit": "Gross Profit",
+    "grossLoss": "Gross Loss",
+    "consecutiveWins": "Max Consecutive Wins",
+    "consecutiveLosses": "Max Consecutive Losses"
+  },
+  "risk": {
+    "maxDrawdown": "Max Drawdown",
+    "currentDrawdown": "Current Drawdown",
+    "sharpeRatio": "Sharpe Ratio",
+    "sortinoRatio": "Sortino Ratio",
+    "calmarRatio": "Calmar Ratio",
+    "expectancy": "Expectancy",
+    "recoveryFactor": "Recovery Factor",
+    "marginLevel": "Margin Level",
+    "depositLoad": "Deposit Load"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "active": "Active",
+    "triggered": "Triggered",
+    "disabled": "Disabled",
+    "createAlert": "Create Alert",
+    "alertType": "Alert Type",
+    "condition": "Condition",
+    "threshold": "Threshold",
+    "noAlerts": "No alerts configured"
+  },
+  "export": {
+    "exportCsv": "Export CSV",
+    "exportExcel": "Export Excel",
+    "exportHistory": "Export History"
+  },
+  "time": {
+    "hour": "Hour",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "all": "All"
+  }
+}
