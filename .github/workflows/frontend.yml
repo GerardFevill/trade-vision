@@ -55,7 +55,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/trade-vision-frontend
+          images: amesika2/trade-vision-frontend
           tags: |
             type=sha,prefix=
             type=raw,value=latest
