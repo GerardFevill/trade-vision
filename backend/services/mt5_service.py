@@ -51,67 +51,77 @@ class MT5Connector:
                 self.peak_balance = info.balance
                 self.peak_equity = info.equity
 
-    def connect(self, account_id: int = None, retries: int = 2, timeout: int = 30000) -> bool:
+    def connect(self, account_id: int = None, retries: int = 2, timeout: int = 60000) -> bool:
         """Connecte à MT5, optionnellement à un compte spécifique
 
         Args:
             account_id: ID du compte MT5
             retries: Nombre de tentatives en cas d'échec
-            timeout: Timeout de connexion en millisecondes (défaut: 30s)
+            timeout: Timeout de connexion en millisecondes (défaut: 60s)
         """
         import time
 
         # Vérifier si on change de compte
         switching_account = account_id and account_id != self.current_account_id
 
-        if account_id:
-            # Trouver le compte dans la config
-            account_config = None
-            for acc in MT5_ACCOUNTS:
-                if acc["id"] == account_id:
-                    account_config = acc
-                    break
-
-            if not account_config:
-                print(f"Compte {account_id} non trouvé dans la config")
+        # Si pas d'account_id spécifié, utiliser le premier compte de la config
+        if not account_id:
+            if MT5_ACCOUNTS:
+                account_id = MT5_ACCOUNTS[0]["id"]
+            else:
+                print("Aucun compte configuré")
                 return False
 
-            terminal_key = account_config.get("terminal", "roboforex")
-
-            # Tentatives de connexion avec retry
-            for attempt in range(retries + 1):
-                # Initialiser MT5 (utilise le terminal actif par défaut)
-                if not mt5.initialize():
-                    error = mt5.last_error()
-                    print(f"Échec initialisation MT5: {error}")
-                    if attempt < retries:
-                        time.sleep(1)
-                        continue
-                    return False
-
-                if not mt5.login(account_config["id"], account_config["password"], account_config["server"], timeout=timeout):
-                    error = mt5.last_error()
-                    print(f"Échec connexion au compte {account_id} (tentative {attempt + 1}/{retries + 1}): {error}")
-                    mt5.shutdown()
-                    if attempt < retries:
-                        time.sleep(1)
-                        continue
-                    return False
-
-                # Connexion réussie
+        # Trouver le compte dans la config
+        account_config = None
+        for acc in MT5_ACCOUNTS:
+            if acc["id"] == account_id:
+                account_config = acc
                 break
 
-            self.current_account_id = account_id
-            self.current_terminal = terminal_key
+        if not account_config:
+            print(f"Compte {account_id} non trouvé dans la config")
+            return False
 
-            # Réinitialiser et charger les données spécifiques au compte
-            if switching_account:
-                self._reset_account_data()
-                self._load_history_from_db(account_id)
-        else:
-            # Connexion par défaut (premier compte ou compte déjà configuré dans MT5)
-            if not mt5.initialize():
+        terminal_key = account_config.get("terminal", "roboforex")
+        terminal_path = MT5_TERMINALS.get(terminal_key)
+
+        # Tentatives de connexion avec retry
+        for attempt in range(retries + 1):
+            # Fermer toute connexion existante
+            mt5.shutdown()
+
+            # Initialiser MT5 avec les identifiants (connexion directe)
+            init_params = {
+                "login": account_config["id"],
+                "password": account_config["password"],
+                "server": account_config["server"],
+                "timeout": timeout
+            }
+
+            # Ajouter le chemin du terminal si disponible
+            if terminal_path:
+                init_params["path"] = terminal_path
+
+            if mt5.initialize(**init_params):
+                # Connexion réussie
+                print(f"MT5 connecté au compte {account_id} ({account_config['server']})")
+                break
+            else:
+                error = mt5.last_error()
+                print(f"Échec connexion MT5 compte {account_id} (tentative {attempt + 1}/{retries + 1}): {error}")
+                if attempt < retries:
+                    time.sleep(2)
+                    continue
                 return False
+
+        self.current_account_id = account_id
+        self.current_terminal = terminal_key
+
+        # Réinitialiser et charger les données spécifiques au compte
+        if switching_account:
+            self._reset_account_data()
+            self._load_history_from_db(account_id)
 
         self.connected = True
         info = mt5.account_info()
