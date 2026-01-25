@@ -245,13 +245,17 @@ export class AccountsListComponent implements OnInit, OnDestroy {
 
     const width = 100;
     const height = 30;
+    const padding = 2; // Padding to keep line visible
     const min = Math.min(...data);
     const max = Math.max(...data);
-    const range = max - min || 1;
+    const range = max - min;
 
     const points = data.map((value, index) => {
       const x = (index / (data.length - 1)) * width;
-      const y = height - ((value - min) / range) * height;
+      // If no variation, draw line in the middle; otherwise scale normally
+      const y = range === 0
+        ? height / 2
+        : padding + ((max - value) / range) * (height - 2 * padding);
       return `${x},${y}`;
     });
 
