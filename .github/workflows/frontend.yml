@@ -2,9 +2,12 @@ name: Frontend CI
 
 on:
   push:
-    paths: ['frontend/**']
+    branches: [master]
   pull_request:
-    paths: ['frontend/**']
+    branches: [master]
+
+env:
+  VERSION: 1.0.${{ github.run_number }}
 
 jobs:
   build:
@@ -51,21 +54,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: amesika2/trade-vision-frontend
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest
-
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            amesika2/trade-vision-frontend:${{ env.VERSION }}
+            amesika2/trade-vision-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          echo "### Frontend Published :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "- Image: \`amesika2/trade-vision-frontend:${{ env.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
