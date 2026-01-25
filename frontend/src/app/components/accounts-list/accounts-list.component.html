@@ -1,0 +1,429 @@
+<div class="accounts-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fa fa-chart-line"></i>
+        Mes Comptes MT5
+      </h1>
+      <p class="page-subtitle">Sélectionnez un compte pour voir les détails</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-refresh" (click)="refresh()" [disabled]="loading()">
+        <i class="fa fa-refresh" [class.fa-spin]="loading()"></i>
+        {{ loading() ? 'Chargement...' : 'Actualiser' }}
+      </button>
+    </div>
+    <div class="header-stats">
+      <div class="header-stat">
+        <span class="stat-value">{{ accounts().length }}</span>
+        <span class="stat-label">Comptes</span>
+      </div>
+      <div class="header-stat">
+        <span class="stat-value connected">{{ connectedCount() }}</span>
+        <span class="stat-label">Connectés</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Totaux par devise -->
+  <div class="totals-section">
+    <div class="total-card eur">
+      <div class="total-icon"><i class="fa fa-euro-sign"></i></div>
+      <div class="total-info">
+        <span class="total-label">Total EUR</span>
+        <span class="total-value">{{ formatCurrency(totalEUR(), 'EUR') }}</span>
+        <div class="total-details">
+          <span class="total-profit" [class]="getProfitClass(totalProfitEUR())">
+            {{ formatCurrency(totalProfitEUR(), 'EUR') }}
+          </span>
+          <span class="total-growth" [class]="getProfitClass(globalGrowthEUR())">
+            ({{ formatPercent(globalGrowthEUR()) }})
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="total-card usd">
+      <div class="total-icon"><i class="fa fa-dollar-sign"></i></div>
+      <div class="total-info">
+        <span class="total-label">Total USD</span>
+        <span class="total-value">{{ formatCurrency(totalUSD(), 'USD') }}</span>
+        <div class="total-details">
+          <span class="total-profit" [class]="getProfitClass(totalProfitUSD())">
+            {{ formatCurrency(totalProfitUSD(), 'USD') }}
+          </span>
+          <span class="total-growth" [class]="getProfitClass(globalGrowthUSD())">
+            ({{ formatPercent(globalGrowthUSD()) }})
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="total-card stats">
+      <div class="total-icon"><i class="fa fa-chart-pie"></i></div>
+      <div class="total-info">
+        <span class="total-label">Statistiques Globales</span>
+        <span class="total-value">{{ totalTrades() }} trades</span>
+        <div class="total-details">
+          <span class="winrate-badge">
+            <i class="fa fa-trophy"></i>
+            Win Rate: {{ globalWinRate().toFixed(1) }}%
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Croissance Mensuelle Globale -->
+  <div class="monthly-growth-section">
+      <h2 class="section-title">
+        <i class="fa fa-calendar"></i>
+        Croissance Mensuelle Globale
+      </h2>
+      <div class="monthly-table-container">
+        <table class="monthly-table">
+          <thead>
+            <tr>
+              <th>Année</th>
+              @for (month of monthNames; track month) {
+                <th>{{ month }}</th>
+              }
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (yearData of monthlyGrowth(); track yearData.year) {
+              <tr>
+                <td class="year-cell">{{ yearData.year }}</td>
+                @for (month of monthNames; track month) {
+                  <td class="month-cell">
+                    @if (getMonthValue(yearData, month); as value) {
+                      <div class="month-values">
+                        <span class="eur-value" [class.positive]="value.eur >= 0" [class.negative]="value.eur < 0">
+                          {{ value.eur >= 0 ? '+' : '' }}{{ value.eur | number:'1.0-0' }}€
+                        </span>
+                        @if (value.usd !== 0) {
+                          <span class="usd-value" [class.positive]="value.usd >= 0" [class.negative]="value.usd < 0">
+                            {{ value.usd >= 0 ? '+' : '' }}{{ value.usd | number:'1.0-0' }}$
+                          </span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="no-data">-</span>
+                    }
+                  </td>
+                }
+                <td class="total-cell">
+                  <div class="month-values">
+                    <span class="eur-value" [class.positive]="yearData.year_total_eur >= 0" [class.negative]="yearData.year_total_eur < 0">
+                      {{ yearData.year_total_eur >= 0 ? '+' : '' }}{{ yearData.year_total_eur | number:'1.0-0' }}€
+                    </span>
+                    @if (yearData.year_total_usd !== 0) {
+                      <span class="usd-value" [class.positive]="yearData.year_total_usd >= 0" [class.negative]="yearData.year_total_usd < 0">
+                        {{ yearData.year_total_usd >= 0 ? '+' : '' }}{{ yearData.year_total_usd | number:'1.0-0' }}$
+                      </span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  <!-- Toolbar: Recherche, Filtres et Vue -->
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="fa fa-search"></i>
+      <input
+        type="text"
+        placeholder="Rechercher un compte..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+      @if (searchQuery()) {
+        <button class="clear-search" (click)="searchQuery.set('')">
+          <i class="fa fa-times"></i>
+        </button>
+      }
+    </div>
+    <div class="broker-filters">
+      <button class="filter-btn" [class.active]="brokerFilter() === 'all'" (click)="setBrokerFilter('all')">
+        <i class="fa fa-globe"></i>
+        Tous ({{ accounts().length }})
+      </button>
+      <button class="filter-btn roboforex" [class.active]="brokerFilter() === 'roboforex'" (click)="setBrokerFilter('roboforex')">
+        <i class="fa fa-robot"></i>
+        RoboForex ({{ roboforexCount() }})
+      </button>
+      <button class="filter-btn icmarkets" [class.active]="brokerFilter() === 'icmarkets'" (click)="setBrokerFilter('icmarkets')">
+        <i class="fa fa-chart-bar"></i>
+        IC Markets ({{ icmarketsCount() }})
+      </button>
+    </div>
+    <div class="toolbar-right">
+      <div class="auto-refresh">
+        <button class="auto-refresh-btn" [class.active]="autoRefreshEnabled()" (click)="toggleAutoRefresh()" title="Rafraîchissement auto (5 min)">
+          <i class="fa fa-clock"></i>
+          <span class="refresh-status">{{ autoRefreshEnabled() ? 'Auto' : 'Off' }}</span>
+        </button>
+        @if (lastRefreshTime()) {
+          <span class="last-refresh">{{ formatTime(lastRefreshTime()) }}</span>
+        }
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn" [class.active]="viewMode() === 'grid'" (click)="setViewMode('grid')" title="Vue grille">
+          <i class="fa fa-th-large"></i>
+        </button>
+        <button class="view-btn" [class.active]="viewMode() === 'list'" (click)="setViewMode('list')" title="Vue liste">
+          <i class="fa fa-list"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div class="error-banner">
+      <i class="fa fa-exclamation-triangle"></i>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading() && accounts().length === 0) {
+    <div class="loading-state">
+      <i class="fa fa-spinner fa-spin"></i>
+      <p>Chargement des comptes...</p>
+    </div>
+  }
+
+  <!-- Vue Grille -->
+  @if (viewMode() === 'grid') {
+    <div class="accounts-grid">
+      @for (account of filteredAccounts(); track account.id) {
+        <div
+          class="account-card"
+          (click)="openAccount(account)"
+          [class.disconnected]="!account.connected"
+          [class]="getPerformanceClass(account)"
+        >
+          <!-- Favorite Button -->
+          <button class="favorite-btn" (click)="toggleFavorite(account.id, $event)" [class.active]="isFavorite(account.id)">
+            <i class="fa fa-star"></i>
+          </button>
+
+          <!-- Card Header -->
+          <div class="card-header">
+            <div class="account-avatar">
+              <i class="fa fa-wallet"></i>
+            </div>
+            <div class="account-info">
+              <h3 class="account-name">{{ account.name }}</h3>
+              <span class="account-id">#{{ account.id }}</span>
+            </div>
+            <div class="connection-status" [class.connected]="account.connected">
+              <i class="fa fa-circle"></i>
+              {{ account.connected ? 'Connecté' : 'Déconnecté' }}
+            </div>
+          </div>
+
+          <!-- Balance Badge (Grand) -->
+          <div class="balance-badge">
+            <span class="balance-value">{{ formatCurrency(account.balance, account.currency) }}</span>
+            <div class="growth-small" [class]="getProfitClass(account.profit_percent)">
+              <i class="fa" [class.fa-arrow-up]="account.profit_percent >= 0" [class.fa-arrow-down]="account.profit_percent < 0"></i>
+              {{ formatPercent(account.profit_percent) }}
+            </div>
+            <!-- Sparkline -->
+            @if (getSparklineData(account.id).length > 1) {
+              <div class="sparkline-container">
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+                  <path
+                    [attr.d]="getSparklinePath(account.id)"
+                    fill="none"
+                    [attr.stroke]="getSparklineColor(account.id)"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            }
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="card-stats">
+            <div class="stat-item">
+              <span class="stat-label">Win Rate</span>
+              <span class="stat-value winrate">{{ account.win_rate.toFixed(1) }}%</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Drawdown</span>
+              <span class="stat-value" [class]="getDrawdownClass(account.drawdown)">
+                {{ account.drawdown.toFixed(2) }}%
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Trades</span>
+              <span class="stat-value">{{ account.trades }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Profit</span>
+              <span class="stat-value" [class]="getProfitClass(account.profit)">
+                {{ formatCurrency(account.profit, account.currency) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Progress Bars -->
+          <div class="card-metrics">
+            <div class="metric-row">
+              <span class="metric-label">Win Rate</span>
+              <div class="metric-bar">
+                <div class="metric-fill winrate" [style.width.%]="account.win_rate"></div>
+              </div>
+              <span class="metric-value">{{ account.win_rate.toFixed(1) }}%</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Drawdown</span>
+              <div class="metric-bar">
+                <div class="metric-fill drawdown" [style.width.%]="Math.min(account.drawdown * 2, 100)"></div>
+              </div>
+              <span class="metric-value" [class]="getDrawdownClass(account.drawdown)">{{ account.drawdown.toFixed(1) }}%</span>
+            </div>
+          </div>
+
+          <!-- Card Footer -->
+          <div class="card-footer">
+            <div class="footer-item">
+              <i class="fa fa-building"></i>
+              {{ account.broker }}
+            </div>
+            <div class="footer-item">
+              <i class="fa fa-exchange"></i>
+              {{ account.trades }} trades
+            </div>
+            <div class="footer-item">
+              <i class="fa fa-balance-scale"></i>
+              1:{{ account.leverage }}
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Vue Liste -->
+  @if (viewMode() === 'list') {
+    <div class="accounts-list">
+      <table class="accounts-table">
+        <thead>
+          <tr>
+            <th class="col-fav"></th>
+            <th class="col-status"></th>
+            <th class="col-name sortable" (click)="sortBy('name')">
+              Compte <i class="fa" [class]="getSortIcon('name')"></i>
+            </th>
+            <th class="col-broker">Broker</th>
+            <th class="col-balance sortable" (click)="sortBy('balance')">
+              Solde <i class="fa" [class]="getSortIcon('balance')"></i>
+            </th>
+            <th class="col-profit sortable" (click)="sortBy('profit')">
+              Profit <i class="fa" [class]="getSortIcon('profit')"></i>
+            </th>
+            <th class="col-growth sortable" (click)="sortBy('profit_percent')">
+              Croissance <i class="fa" [class]="getSortIcon('profit_percent')"></i>
+            </th>
+            <th class="col-sparkline">Évolution</th>
+            <th class="col-winrate sortable" (click)="sortBy('win_rate')">
+              Win Rate <i class="fa" [class]="getSortIcon('win_rate')"></i>
+            </th>
+            <th class="col-dd sortable" (click)="sortBy('drawdown')">
+              Drawdown <i class="fa" [class]="getSortIcon('drawdown')"></i>
+            </th>
+            <th class="col-trades sortable" (click)="sortBy('trades')">
+              Trades <i class="fa" [class]="getSortIcon('trades')"></i>
+            </th>
+            <th class="col-leverage">Levier</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (account of filteredAccounts(); track account.id) {
+            <tr
+              (click)="openAccount(account)"
+              [class.disconnected]="!account.connected"
+              [class]="getPerformanceClass(account)"
+            >
+              <td class="col-fav">
+                <button class="fav-btn" (click)="toggleFavorite(account.id, $event)" [class.active]="isFavorite(account.id)">
+                  <i class="fa fa-star"></i>
+                </button>
+              </td>
+              <td class="col-status">
+                <span class="status-dot" [class.connected]="account.connected"></span>
+              </td>
+              <td class="col-name">
+                <div class="account-cell">
+                  <span class="account-name">{{ account.name }}</span>
+                  <span class="account-id">#{{ account.id }}</span>
+                </div>
+              </td>
+              <td class="col-broker">
+                <span class="broker-badge" [class.roboforex]="account.broker.toLowerCase().includes('roboforex')">
+                  {{ account.broker.toLowerCase().includes('roboforex') ? 'RoboForex' : 'IC Markets' }}
+                </span>
+              </td>
+              <td class="col-balance">
+                <strong>{{ formatCurrency(account.balance, account.currency) }}</strong>
+              </td>
+              <td class="col-profit" [class]="getProfitClass(account.profit)">
+                {{ formatCurrency(account.profit, account.currency) }}
+              </td>
+              <td class="col-growth" [class]="getProfitClass(account.profit_percent)">
+                {{ formatPercent(account.profit_percent) }}
+              </td>
+              <td class="col-sparkline">
+                @if (getSparklineData(account.id).length > 1) {
+                  <svg class="table-sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
+                    <path
+                      [attr.d]="getSparklinePath(account.id)"
+                      fill="none"
+                      [attr.stroke]="getSparklineColor(account.id)"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                } @else {
+                  <span class="no-data">-</span>
+                }
+              </td>
+              <td class="col-winrate">
+                <div class="winrate-cell">
+                  <span>{{ account.win_rate.toFixed(1) }}%</span>
+                  <div class="mini-bar">
+                    <div class="mini-fill" [style.width.%]="account.win_rate"></div>
+                  </div>
+                </div>
+              </td>
+              <td class="col-dd" [class]="getDrawdownClass(account.drawdown)">
+                {{ account.drawdown.toFixed(2) }}%
+              </td>
+              <td class="col-trades">{{ account.trades }}</td>
+              <td class="col-leverage">1:{{ account.leverage }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && filteredAccounts().length === 0 && !error()) {
+    <div class="empty-state">
+      <i class="fa fa-wallet"></i>
+      <p>Aucun compte trouvé</p>
+    </div>
+  }
+</div>

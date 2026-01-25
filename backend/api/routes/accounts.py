@@ -1,6 +1,6 @@
 """Account management routes"""
 from fastapi import APIRouter, HTTPException, Query, Path
-from services import mt5_connector
+from services import mt5_connector, sync_service
 from db import accounts_cache
 from models import AccountSummary
 import threading
@@ -71,3 +71,47 @@ async def rebuild_account_history(account_id: int = Path(..., description="ID du
         "points_added": points_added,
         "account_id": account_id
     }
+
+
+@router.post("/accounts/{account_id}/sync")
+async def sync_account(
+    account_id: int = Path(..., description="ID du compte MT5"),
+    force: bool = Query(default=False, description="Forcer la sync même si pas de changement")
+):
+    """Synchronise les données d'un compte vers la DB (uniquement si changements détectés)"""
+    # Se connecter au compte
+    if not mt5_connector.connect(account_id):
+        raise HTTPException(503, f"Impossible de se connecter au compte {account_id}")
+
+    # Synchroniser
+    synced = sync_service.sync_account(account_id, force=force)
+
+    return {
+        "message": f"Compte {account_id} {'synchronisé' if synced else 'pas de changement'}",
+        "synced": synced,
+        "account_id": account_id
+    }
+
+
+@router.post("/sync/all")
+async def sync_all_accounts(
+    force: bool = Query(default=False, description="Forcer la sync même si pas de changement")
+):
+    """Synchronise tous les comptes vers la DB (uniquement ceux avec des changements)"""
+    # Lancer en arrière-plan pour ne pas bloquer
+    def do_sync():
+        return sync_service.sync_all_accounts(force=force)
+
+    thread = threading.Thread(target=do_sync, daemon=True)
+    thread.start()
+
+    return {
+        "message": "Synchronisation lancée en arrière-plan",
+        "force": force
+    }
+
+
+@router.get("/sync/status")
+async def get_sync_status():
+    """Vérifie quels comptes ont besoin d'être synchronisés"""
+    return sync_service.quick_check_all()

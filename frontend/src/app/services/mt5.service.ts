@@ -152,6 +152,37 @@ export interface FullDashboard {
   monthly_growth: MonthlyGrowth[];
 }
 
+export interface AccountSummary {
+  id: number;
+  name: string;
+  broker: string;
+  server: string;
+  balance: number;
+  equity: number;
+  profit: number;
+  profit_percent: number;
+  drawdown: number;
+  trades: number;
+  win_rate: number;
+  currency: string;
+  leverage: number;
+  connected: boolean;
+}
+
+export type SparklineData = Record<number, number[]>;
+
+export interface GlobalMonthlyGrowthMonth {
+  profit_eur: number;
+  profit_usd: number;
+}
+
+export interface GlobalMonthlyGrowth {
+  year: number;
+  months: Record<string, GlobalMonthlyGrowthMonth | null>;
+  year_total_eur: number;
+  year_total_usd: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class Mt5Service {
   private apiUrl = 'http://localhost:8000/api';
@@ -172,6 +203,14 @@ export class Mt5Service {
 
   getDashboard(): Observable<FullDashboard> {
     return this.http.get<FullDashboard>(`${this.apiUrl}/dashboard`);
+  }
+
+  getAccounts(): Observable<AccountSummary[]> {
+    return this.http.get<AccountSummary[]>(`${this.apiUrl}/accounts`);
+  }
+
+  connectToAccount(accountId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/accounts/${accountId}/connect`, {});
   }
 
   getHistory(limit = 60): Observable<HistoryPoint[]> {
@@ -204,6 +243,14 @@ export class Mt5Service {
 
   getYearlyDrawdown(): Observable<YearlyDrawdown[]> {
     return this.http.get<YearlyDrawdown[]>(`${this.apiUrl}/yearly-drawdown`);
+  }
+
+  getSparklines(points = 20): Observable<SparklineData> {
+    return this.http.get<SparklineData>(`${this.apiUrl}/sparklines?points=${points}`);
+  }
+
+  getGlobalMonthlyGrowth(): Observable<GlobalMonthlyGrowth[]> {
+    return this.http.get<GlobalMonthlyGrowth[]>(`${this.apiUrl}/global-monthly-growth`);
   }
 
   refresh(): void {

@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
 import { Mt5Service, HistoryPoint, DailyDrawdown, WeeklyDrawdown, MonthlyDrawdown, YearlyDrawdown } from '../../services/mt5.service';
@@ -47,7 +48,7 @@ export class DashboardComponent implements OnInit {
   loading = computed(() => this.mt5.loading());
   lastUpdate = computed(() => this.mt5.lastUpdate());
 
-  constructor(public mt5: Mt5Service) {
+  constructor(public mt5: Mt5Service, private router: Router) {
     // Update chart when history OR timeframe OR chartMode changes
     effect(() => {
       const history = this.mt5.history();
@@ -176,6 +177,10 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.mt5.startPolling();
+  }
+
+  goBack(): void {
+    this.router.navigate(['/accounts']);
   }
 
   setTab(tab: TabType): void {

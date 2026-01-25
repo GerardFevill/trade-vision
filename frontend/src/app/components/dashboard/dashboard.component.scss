@@ -40,6 +40,31 @@ $bar-blue: #5ba4e6;
   border-bottom: 1px solid $border;
 }
 
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid $border;
+  color: $text-secondary;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+
+  i {
+    font-size: 11px;
+  }
+
+  &:hover {
+    background: $bg-input;
+    border-color: $border-light;
+    color: $text;
+  }
+}
+
 .sidebar-title {
   font-size: 15px;
   font-weight: 600;

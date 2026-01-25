@@ -1,0 +1,1153 @@
+// MQL5 Dark Theme
+$bg-dark: #0d0d0d;
+$bg-card: #161616;
+$bg-card-hover: #1a1a1a;
+$bg-input: #1a1a1a;
+$border: #222222;
+$border-light: #2a2a2a;
+$text: #e0e0e0;
+$text-secondary: #888888;
+$text-muted: #555555;
+$accent: #3b82f6;
+$positive: #22c55e;
+$negative: #ef4444;
+$warning: #f59e0b;
+
+.accounts-page {
+  min-height: 100vh;
+  background: $bg-dark;
+  color: $text;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 24px;
+}
+
+// Header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid $border;
+}
+
+.header-content {
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: $text;
+    margin: 0 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    i {
+      color: $accent;
+      font-size: 20px;
+    }
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+.header-actions {
+  .btn-refresh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: $accent;
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) {
+      background: #2563eb;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    i {
+      font-size: 12px;
+    }
+  }
+}
+
+.header-stats {
+  display: flex;
+  gap: 32px;
+
+  .header-stat {
+    text-align: center;
+
+    .stat-value {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+      color: $text;
+
+      &.connected {
+        color: $positive;
+      }
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: $text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+// Totals Section
+.totals-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 24px;
+
+  .total-card {
+    flex: 1;
+
+    // Les deux premiers blocs (EUR et USD) prennent 50% chacun
+    &.eur,
+    &.usd {
+      flex: 0 0 calc(50% - 10px);
+    }
+
+    // Le bloc stats prend toute la largeur
+    &.stats {
+      flex: 0 0 100%;
+    }
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: $bg-card;
+    border: 1px solid $border;
+    border-radius: 8px;
+
+    .total-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      i {
+        font-size: 24px;
+        color: #fff;
+      }
+    }
+
+    &.eur .total-icon {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    &.usd .total-icon {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .total-info {
+      flex: 1;
+
+      .total-label {
+        display: block;
+        font-size: 12px;
+        color: $text-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+      }
+
+      .total-value {
+        display: block;
+        font-size: 24px;
+        font-weight: 700;
+        color: $text;
+        margin-bottom: 2px;
+      }
+
+      .total-profit {
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .total-details {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .total-growth {
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .winrate-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: $accent;
+
+        i {
+          color: $warning;
+        }
+      }
+    }
+
+    &.stats .total-icon {
+      background: linear-gradient(135deg, $warning, #d97706);
+    }
+  }
+}
+
+// Monthly Growth Section
+.monthly-growth-section {
+  margin-bottom: 24px;
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: $text;
+    margin-bottom: 16px;
+
+    i {
+      color: $accent;
+    }
+  }
+}
+
+.monthly-table-container {
+  overflow-x: auto;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 8px;
+}
+
+.monthly-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+
+  th, td {
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 12px;
+    border-bottom: 1px solid $border;
+  }
+
+  th {
+    background: $bg-input;
+    color: $text-muted;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 10px;
+  }
+
+  .year-cell {
+    font-weight: 700;
+    color: $text;
+    background: $bg-input;
+  }
+
+  .month-cell {
+    min-width: 65px;
+  }
+
+  .total-cell {
+    background: rgba($accent, 0.05);
+    font-weight: 600;
+  }
+
+  .month-values {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .eur-value, .usd-value {
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .eur-value {
+    color: $text;
+  }
+
+  .usd-value {
+    color: $text-secondary;
+    font-size: 10px;
+  }
+
+  .positive {
+    color: $positive !important;
+  }
+
+  .negative {
+    color: $negative !important;
+  }
+
+  .no-data {
+    color: $text-muted;
+  }
+}
+
+// Toolbar
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 8px;
+  flex-wrap: wrap;
+
+  .search-box {
+    position: relative;
+    min-width: 200px;
+
+    i.fa-search {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $text-muted;
+      font-size: 12px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 36px 10px 36px;
+      background: $bg-input;
+      border: 1px solid $border;
+      border-radius: 6px;
+      color: $text;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
+
+      &::placeholder {
+        color: $text-muted;
+      }
+
+      &:focus {
+        border-color: $accent;
+        box-shadow: 0 0 0 2px rgba($accent, 0.2);
+      }
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: $text-muted;
+      cursor: pointer;
+      padding: 4px;
+
+      &:hover {
+        color: $text;
+      }
+    }
+  }
+
+  .broker-filters {
+    display: flex;
+    gap: 8px;
+
+    .filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid $border;
+      border-radius: 6px;
+      color: $text-secondary;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      i {
+        font-size: 12px;
+      }
+
+      &:hover {
+        background: $bg-input;
+        border-color: $border-light;
+        color: $text;
+      }
+
+      &.active {
+        background: $accent;
+        border-color: $accent;
+        color: #fff;
+      }
+
+      &.roboforex.active {
+        background: #8b5cf6;
+        border-color: #8b5cf6;
+      }
+
+      &.icmarkets.active {
+        background: #06b6d4;
+        border-color: #06b6d4;
+      }
+    }
+  }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+  }
+
+  .auto-refresh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .auto-refresh-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: transparent;
+      border: 1px solid $border;
+      border-radius: 6px;
+      color: $text-muted;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: $bg-input;
+        color: $text;
+      }
+
+      &.active {
+        background: rgba($positive, 0.1);
+        border-color: rgba($positive, 0.3);
+        color: $positive;
+      }
+    }
+
+    .last-refresh {
+      font-size: 11px;
+      color: $text-muted;
+    }
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 4px;
+    background: $bg-input;
+    padding: 4px;
+    border-radius: 6px;
+
+    .view-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: $text-muted;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      i {
+        font-size: 14px;
+      }
+
+      &:hover {
+        color: $text;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      &.active {
+        background: $accent;
+        color: #fff;
+      }
+    }
+  }
+}
+
+// Error Banner
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba($negative, 0.1);
+  border: 1px solid rgba($negative, 0.3);
+  border-radius: 8px;
+  color: $negative;
+  margin-bottom: 20px;
+
+  i {
+    font-size: 18px;
+  }
+}
+
+// Loading State
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: $text-muted;
+
+  i {
+    font-size: 32px;
+    margin-bottom: 16px;
+    color: $accent;
+  }
+
+  p {
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: $text-muted;
+
+  i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+// Accounts Grid
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+// Account Card
+.account-card {
+  position: relative;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $bg-card-hover;
+    border-color: $border-light;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+    .favorite-btn {
+      opacity: 1;
+    }
+  }
+
+  &.disconnected {
+    opacity: 0.7;
+
+    .card-header .account-avatar {
+      background: $bg-input;
+      color: $text-muted;
+    }
+  }
+
+}
+
+// Favorite Button
+.favorite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $border;
+  border-radius: 6px;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $warning;
+    border-color: $warning;
+  }
+
+  &.active {
+    color: $warning;
+    background: rgba($warning, 0.15);
+    border-color: $warning;
+  }
+}
+
+// Card Header
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .account-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, $accent, #1d4ed8);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 20px;
+      color: #fff;
+    }
+  }
+
+  .account-info {
+    flex: 1;
+
+    .account-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: $text;
+      margin: 0 0 2px 0;
+    }
+
+    .account-id {
+      font-size: 12px;
+      color: $text-muted;
+    }
+  }
+
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: $negative;
+    padding: 4px 10px;
+    background: rgba($negative, 0.1);
+    border-radius: 20px;
+
+    i {
+      font-size: 8px;
+    }
+
+    &.connected {
+      color: $positive;
+      background: rgba($positive, 0.1);
+    }
+  }
+}
+
+// Balance Badge (Solde en grand)
+.balance-badge {
+  text-align: center;
+  padding: 20px 16px;
+  margin-bottom: 16px;
+  background: $bg-input;
+  border-radius: 8px;
+  border: 1px solid $border;
+
+  .balance-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: $text;
+    margin-bottom: 8px;
+  }
+
+  .growth-small {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba($text-muted, 0.1);
+
+    i {
+      font-size: 10px;
+    }
+
+    &.positive {
+      color: $positive;
+      background: rgba($positive, 0.1);
+    }
+
+    &.negative {
+      color: $negative;
+      background: rgba($negative, 0.1);
+    }
+  }
+
+  .sparkline-container {
+    margin-top: 12px;
+    height: 30px;
+    width: 100%;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+// Stats Grid
+.card-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .stat-item {
+    background: rgba($bg-input, 0.5);
+    padding: 10px;
+    border-radius: 6px;
+
+    .stat-label {
+      display: block;
+      font-size: 10px;
+      color: $text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: $text;
+
+      &.winrate {
+        color: $accent;
+      }
+    }
+  }
+}
+
+// Metrics
+.card-metrics {
+  margin-bottom: 16px;
+  padding-top: 16px;
+  border-top: 1px solid $border;
+
+  .metric-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .metric-label {
+      width: 70px;
+      font-size: 11px;
+      color: $text-muted;
+    }
+
+    .metric-bar {
+      flex: 1;
+      height: 6px;
+      background: $bg-input;
+      border-radius: 3px;
+      overflow: hidden;
+
+      .metric-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+
+        &.winrate {
+          background: $accent;
+        }
+
+        &.drawdown {
+          background: $warning;
+        }
+      }
+    }
+
+    .metric-value {
+      width: 50px;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 500;
+      color: $text-secondary;
+    }
+  }
+}
+
+// Card Footer
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid $border;
+
+  .footer-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: $text-muted;
+
+    i {
+      color: $text-muted;
+      font-size: 10px;
+    }
+  }
+}
+
+// Utility Classes
+.positive {
+  color: $positive !important;
+}
+
+.negative {
+  color: $negative !important;
+}
+
+// Drawdown severity classes
+.dd-low {
+  color: $positive !important;
+}
+
+.dd-moderate {
+  color: $warning !important;
+}
+
+.dd-warning {
+  color: #f97316 !important;
+}
+
+.dd-critical {
+  color: $negative !important;
+}
+
+// List View
+.accounts-list {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.accounts-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background: $bg-input;
+
+    th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: $text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid $border;
+
+      &.col-fav {
+        width: 40px;
+      }
+
+      &.col-status {
+        width: 40px;
+      }
+
+      &.col-balance,
+      &.col-profit,
+      &.col-growth {
+        text-align: right;
+      }
+
+      &.col-winrate,
+      &.col-dd,
+      &.col-trades,
+      &.col-leverage {
+        text-align: center;
+      }
+
+      &.sortable {
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.2s;
+
+        &:hover {
+          color: $text;
+        }
+
+        i {
+          margin-left: 4px;
+          font-size: 10px;
+        }
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      cursor: pointer;
+      transition: background 0.15s;
+
+      &:hover {
+        background: $bg-card-hover;
+      }
+
+      &.disconnected {
+        opacity: 0.6;
+      }
+
+      &:not(:last-child) td {
+        border-bottom: 1px solid $border;
+      }
+
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: 13px;
+      color: $text;
+
+      &.col-fav {
+        width: 40px;
+      }
+
+      &.col-status {
+        width: 40px;
+      }
+
+      &.col-balance {
+        text-align: right;
+        font-size: 14px;
+      }
+
+      &.col-profit,
+      &.col-growth {
+        text-align: right;
+        font-weight: 500;
+      }
+
+      &.col-winrate,
+      &.col-dd,
+      &.col-trades,
+      &.col-leverage {
+        text-align: center;
+      }
+    }
+  }
+}
+
+// Favorite button for table
+.fav-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg-input;
+  border: 1px solid $border;
+  border-radius: 4px;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $warning;
+    border-color: $warning;
+  }
+
+  &.active {
+    color: $warning;
+    background: rgba($warning, 0.15);
+    border-color: $warning;
+  }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: $negative;
+
+  &.connected {
+    background: $positive;
+  }
+}
+
+.account-cell {
+  .account-name {
+    display: block;
+    font-weight: 500;
+    color: $text;
+  }
+
+  .account-id {
+    font-size: 11px;
+    color: $text-muted;
+  }
+}
+
+.broker-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  background: rgba(#06b6d4, 0.15);
+  color: #06b6d4;
+
+  &.roboforex {
+    background: rgba(#8b5cf6, 0.15);
+    color: #8b5cf6;
+  }
+}
+
+.winrate-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  span {
+    font-weight: 500;
+    color: $accent;
+  }
+
+  .mini-bar {
+    width: 60px;
+    height: 4px;
+    background: $bg-input;
+    border-radius: 2px;
+    overflow: hidden;
+
+    .mini-fill {
+      height: 100%;
+      background: $accent;
+      border-radius: 2px;
+    }
+  }
+}
+
+// Table Sparkline
+.col-sparkline {
+  width: 80px;
+  text-align: center;
+}
+
+.table-sparkline {
+  width: 70px;
+  height: 24px;
+}
+
+.no-data {
+  color: $text-muted;
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .totals-section {
+    flex-direction: column;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    gap: 16px;
+
+    .broker-filters {
+      width: 100%;
+      flex-wrap: wrap;
+    }
+  }
+
+  .accounts-list {
+    overflow-x: auto;
+  }
+
+  .accounts-table {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 768px) {
+  .accounts-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-stats {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .accounts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar .broker-filters .filter-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+}
