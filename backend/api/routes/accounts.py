@@ -54,3 +54,20 @@ async def reset_account_peaks(account_id: int = Path(..., description="ID du com
         "peak_balance": mt5_connector.peak_balance,
         "peak_equity": mt5_connector.peak_equity
     }
+
+
+@router.post("/accounts/{account_id}/rebuild-history")
+async def rebuild_account_history(account_id: int = Path(..., description="ID du compte MT5")):
+    """Reconstruit l'historique balance/equity complet depuis les deals MT5"""
+    # Se connecter au compte
+    if not mt5_connector.connect(account_id):
+        raise HTTPException(503, f"Impossible de se connecter au compte {account_id}")
+
+    # Reconstruire l'historique
+    points_added = mt5_connector.rebuild_history_from_deals()
+
+    return {
+        "message": f"Historique reconstruit pour compte {account_id}",
+        "points_added": points_added,
+        "account_id": account_id
+    }
