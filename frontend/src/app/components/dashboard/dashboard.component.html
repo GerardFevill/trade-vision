@@ -96,6 +96,13 @@
         </div>
       </div>
 
+      <!-- ALL-TIME SPARKLINE -->
+      <div class="sparkline-section">
+        <div class="sparkline-container">
+          <canvas baseChart [type]="'line'" [data]="sparklineData" [options]="sparklineOptions"></canvas>
+        </div>
+      </div>
+
       <!-- PROGRESS BARS -->
       <div class="bars-section">
         <div class="progress-item">
@@ -326,142 +333,35 @@
           </div>
         </div>
 
-        <!-- DRAWDOWN PERIOD SELECTOR -->
+        <!-- DAILY DRAWDOWN TABLE -->
         <div class="monthly-growth-section">
           <div class="monthly-header">
-            <span class="monthly-title">Drawdown par période</span>
-            <div class="monthly-toggles">
-              @for (period of drawdownPeriods; track period) {
-                <button [class.active]="activeDrawdownPeriod() === period" (click)="setDrawdownPeriod(period)">
-                  {{ drawdownPeriodLabels[period] }}
-                </button>
-              }
-            </div>
+            <span class="monthly-title">Drawdown journalier</span>
           </div>
-
-          <!-- DAILY DRAWDOWN TABLE -->
-          @if (activeDrawdownPeriod() === 'day') {
-            <div class="drawdown-table">
-              <table>
-                <thead>
+          <div class="drawdown-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Solde début</th>
+                  <th>Solde min</th>
+                  <th>Drawdown</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of dailyDrawdown(); track row.date) {
                   <tr>
-                    <th>Date</th>
-                    <th>Solde début</th>
-                    <th>Solde min</th>
-                    <th>Drawdown</th>
+                    <td>{{ row.date }}</td>
+                    <td>{{ fmtCurrency(row.start_balance) }}</td>
+                    <td>{{ fmtCurrency(row.min_balance) }}</td>
+                    <td [class]="getDrawdownClass(row.drawdown_percent)">{{ fmtPct(row.drawdown_percent) }}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  @for (row of dailyDrawdown(); track row.date) {
-                    <tr>
-                      <td>{{ row.date }}</td>
-                      <td>{{ fmtCurrency(row.start_balance) }}</td>
-                      <td>{{ fmtCurrency(row.min_balance) }}</td>
-                      <td [class]="getDrawdownClass(row.drawdown_percent)">{{ fmtPct(row.drawdown_percent) }}</td>
-                    </tr>
-                  } @empty {
-                    <tr><td colspan="4" class="empty">Aucune donnée</td></tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-
-          <!-- WEEKLY DRAWDOWN TABLE -->
-          @if (activeDrawdownPeriod() === 'week') {
-            <div class="drawdown-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Année</th>
-                    <th>Semaine</th>
-                    <th>Date début</th>
-                    <th>Drawdown</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of weeklyDrawdown(); track row.year + '-' + row.week) {
-                    <tr>
-                      <td>{{ row.year }}</td>
-                      <td>S{{ row.week }}</td>
-                      <td>{{ row.start_date }}</td>
-                      <td [class]="getDrawdownClass(row.drawdown_percent)">{{ fmtPct(row.drawdown_percent) }}</td>
-                    </tr>
-                  } @empty {
-                    <tr><td colspan="4" class="empty">Aucune donnée</td></tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-
-          <!-- MONTHLY DRAWDOWN TABLE -->
-          @if (activeDrawdownPeriod() === 'month') {
-            <div class="monthly-growth-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th class="year-col"></th>
-                    @for (month of monthNames; track month) {
-                      <th>{{ month }}</th>
-                    }
-                    <th class="year-total">Max</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of monthlyDrawdown(); track row.year) {
-                    <tr>
-                      <td class="year-col">{{ row.year }}</td>
-                      @for (month of monthNames; track month) {
-                        <td [class]="getDrawdownClass(row.months[month])">
-                          {{ row.months[month] != null ? fmtPct(row.months[month]) : '' }}
-                        </td>
-                      }
-                      <td class="year-total" [class]="getDrawdownClass(row.year_max)">
-                        {{ row.year_max != null ? fmtPct(row.year_max) : '' }}
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colspan="13" class="total-row">
-                      <span class="total-label">Max global:</span>
-                      <span class="total-value" [class]="getDrawdownClass(maxDrawdownTotal())">{{ fmtPct(maxDrawdownTotal()) }}</span>
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          }
-
-          <!-- YEARLY DRAWDOWN TABLE -->
-          @if (activeDrawdownPeriod() === 'year') {
-            <div class="drawdown-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Année</th>
-                    <th>Solde début</th>
-                    <th>Solde min</th>
-                    <th>Drawdown</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of yearlyDrawdown(); track row.year) {
-                    <tr>
-                      <td>{{ row.year }}</td>
-                      <td>{{ fmtCurrency(row.start_balance) }}</td>
-                      <td>{{ fmtCurrency(row.min_balance) }}</td>
-                      <td [class]="getDrawdownClass(row.drawdown_percent)">{{ fmtPct(row.drawdown_percent) }}</td>
-                    </tr>
-                  } @empty {
-                    <tr><td colspan="4" class="empty">Aucune donnée</td></tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
+                } @empty {
+                  <tr><td colspan="4" class="empty">Aucune donnée</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- DRAWDOWN HISTORY CHART -->
@@ -496,6 +396,7 @@
           </div>
         </div>
         <div class="chart-toggles">
+          <button [class.active]="activeChart() === 'all'" (click)="setChart('all')">All</button>
           <button [class.active]="activeChart() === 'growth'" (click)="setChart('growth')">Croissance</button>
           <button [class.active]="activeChart() === 'drawdown'" (click)="setChart('drawdown')">Prélèvement</button>
         </div>

@@ -116,28 +116,8 @@ export interface MonthlyGrowth {
   year_total_value: number | null;
 }
 
-export interface MonthlyDrawdown {
-  year: number;
-  months: Record<string, number | null>;
-  year_max: number | null;
-}
-
 export interface DailyDrawdown {
   date: string;
-  drawdown_percent: number;
-  start_balance: number;
-  min_balance: number;
-}
-
-export interface WeeklyDrawdown {
-  year: number;
-  week: number;
-  start_date: string;
-  drawdown_percent: number;
-}
-
-export interface YearlyDrawdown {
-  year: number;
   drawdown_percent: number;
   start_balance: number;
   min_balance: number;
@@ -190,10 +170,7 @@ export class Mt5Service {
   dashboard = signal<FullDashboard | null>(null);
   history = signal<HistoryPoint[]>([]);
   trades = signal<Trade[]>([]);
-  monthlyDrawdown = signal<MonthlyDrawdown[]>([]);
   dailyDrawdown = signal<DailyDrawdown[]>([]);
-  weeklyDrawdown = signal<WeeklyDrawdown[]>([]);
-  yearlyDrawdown = signal<YearlyDrawdown[]>([]);
   connectionStatus = signal<ConnectionStatus | null>(null);
   error = signal<string | null>(null);
   loading = signal<boolean>(false);
@@ -229,20 +206,8 @@ export class Mt5Service {
     return this.http.post(`${this.apiUrl}/reset-drawdown`, {});
   }
 
-  getMonthlyDrawdown(): Observable<MonthlyDrawdown[]> {
-    return this.http.get<MonthlyDrawdown[]>(`${this.apiUrl}/monthly-drawdown`);
-  }
-
   getDailyDrawdown(): Observable<DailyDrawdown[]> {
     return this.http.get<DailyDrawdown[]>(`${this.apiUrl}/daily-drawdown`);
-  }
-
-  getWeeklyDrawdown(): Observable<WeeklyDrawdown[]> {
-    return this.http.get<WeeklyDrawdown[]>(`${this.apiUrl}/weekly-drawdown`);
-  }
-
-  getYearlyDrawdown(): Observable<YearlyDrawdown[]> {
-    return this.http.get<YearlyDrawdown[]>(`${this.apiUrl}/yearly-drawdown`);
   }
 
   getSparklines(points = 20): Observable<SparklineData> {
@@ -274,10 +239,7 @@ export class Mt5Service {
     this.getHistory(3600).pipe(catchError(() => of([]))).subscribe(data => this.history.set(data));
     this.getStatus().pipe(catchError(() => of(null))).subscribe(data => { if (data) this.connectionStatus.set(data); });
     this.getTrades(365).pipe(catchError(() => of([]))).subscribe(data => this.trades.set(data));
-    this.getMonthlyDrawdown().pipe(catchError(() => of([]))).subscribe(data => this.monthlyDrawdown.set(data));
     this.getDailyDrawdown().pipe(catchError(() => of([]))).subscribe(data => this.dailyDrawdown.set(data));
-    this.getWeeklyDrawdown().pipe(catchError(() => of([]))).subscribe(data => this.weeklyDrawdown.set(data));
-    this.getYearlyDrawdown().pipe(catchError(() => of([]))).subscribe(data => this.yearlyDrawdown.set(data));
   }
 
   // Keep for backwards compatibility, just calls refresh once

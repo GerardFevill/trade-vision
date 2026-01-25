@@ -185,6 +185,18 @@ $bar-blue: #5ba4e6;
   height: 180px;
 }
 
+.sparkline-section {
+  width: 200px;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+}
+
+.sparkline-container {
+  width: 100%;
+  height: 80px;
+}
+
 .bars-section {
   flex: 1;
   display: flex;

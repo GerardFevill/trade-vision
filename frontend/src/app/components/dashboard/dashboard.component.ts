@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
-import { Mt5Service, HistoryPoint, DailyDrawdown, WeeklyDrawdown, MonthlyDrawdown, YearlyDrawdown } from '../../services/mt5.service';
+import { Mt5Service, HistoryPoint, DailyDrawdown } from '../../services/mt5.service';
 
 import {
   Chart, LineController, LineElement, PointElement,
@@ -17,10 +17,9 @@ Chart.register(
 );
 
 type TabType = 'account' | 'history' | 'statistics' | 'risks';
-type ChartMode = 'growth' | 'drawdown';
+type ChartMode = 'all' | 'growth' | 'drawdown';
 type MonthlyDisplayMode = 'percent' | 'value';
 type Timeframe = '1H' | '1D' | '1W' | '1M' | '1Y' | 'All';
-type DrawdownPeriod = 'day' | 'week' | 'month' | 'year';
 
 @Component({
   selector: 'app-dashboard',
@@ -31,19 +30,11 @@ type DrawdownPeriod = 'day' | 'week' | 'month' | 'year';
 })
 export class DashboardComponent implements OnInit {
   activeTab = signal<TabType>('account');
-  activeChart = signal<ChartMode>('growth');
+  activeChart = signal<ChartMode>('all');
   monthlyDisplayMode = signal<MonthlyDisplayMode>('percent');
-  activeTimeframe = signal<Timeframe>('1D');
-  activeDrawdownPeriod = signal<DrawdownPeriod>('month');
+  activeTimeframe = signal<Timeframe>('All');
 
   timeframes: Timeframe[] = ['1H', '1D', '1W', '1M', '1Y', 'All'];
-  drawdownPeriods: DrawdownPeriod[] = ['day', 'week', 'month', 'year'];
-  drawdownPeriodLabels: Record<DrawdownPeriod, string> = {
-    day: 'Jour',
-    week: 'Semaine',
-    month: 'Mois',
-    year: 'Année'
-  };
 
   loading = computed(() => this.mt5.loading());
   lastUpdate = computed(() => this.mt5.lastUpdate());
@@ -63,14 +54,16 @@ export class DashboardComponent implements OnInit {
       if (ts && r) this.updateRadar();
     });
 
-    // Update drawdown chart for risks tab - react to period changes
+    // Update drawdown chart for risks tab
     effect(() => {
-      const period = this.activeDrawdownPeriod();
       const daily = this.mt5.dailyDrawdown();
-      const weekly = this.mt5.weeklyDrawdown();
-      const monthly = this.mt5.monthlyDrawdown();
-      const yearly = this.mt5.yearlyDrawdown();
-      this.updateDrawdownChartByPeriod(period, daily, weekly, monthly, yearly);
+      this.updateDrawdownChart(daily);
+    });
+
+    // Update all-time sparkline
+    effect(() => {
+      const history = this.mt5.history();
+      if (history.length) this.updateSparkline(history);
     });
   }
 
@@ -87,12 +80,8 @@ export class DashboardComponent implements OnInit {
   isConnected = computed(() => this.status()?.connected ?? false);
 
   monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  weekNumbers = Array.from({ length: 52 }, (_, i) => i + 1);
   currency = computed(() => this.account()?.currency || 'EUR');
-  monthlyDrawdown = computed(() => this.mt5.monthlyDrawdown());
   dailyDrawdown = computed(() => this.mt5.dailyDrawdown());
-  weeklyDrawdown = computed(() => this.mt5.weeklyDrawdown());
-  yearlyDrawdown = computed(() => this.mt5.yearlyDrawdown());
 
   totalGrowth = computed(() => {
     const data = this.monthlyGrowth();
@@ -127,7 +116,21 @@ export class DashboardComponent implements OnInit {
     },
     scales: {
       x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 10 } },
-      y: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } } }
+      y: {
+        type: 'linear',
+        position: 'left',
+        grid: { color: '#1f1f1f' },
+        ticks: { color: '#22c55e', font: { size: 10 } },
+        title: { display: false }
+      },
+      y1: {
+        type: 'linear',
+        position: 'right',
+        grid: { drawOnChartArea: false },
+        ticks: { color: '#f59e0b', font: { size: 10 } },
+        title: { display: false },
+        reverse: true
+      }
     }
   };
 
@@ -157,6 +160,19 @@ export class DashboardComponent implements OnInit {
         max: 100
       }
     }
+  };
+
+  // All-time Sparkline (no axes)
+  sparklineData: ChartConfiguration['data'] = { labels: [], datasets: [] };
+  sparklineOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    scales: {
+      x: { display: false },
+      y: { display: false }
+    },
+    elements: { point: { radius: 0 } }
   };
 
   // Drawdown History Chart (for Risks tab)
@@ -195,10 +211,6 @@ export class DashboardComponent implements OnInit {
   setTimeframe(tf: Timeframe): void {
     this.activeTimeframe.set(tf);
     this.updateChart(this.mt5.history());
-  }
-
-  setDrawdownPeriod(period: DrawdownPeriod): void {
-    this.activeDrawdownPeriod.set(period);
   }
 
   refresh(): void {
@@ -245,8 +257,57 @@ export class DashboardComponent implements OnInit {
     const labels = filtered.map(h => new Date(h.timestamp).toLocaleString('fr-FR', formatOptions));
     const mode = this.activeChart();
 
-    if (mode === 'growth') {
-      // Affiche les deux courbes superposées: Solde (balance) et Fonds propres (equity)
+    if (mode === 'all') {
+      // Dual-axis: Growth (left) + Drawdown (right)
+      this.chartOptions = {
+        ...this.chartOptions,
+        scales: {
+          x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 10 } },
+          y: {
+            type: 'linear',
+            position: 'left',
+            grid: { color: '#1f1f1f' },
+            ticks: { color: '#22c55e', font: { size: 10 } }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#f59e0b', font: { size: 10 } },
+            reverse: true
+          }
+        }
+      };
+      this.chartData = {
+        labels,
+        datasets: [
+          {
+            label: 'Solde',
+            data: filtered.map(h => h.balance),
+            borderColor: '#22c55e',
+            backgroundColor: 'rgba(34,197,94,0.1)',
+            fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Prélèvement %',
+            data: filtered.map(h => h.drawdown_percent),
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245,158,11,0.1)',
+            fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2,
+            yAxisID: 'y1'
+          }
+        ]
+      };
+    } else if (mode === 'growth') {
+      // Single axis: Balance + Equity
+      this.chartOptions = {
+        ...this.chartOptions,
+        scales: {
+          x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 10 } },
+          y: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } } }
+        }
+      };
       this.chartData = {
         labels,
         datasets: [
@@ -267,6 +328,14 @@ export class DashboardComponent implements OnInit {
         ]
       };
     } else {
+      // Single axis: Drawdown only
+      this.chartOptions = {
+        ...this.chartOptions,
+        scales: {
+          x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 10 } },
+          y: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } }, reverse: true }
+        }
+      };
       this.chartData = {
         labels,
         datasets: [{
@@ -304,49 +373,36 @@ export class DashboardComponent implements OnInit {
     };
   }
 
-  updateDrawdownChartByPeriod(
-    period: DrawdownPeriod,
-    daily: DailyDrawdown[],
-    weekly: WeeklyDrawdown[],
-    monthly: MonthlyDrawdown[],
-    yearly: YearlyDrawdown[]
-  ): void {
-    let labels: string[] = [];
-    let data: number[] = [];
+  updateSparkline(history: HistoryPoint[]): void {
+    if (!history.length) return;
 
-    if (period === 'day' && daily.length) {
-      labels = daily.map(d => d.date);
-      data = daily.map(d => d.drawdown_percent);
-    } else if (period === 'week' && weekly.length) {
-      labels = weekly.map(w => `S${w.week} ${w.year}`);
-      data = weekly.map(w => w.drawdown_percent);
-    } else if (period === 'month' && monthly.length) {
-      // Flatten monthly data to show each month
-      for (const year of monthly) {
-        for (const month of this.monthNames) {
-          if (year.months[month] != null) {
-            labels.push(`${month} ${year.year}`);
-            data.push(year.months[month]!);
-          }
-        }
-      }
-    } else if (period === 'year' && yearly.length) {
-      labels = yearly.map(y => y.year.toString());
-      data = yearly.map(y => y.drawdown_percent);
-    }
+    // Use all history for sparkline
+    this.sparklineData = {
+      labels: history.map(() => ''),
+      datasets: [{
+        data: history.map(h => h.balance),
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34,197,94,0.2)',
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2
+      }]
+    };
+  }
 
-    if (!labels.length) return;
+  updateDrawdownChart(daily: DailyDrawdown[]): void {
+    if (!daily.length) return;
 
     this.drawdownChartData = {
-      labels,
+      labels: daily.map(d => d.date),
       datasets: [{
         label: 'Drawdown %',
-        data,
+        data: daily.map(d => d.drawdown_percent),
         borderColor: '#ef4444',
         backgroundColor: 'rgba(239,68,68,0.2)',
         fill: true,
         tension: 0.3,
-        pointRadius: period === 'year' ? 4 : 0,
+        pointRadius: 0,
         borderWidth: 2
       }]
     };
@@ -404,15 +460,4 @@ export class DashboardComponent implements OnInit {
     return 'dd-low';
   }
 
-  maxDrawdownTotal = computed(() => {
-    const data = this.monthlyDrawdown();
-    if (!data.length) return null;
-    let max = 0;
-    for (const year of data) {
-      if (year.year_max != null && year.year_max > max) {
-        max = year.year_max;
-      }
-    }
-    return max > 0 ? max : null;
-  });
 }
