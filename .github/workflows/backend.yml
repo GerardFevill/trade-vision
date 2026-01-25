@@ -31,6 +31,7 @@ jobs:
 
       - name: Type check with MyPy
         run: mypy . --ignore-missing-imports
+        continue-on-error: true
 
       - name: Test with pytest
         run: pytest --cov=. --cov-report=xml

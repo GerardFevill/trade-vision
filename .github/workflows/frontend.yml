@@ -31,7 +31,7 @@ jobs:
 
       - name: Check bundle size
         run: |
-          size=$(du -sk dist/trade-vision/browser | cut -f1)
+          size=$(du -sk dist/frontend/browser | cut -f1)
           echo "Bundle size: ${size}KB"
           if [ $size -gt 2048 ]; then
             echo "::warning::Bundle exceeds 2MB"
