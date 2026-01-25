@@ -99,3 +99,73 @@ async def get_account_balance_history(
     if not history:
         return []
     return history
+
+
+@router.post("/rebuild-all-sparklines")
+async def rebuild_all_sparklines():
+    """Reconstruit les sparklines depuis les deals MT5 pour tous les comptes"""
+    import MetaTrader5 as mt5
+    from datetime import datetime
+    from config import MT5_ACCOUNTS, MT5_TERMINALS
+
+    results = {}
+
+    for acc_config in MT5_ACCOUNTS:
+        account_id = acc_config["id"]
+        terminal_key = acc_config.get("terminal", "roboforex")
+        terminal_path = MT5_TERMINALS.get(terminal_key)
+
+        try:
+            # Se connecter au compte
+            mt5.shutdown()
+            init_params = {
+                "login": acc_config["id"],
+                "password": acc_config["password"],
+                "server": acc_config["server"],
+                "timeout": 60000
+            }
+            if terminal_path:
+                init_params["path"] = terminal_path
+
+            if not mt5.initialize(**init_params):
+                results[account_id] = {"status": "error", "message": str(mt5.last_error())}
+                continue
+
+            # Récupérer les deals
+            deals = mt5.history_deals_get(datetime(2000, 1, 1), datetime.now())
+            if not deals:
+                results[account_id] = {"status": "no_deals", "points": 0}
+                continue
+
+            # Calculer la balance au fil du temps
+            sorted_deals = sorted(deals, key=lambda d: d.time)
+            running_balance = 0.0
+            balance_points = []
+            last_date = None
+
+            for d in sorted_deals:
+                deal_time = datetime.fromtimestamp(d.time)
+                deal_date = deal_time.date()
+
+                if d.type == mt5.DEAL_TYPE_BALANCE:
+                    running_balance += d.profit
+                elif d.type in [mt5.DEAL_TYPE_BUY, mt5.DEAL_TYPE_SELL]:
+                    running_balance += d.profit + d.commission + d.swap
+
+                # Un point par jour
+                if last_date != deal_date and running_balance > 0:
+                    balance_points.append((deal_time, running_balance))
+                    last_date = deal_date
+
+            # Sauvegarder dans account_balance_history
+            points_saved = 0
+            for ts, balance in balance_points:
+                if account_balance_history.save_snapshot_at_time(account_id, balance, balance, ts):
+                    points_saved += 1
+
+            results[account_id] = {"status": "rebuilt", "points": points_saved}
+
+        except Exception as e:
+            results[account_id] = {"status": "error", "message": str(e)}
+
+    return results

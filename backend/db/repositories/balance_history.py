@@ -43,6 +43,25 @@ class AccountBalanceHistory:
             print(f"Erreur sauvegarde snapshot compte {account_id}: {e}")
             return False
 
+    def save_snapshot_at_time(self, account_id: int, balance: float, equity: float, timestamp: datetime) -> bool:
+        """Sauvegarde un snapshot à un timestamp spécifique (pour rebuild depuis deals)"""
+        try:
+            with get_connection() as conn:
+                with conn.cursor() as cur:
+                    # Arrondir au jour pour éviter les doublons
+                    rounded = timestamp.replace(hour=12, minute=0, second=0, microsecond=0)
+                    cur.execute("""
+                        INSERT INTO account_balance_history (account_id, timestamp, balance, equity)
+                        VALUES (%s, %s, %s, %s)
+                        ON CONFLICT (account_id, timestamp) DO UPDATE SET
+                            balance = EXCLUDED.balance,
+                            equity = EXCLUDED.equity
+                    """, (account_id, rounded, balance, equity))
+            return True
+        except Exception as e:
+            print(f"Erreur sauvegarde snapshot historique compte {account_id}: {e}")
+            return False
+
     def save_all_snapshots(self, accounts: list[AccountSummary]) -> bool:
         try:
             with get_connection() as conn:
