@@ -1,10 +1,21 @@
 """MT5 Connector Service - Core trading platform integration"""
-try:
-    import MetaTrader5 as mt5
+import os
+
+MT5_MODE = os.environ.get('MT5_MODE', 'direct')
+
+if MT5_MODE == 'bridge':
+    # Use bridge mode - connect to MT5 Bridge service on Windows host
+    from .mt5_bridge_client import mt5_bridge as mt5
     MT5_AVAILABLE = True
-except ImportError:
-    from . import mt5_mock as mt5
-    MT5_AVAILABLE = False
+else:
+    # Direct mode - use MetaTrader5 module directly
+    try:
+        import MetaTrader5 as mt5
+        MT5_AVAILABLE = True
+    except ImportError:
+        from . import mt5_mock as mt5
+        MT5_AVAILABLE = False
+
 from datetime import datetime, timedelta
 from collections import deque
 from models import (
