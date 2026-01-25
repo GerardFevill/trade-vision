@@ -1,9 +1,37 @@
 version: '3.8'
 
 services:
+  frontend:
+    image: amesika2/trade-vision-frontend:${VERSION:-latest}
+    container_name: trade-vision-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    environment:
+      - API_URL=http://backend:8000
+
+  backend:
+    image: amesika2/trade-vision-backend:${VERSION:-latest}
+    container_name: trade-vision-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://mt5user:mt5password@postgres:5432/mt5monitor
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=mt5user
+      - POSTGRES_PASSWORD=mt5password
+      - POSTGRES_DB=mt5monitor
+
   postgres:
     image: postgres:16-alpine
-    container_name: mt5-postgres
+    container_name: trade-vision-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: mt5user
