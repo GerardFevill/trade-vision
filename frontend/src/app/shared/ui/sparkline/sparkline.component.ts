@@ -1,14 +1,18 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
 
+/**
+ * Reusable sparkline chart component
+ * Displays a mini trend line based on array of values
+ */
 @Component({
   selector: 'app-sparkline',
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
   template: `
-    <div class="sparkline-wrapper" [style.height.px]="height">
+    <div class="sparkline-wrapper" [style.height.px]="height()">
       <canvas baseChart
         [type]="chartType"
         [data]="chartData"
@@ -28,11 +32,11 @@ import { ChartConfiguration, ChartType } from 'chart.js';
   `]
 })
 export class SparklineComponent implements OnChanges {
-  @Input() data: number[] = [];
-  @Input() height: number = 60;
-  @Input() color: string = '#22c55e';
-  @Input() fillColor: string = 'rgba(34, 197, 94, 0.2)';
-  @Input() showFill: boolean = true;
+  data = input<number[]>([]);
+  height = input<number>(60);
+  color = input<string>('#22c55e');
+  fillColor = input<string>('rgba(34, 197, 94, 0.2)');
+  showFill = input<boolean>(true);
 
   chartType: ChartType = 'line';
   chartData: ChartConfiguration['data'] = { labels: [], datasets: [] };
@@ -60,27 +64,27 @@ export class SparklineComponent implements OnChanges {
   }
 
   private updateChart(): void {
-    if (!this.data || this.data.length < 2) {
+    const dataValues = this.data();
+    if (!dataValues || dataValues.length < 2) {
       this.chartData = { labels: [], datasets: [] };
       return;
     }
 
-    // Determine color based on trend (if not explicitly set)
-    const trendColor = this.data[this.data.length - 1] >= this.data[0]
-      ? this.color
+    const trendColor = dataValues[dataValues.length - 1] >= dataValues[0]
+      ? this.color()
       : '#ef4444';
 
-    const trendFill = this.data[this.data.length - 1] >= this.data[0]
-      ? this.fillColor
+    const trendFill = dataValues[dataValues.length - 1] >= dataValues[0]
+      ? this.fillColor()
       : 'rgba(239, 68, 68, 0.2)';
 
     this.chartData = {
-      labels: this.data.map(() => ''),
+      labels: dataValues.map(() => ''),
       datasets: [{
-        data: this.data,
+        data: dataValues,
         borderColor: trendColor,
-        backgroundColor: this.showFill ? trendFill : 'transparent',
-        fill: this.showFill,
+        backgroundColor: this.showFill() ? trendFill : 'transparent',
+        fill: this.showFill(),
         tension: 0.4,
         borderWidth: 2,
         pointRadius: 0

@@ -1,0 +1,211 @@
+@use '../../styles/variables' as *;
+
+.accounts-page {
+  min-height: 100vh;
+  background: $bg-dark;
+  color: $text;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 24px;
+}
+
+.totals-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 24px;
+
+  .total-card {
+    flex: 1;
+    &.eur, &.usd { flex: 0 0 calc(50% - 10px); }
+    &.stats { flex: 0 0 100%; }
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    background: $bg-card;
+    border: 1px solid $border;
+    border-radius: 8px;
+
+    .total-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      i { font-size: 24px; color: #fff; }
+    }
+
+    &.eur .total-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    &.usd .total-icon { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    &.stats .total-icon { background: linear-gradient(135deg, $warning, #d97706); }
+
+    .total-info {
+      flex: 1;
+      .total-label { display: block; font-size: 12px; color: $text-muted; text-transform: uppercase; }
+      .total-value { display: block; font-size: 24px; font-weight: 700; color: $text; }
+      .total-details { display: flex; gap: 8px; font-size: 13px; }
+      .winrate-badge { display: flex; align-items: center; gap: 6px; color: $accent; i { color: $warning; } }
+    }
+  }
+}
+
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.account-card {
+  position: relative;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: $bg-card-hover;
+    border-color: $border-light;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  &.disconnected { opacity: 0.7; }
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid $border;
+  border-radius: 6px;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover { background: rgba(255,255,255,0.1); color: $warning; border-color: $warning; }
+  &.active { color: $warning; background: rgba($warning, 0.15); border-color: $warning; }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .account-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, $accent, #1d4ed8);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    i { font-size: 20px; color: #fff; }
+  }
+
+  .account-info {
+    flex: 1;
+    h3 { font-size: 16px; font-weight: 600; color: $text; margin: 0 0 2px 0; }
+    .account-id { font-size: 12px; color: $text-muted; }
+  }
+
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: $negative;
+    padding: 4px 10px;
+    background: rgba($negative, 0.1);
+    border-radius: 20px;
+    i { font-size: 8px; }
+    &.connected { color: $positive; background: rgba($positive, 0.1); }
+  }
+}
+
+.balance-badge {
+  text-align: center;
+  padding: 20px 16px;
+  margin-bottom: 16px;
+  background: $bg-input;
+  border-radius: 8px;
+  border: 1px solid $border;
+
+  .balance-value { display: block; font-size: 28px; font-weight: 700; color: $text; margin-bottom: 8px; }
+  .growth-small {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba($text-muted, 0.1);
+    i { font-size: 10px; }
+    &.positive { color: $positive; background: rgba($positive, 0.1); }
+    &.negative { color: $negative; background: rgba($negative, 0.1); }
+  }
+  .sparkline-container { margin-top: 12px; height: 80px; width: 100%; }
+}
+
+.card-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .stat-item {
+    background: rgba($bg-input, 0.5);
+    padding: 10px;
+    border-radius: 6px;
+    .stat-label { display: block; font-size: 10px; color: $text-muted; text-transform: uppercase; margin-bottom: 4px; }
+    .stat-value { font-size: 15px; font-weight: 600; color: $text; &.winrate { color: $accent; } }
+  }
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid $border;
+  .footer-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: $text-muted; i { font-size: 10px; } }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba($negative, 0.1);
+  border: 1px solid rgba($negative, 0.3);
+  border-radius: 8px;
+  color: $negative;
+  margin-bottom: 20px;
+}
+
+.loading-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: $text-muted;
+  i { font-size: 32px; margin-bottom: 16px; color: $accent; }
+  p { font-size: 14px; margin: 0; }
+}
+
+.positive { color: $positive !important; }
+.negative { color: $negative !important; }
+.dd-low { color: $positive !important; }
+.dd-moderate { color: $warning !important; }
+.dd-warning { color: #f97316 !important; }
+.dd-critical { color: $negative !important; }

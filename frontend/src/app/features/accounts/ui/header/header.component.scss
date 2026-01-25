@@ -1,0 +1,78 @@
+@use '../../styles/variables' as *;
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid $border;
+}
+
+.header-content {
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: $text;
+    margin: 0 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    i {
+      color: $accent;
+      font-size: 20px;
+    }
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+.header-actions {
+  .btn-refresh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: $accent;
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) { background: #2563eb; }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+    i { font-size: 12px; }
+  }
+}
+
+.header-stats {
+  display: flex;
+  gap: 32px;
+
+  .header-stat {
+    text-align: center;
+
+    .stat-value {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+      color: $text;
+
+      &.connected { color: $positive; }
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: $text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}

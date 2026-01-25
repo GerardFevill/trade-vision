@@ -1,0 +1,33 @@
+<div class="chart-section">
+  <div class="chart-header">
+    <div class="chart-stats">
+      <div class="chart-stat">
+        <span class="chart-stat-value" [class]="fmt.getProfitClass(stats()?.growth_percent)">
+          {{ fmt.formatPercent(stats()?.growth_percent) }}
+        </span>
+        <span class="chart-stat-label">Croissance</span>
+      </div>
+      <div class="chart-stat">
+        <span class="chart-stat-value">{{ fmt.formatCurrency(stats()?.total_deposits, currency()) }}</span>
+        <span class="chart-stat-label">Dépôts</span>
+      </div>
+      <div class="chart-stat">
+        <span class="chart-stat-value">{{ fmt.formatCurrency(stats()?.total_withdrawals, currency()) }}</span>
+        <span class="chart-stat-label">Retraits</span>
+      </div>
+    </div>
+    <div class="chart-toggles">
+      <button [class.active]="activeChart() === 'all'" (click)="onChartChange.emit('all')">All</button>
+      <button [class.active]="activeChart() === 'growth'" (click)="onChartChange.emit('growth')">Croissance</button>
+      <button [class.active]="activeChart() === 'drawdown'" (click)="onChartChange.emit('drawdown')">Prélèvement</button>
+    </div>
+  </div>
+  <div class="timeframe-bar">
+    @for (tf of timeframes; track tf) {
+      <button [class.active]="activeTimeframe() === tf" (click)="onTimeframeChange.emit(tf)">{{ tf }}</button>
+    }
+  </div>
+  <div class="chart-container">
+    <canvas baseChart [type]="chartType" [data]="chartData()" [options]="chartOptions()"></canvas>
+  </div>
+</div>

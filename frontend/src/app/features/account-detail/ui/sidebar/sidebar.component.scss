@@ -1,0 +1,135 @@
+@use '../../styles/variables' as *;
+
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  background: $bg-sidebar;
+  border-right: 1px solid $border;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid $border;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid $border;
+  color: $text-secondary;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+
+  i { font-size: 11px; }
+
+  &:hover {
+    background: $bg-input;
+    border-color: $border-light;
+    color: $text;
+  }
+}
+
+.sidebar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text;
+  i { color: $accent; margin-right: 8px; }
+}
+
+.stats-summary {
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 12px;
+
+    &.highlight {
+      margin-bottom: 8px;
+      .stat-value { font-size: 18px; font-weight: 600; }
+    }
+  }
+  .stat-label { color: $text-muted; }
+  .stat-value { color: $text; font-weight: 500; }
+}
+
+.account-info {
+  .broker-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: $bg-card;
+    border-radius: 4px;
+    font-size: 11px;
+    i { color: $positive; }
+    .leverage {
+      margin-left: auto;
+      color: $text-secondary;
+      background: $bg-input;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  }
+}
+
+.stats-secondary {
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 11px;
+  }
+  .stat-label { color: $text-muted; }
+  .stat-value { color: $text-secondary; }
+}
+
+.connection-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: $text-muted;
+  i { font-size: 8px; color: $negative; }
+  &.connected i { color: $positive; }
+}
+
+.refresh-section {
+  .btn-refresh {
+    width: 100%;
+    background: $accent;
+    border: none;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) { background: #2563eb; }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+    i { font-size: 12px; }
+  }
+
+  .last-update {
+    margin-top: 8px;
+    font-size: 10px;
+    color: $text-muted;
+    text-align: center;
+  }
+}
+
+.positive { color: $positive !important; }
+.negative { color: $negative !important; }

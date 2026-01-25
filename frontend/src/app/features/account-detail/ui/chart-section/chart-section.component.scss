@@ -1,0 +1,103 @@
+@use '../../styles/variables' as *;
+
+.chart-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid $border;
+  margin-top: auto;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid $border;
+}
+
+.chart-stats {
+  display: flex;
+  gap: 24px;
+
+  .chart-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .chart-stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: $text;
+  }
+
+  .chart-stat-label {
+    font-size: 10px;
+    color: $text-muted;
+    text-transform: uppercase;
+  }
+}
+
+.chart-toggles {
+  display: flex;
+  gap: 4px;
+
+  button {
+    background: $bg-input;
+    border: 1px solid $border;
+    color: $text-secondary;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover { border-color: $border-light; }
+    &.active {
+      background: $accent;
+      border-color: $accent;
+      color: #fff;
+    }
+  }
+}
+
+.timeframe-bar {
+  display: flex;
+  gap: 2px;
+  padding: 8px 20px;
+  background: $bg-sidebar;
+  border-bottom: 1px solid $border;
+  overflow-x: auto;
+
+  button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: $text-muted;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+      color: $text-secondary;
+      background: $bg-input;
+    }
+    &.active {
+      background: $accent;
+      color: #fff;
+      border-color: $accent;
+    }
+  }
+}
+
+.chart-container {
+  flex: 1;
+  min-height: 250px;
+  padding: 12px 20px;
+}
+
+.positive { color: $positive !important; }
+.negative { color: $negative !important; }

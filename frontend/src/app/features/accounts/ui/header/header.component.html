@@ -1,0 +1,25 @@
+<header class="page-header">
+  <div class="header-content">
+    <h1 class="page-title">
+      <i class="fa fa-chart-line"></i>
+      Mes Comptes MT5
+    </h1>
+    <p class="page-subtitle">Sélectionnez un compte pour voir les détails</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn-refresh" (click)="onRefresh.emit()" [disabled]="loading()">
+      <i class="fa fa-refresh" [class.fa-spin]="loading()"></i>
+      {{ loading() ? 'Chargement...' : 'Actualiser' }}
+    </button>
+  </div>
+  <div class="header-stats">
+    <div class="header-stat">
+      <span class="stat-value">{{ totalAccounts() }}</span>
+      <span class="stat-label">Comptes</span>
+    </div>
+    <div class="header-stat">
+      <span class="stat-value connected">{{ connectedCount() }}</span>
+      <span class="stat-label">Connectés</span>
+    </div>
+  </div>
+</header>

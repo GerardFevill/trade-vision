@@ -1,0 +1,42 @@
+<div class="mql-layout">
+  <!-- SIDEBAR -->
+  <app-account-detail-sidebar
+    [account]="account()"
+    [stats]="stats()"
+    [tradeStats]="tradeStats()"
+    [currency]="currency()"
+    [isConnected]="isConnected()"
+    [loading]="loading()"
+    [lastUpdate]="lastUpdate()"
+    (onBack)="goBack()"
+    (onRefresh)="refresh()"
+  />
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- TABS -->
+    <nav class="tabs-nav">
+      <button [class.active]="activeTab() === 'account'" (click)="setTab('account')">Compte</button>
+      <button [class.active]="activeTab() === 'history'" (click)="setTab('history')">Historique</button>
+      <button [class.active]="activeTab() === 'statistics'" (click)="setTab('statistics')">Statistiques</button>
+      <button [class.active]="activeTab() === 'risks'" (click)="setTab('risks')">Risques</button>
+    </nav>
+
+    <!-- TAB CONTENT -->
+    <div class="tab-content">
+      <!-- Content rendered based on activeTab -->
+    </div>
+
+    <!-- CHART SECTION -->
+    <app-chart-section
+      [stats]="stats()"
+      [currency]="currency()"
+      [activeChart]="activeChart()"
+      [activeTimeframe]="activeTimeframe()"
+      [chartData]="chartData()"
+      [chartOptions]="chartOptions()"
+      (onChartChange)="setChart($event)"
+      (onTimeframeChange)="setTimeframe($event)"
+    />
+  </main>
+</div>

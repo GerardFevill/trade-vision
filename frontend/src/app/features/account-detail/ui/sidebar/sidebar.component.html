@@ -1,0 +1,86 @@
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <button class="btn-back" (click)="onBack.emit()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Mes Comptes
+    </button>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title"><i class="fa-solid fa-chart-line"></i> MT5 Monitor</div>
+  </div>
+
+  <div class="sidebar-section stats-summary">
+    <div class="stat-row highlight">
+      <span class="stat-label">Croissance</span>
+      <span class="stat-value" [class]="fmt.getProfitClass(stats()?.growth_percent)">
+        {{ fmt.formatPercent(stats()?.growth_percent) }}
+      </span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Profit</span>
+      <span class="stat-value">{{ fmt.formatCurrency(tradeStats()?.gross_profit, currency()) }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Fonds propres</span>
+      <span class="stat-value">{{ fmt.formatCurrency(stats()?.equity, currency()) }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Solde</span>
+      <span class="stat-value">{{ fmt.formatCurrency(stats()?.balance, currency()) }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Dépôt initial</span>
+      <span class="stat-value">{{ fmt.formatCurrency(stats()?.initial_deposit, currency()) }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Retraits</span>
+      <span class="stat-value">{{ fmt.formatCurrency(stats()?.total_withdrawals, currency()) }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Dépôts</span>
+      <span class="stat-value">{{ fmt.formatCurrency(stats()?.total_deposits, currency()) }}</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section account-info">
+    <div class="broker-badge">
+      <i class="fa-solid fa-building"></i>
+      <span>{{ account()?.server }}</span>
+      <span class="leverage">1:{{ account()?.leverage }}</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section stats-secondary">
+    <div class="stat-row">
+      <span class="stat-label">Total trades</span>
+      <span class="stat-value">{{ tradeStats()?.total_trades }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Dernier trade</span>
+      <span class="stat-value">{{ fmt.formatDate(stats()?.timestamp) }}</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Temps moyen</span>
+      <span class="stat-value">{{ fmt.formatTime(tradeStats()?.avg_holding_time_seconds) }}</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="connection-badge" [class.connected]="isConnected()">
+      <i class="fa-solid fa-circle"></i>
+      <span>{{ isConnected() ? 'Connecté' : 'Déconnecté' }}</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section refresh-section">
+    <button class="btn-refresh" (click)="onRefresh.emit()" [disabled]="loading()">
+      <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
+      {{ loading() ? 'Chargement...' : 'Actualiser' }}
+    </button>
+    @if (lastUpdate()) {
+      <div class="last-update">
+        Mis à jour: {{ lastUpdate() | date:'HH:mm:ss' }}
+      </div>
+    }
+  </div>
+</aside>

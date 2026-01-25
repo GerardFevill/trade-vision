@@ -1,9 +1,21 @@
 import { Routes } from '@angular/router';
-import { AccountsListComponent } from './components/accounts-list/accounts-list.component';
-import { DashboardComponent } from './components/dashboard/dashboard.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/accounts', pathMatch: 'full' },
-  { path: 'accounts', component: AccountsListComponent },
-  { path: 'dashboard/:id', component: DashboardComponent },
+  {
+    path: '',
+    redirectTo: '/accounts',
+    pathMatch: 'full'
+  },
+  {
+    path: 'accounts',
+    loadChildren: () =>
+      import('./features/accounts/accounts.routes').then(m => m.ACCOUNTS_ROUTES),
+    title: 'Comptes MT5'
+  },
+  {
+    path: 'accounts/:id',
+    loadChildren: () =>
+      import('./features/account-detail/account-detail.routes').then(m => m.ACCOUNT_DETAIL_ROUTES),
+    title: 'Détails du compte'
+  }
 ];
