@@ -1,0 +1,65 @@
+name: Create Release
+
+on:
+  workflow_run:
+    workflows: ["Frontend CI", "Backend CI"]
+    types: [completed]
+    branches: [master]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(cat VERSION | tr -d '\n')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if release exists
+        id: check
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        if: steps.check.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          body: |
+            ## Docker Images
+
+            ```bash
+            docker pull amesika2/trade-vision-frontend:${{ steps.version.outputs.version }}
+            docker pull amesika2/trade-vision-backend:${{ steps.version.outputs.version }}
+            ```
+
+            ## Quick Start
+
+            ```bash
+            VERSION=${{ steps.version.outputs.version }} docker-compose up -d
+            ```
+
+            - Frontend: http://localhost:10003
+            - Backend API: http://localhost:10004
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "### Release v${{ steps.version.outputs.version }} :tada:" >> $GITHUB_STEP_SUMMARY
