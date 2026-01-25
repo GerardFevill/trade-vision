@@ -4,6 +4,8 @@ __pycache__/
 *.pyo
 *.db
 .env
+logs/
+nul
 
 # Credentials - NE JAMAIS COMMITTER
 accounts_config.py
