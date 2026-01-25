@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from collections import deque
 from models import (
     AccountInfo, AccountStats, TradeStats, RiskMetrics,
-    Trade, Position, HistoryPoint, ConnectionStatus, FullDashboard, MonthlyGrowth, MonthlyDrawdown,
-    DailyDrawdown, WeeklyDrawdown, YearlyDrawdown, AccountSummary
+    Trade, Position, HistoryPoint, ConnectionStatus, FullDashboard, MonthlyGrowth,
+    DailyDrawdown, AccountSummary
 )
 from db import history_db, accounts_cache, account_balance_history, monthly_growth_cache
 from config import MT5_ACCOUNTS, MT5_TERMINALS
@@ -614,54 +614,6 @@ class MT5Connector:
 
         return result
 
-    def get_monthly_drawdown(self) -> list[MonthlyDrawdown]:
-        """Retourne le MAX des drawdowns journaliers par mois"""
-        # Récupérer les DD journaliers
-        daily_dd = self.get_daily_drawdown()
-        if not daily_dd:
-            return []
-
-        from datetime import datetime as dt
-
-        # Grouper par mois
-        monthly_max: dict[tuple[int, int], float] = {}  # (year, month) -> max drawdown %
-
-        for d in daily_dd:
-            date_obj = dt.strptime(d.date, '%Y-%m-%d')
-            key = (date_obj.year, date_obj.month)
-            if key not in monthly_max or d.drawdown_percent > monthly_max[key]:
-                monthly_max[key] = d.drawdown_percent
-
-        if not monthly_max:
-            return []
-
-        # Get all years
-        years = sorted(set(k[0] for k in monthly_max.keys()))
-        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        result = []
-
-        for year in years:
-            months_dict: dict[str, float | None] = {}
-            year_max_dd = 0.0
-
-            for month_idx, month_name in enumerate(month_names, 1):
-                key = (year, month_idx)
-                if key in monthly_max:
-                    dd = round(monthly_max[key], 2)
-                    months_dict[month_name] = dd
-                    if dd > year_max_dd:
-                        year_max_dd = dd
-                else:
-                    months_dict[month_name] = None
-
-            result.append(MonthlyDrawdown(
-                year=year,
-                months=months_dict,
-                year_max=round(year_max_dd, 2) if year_max_dd > 0 else None
-            ))
-
-        return result
-
     def get_daily_drawdown(self) -> list[DailyDrawdown]:
         """Retourne le drawdown journalier (depuis le solde de début de journée)"""
         history = list(self.history)
@@ -708,79 +660,6 @@ class MT5Connector:
             ))
 
             prev_day_end_balance = points[-1].balance
-
-        return result
-
-    def get_weekly_drawdown(self) -> list[WeeklyDrawdown]:
-        """Retourne le MAX des drawdowns journaliers par semaine"""
-        # Récupérer les DD journaliers
-        daily_dd = self.get_daily_drawdown()
-        if not daily_dd:
-            return []
-
-        # Grouper par semaine
-        from datetime import datetime as dt
-        weekly_max: dict[tuple[int, int], tuple[float, str]] = {}  # (year, week) -> (max_dd, start_date)
-
-        for d in daily_dd:
-            date_obj = dt.strptime(d.date, '%Y-%m-%d')
-            year, week, _ = date_obj.isocalendar()
-            key = (year, week)
-
-            if key not in weekly_max:
-                weekly_max[key] = (d.drawdown_percent, d.date)
-            else:
-                current_max, current_date = weekly_max[key]
-                if d.drawdown_percent > current_max:
-                    weekly_max[key] = (d.drawdown_percent, current_date)
-                # Garder la première date de la semaine
-                if d.date < current_date:
-                    weekly_max[key] = (weekly_max[key][0], d.date)
-
-        result = []
-        for (year, week), (max_dd, start_date) in sorted(weekly_max.items()):
-            result.append(WeeklyDrawdown(
-                year=year,
-                week=week,
-                start_date=start_date,
-                drawdown_percent=round(max_dd, 2)
-            ))
-
-        return result
-
-    def get_yearly_drawdown(self) -> list[YearlyDrawdown]:
-        """Retourne le MAX des drawdowns journaliers par année"""
-        # Récupérer les DD journaliers
-        daily_dd = self.get_daily_drawdown()
-        if not daily_dd:
-            return []
-
-        from datetime import datetime as dt
-
-        # Grouper par année
-        yearly_data: dict[int, list[DailyDrawdown]] = {}
-        for d in daily_dd:
-            date_obj = dt.strptime(d.date, '%Y-%m-%d')
-            year = date_obj.year
-            if year not in yearly_data:
-                yearly_data[year] = []
-            yearly_data[year].append(d)
-
-        result = []
-        sorted_years = sorted(yearly_data.keys())
-
-        for year in sorted_years:
-            days = yearly_data[year]
-            max_dd = max(d.drawdown_percent for d in days)
-            start_balance = days[0].start_balance
-            min_balance = min(d.min_balance for d in days)
-
-            result.append(YearlyDrawdown(
-                year=year,
-                drawdown_percent=round(max_dd, 2),
-                start_balance=round(start_balance, 2),
-                min_balance=round(min_balance, 2)
-            ))
 
         return result
 

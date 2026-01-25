@@ -109,28 +109,8 @@ class MonthlyGrowth(BaseModel):
     year_total_value: float | None
 
 
-class MonthlyDrawdown(BaseModel):
-    year: int
-    months: dict[str, float | None]  # Jan -> Dec max drawdown %
-    year_max: float | None  # Max drawdown of the year
-
-
 class DailyDrawdown(BaseModel):
     date: str  # YYYY-MM-DD
-    drawdown_percent: float
-    start_balance: float
-    min_balance: float
-
-
-class WeeklyDrawdown(BaseModel):
-    year: int
-    week: int  # Week number 1-52
-    start_date: str
-    drawdown_percent: float
-
-
-class YearlyDrawdown(BaseModel):
-    year: int
     drawdown_percent: float
     start_balance: float
     min_balance: float

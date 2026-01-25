@@ -1,34 +1,16 @@
-"""Drawdown routes - all drawdown endpoints, sparklines, monthly growth"""
+"""Drawdown routes - daily drawdown, sparklines, monthly growth"""
 from fastapi import APIRouter, Query, Path
 from services import mt5_connector
 from db import account_balance_history
-from models import MonthlyDrawdown, DailyDrawdown, WeeklyDrawdown, YearlyDrawdown
+from models import DailyDrawdown
 
 router = APIRouter()
-
-
-@router.get("/monthly-drawdown", response_model=list[MonthlyDrawdown])
-async def get_monthly_drawdown():
-    """Get monthly drawdown data"""
-    return mt5_connector.get_monthly_drawdown()
 
 
 @router.get("/daily-drawdown", response_model=list[DailyDrawdown])
 async def get_daily_drawdown():
     """Get daily drawdown data"""
     return mt5_connector.get_daily_drawdown()
-
-
-@router.get("/weekly-drawdown", response_model=list[WeeklyDrawdown])
-async def get_weekly_drawdown():
-    """Get weekly drawdown data"""
-    return mt5_connector.get_weekly_drawdown()
-
-
-@router.get("/yearly-drawdown", response_model=list[YearlyDrawdown])
-async def get_yearly_drawdown():
-    """Get yearly drawdown data"""
-    return mt5_connector.get_yearly_drawdown()
 
 
 @router.post("/reset-drawdown")
