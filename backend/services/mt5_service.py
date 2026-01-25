@@ -1,5 +1,10 @@
 """MT5 Connector Service - Core trading platform integration"""
-import MetaTrader5 as mt5
+try:
+    import MetaTrader5 as mt5
+    MT5_AVAILABLE = True
+except ImportError:
+    from . import mt5_mock as mt5
+    MT5_AVAILABLE = False
 from datetime import datetime, timedelta
 from collections import deque
 from models import (
