@@ -9,6 +9,7 @@ from models import (
 )
 from db import history_db, accounts_cache, account_balance_history, monthly_growth_cache
 from config import MT5_ACCOUNTS, MT5_TERMINALS
+from config.logging import logger
 
 
 class MT5Connector:
@@ -42,10 +43,10 @@ class MT5Connector:
             # Ne pas restaurer max_drawdown - le recalculer depuis les données actuelles
             self.max_drawdown = 0.0
             self.max_drawdown_percent = 0.0
-            print(f"Historique chargé pour compte {account_id}: {len(db_history)} points")
+            logger.info("History loaded for account", account_id=account_id, points=len(db_history))
         else:
             # Pas d'historique - commencer frais avec les valeurs actuelles
-            print(f"Pas d'historique pour compte {account_id}, démarrage à zéro")
+            logger.info("No history for account, starting fresh", account_id=account_id)
             info = mt5.account_info()
             if info:
                 self.peak_balance = info.balance
@@ -69,7 +70,7 @@ class MT5Connector:
             if MT5_ACCOUNTS:
                 account_id = MT5_ACCOUNTS[0]["id"]
             else:
-                print("Aucun compte configuré")
+                logger.warning("No accounts configured")
                 return False
 
         # Trouver le compte dans la config
@@ -80,7 +81,7 @@ class MT5Connector:
                 break
 
         if not account_config:
-            print(f"Compte {account_id} non trouvé dans la config")
+            logger.error("Account not found in config", account_id=account_id)
             return False
 
         terminal_key = account_config.get("terminal", "roboforex")
@@ -105,11 +106,11 @@ class MT5Connector:
 
             if mt5.initialize(**init_params):
                 # Connexion réussie
-                print(f"MT5 connecté au compte {account_id} ({account_config['server']})")
+                logger.info("MT5 connected to account", account_id=account_id, server=account_config['server'])
                 break
             else:
                 error = mt5.last_error()
-                print(f"Échec connexion MT5 compte {account_id} (tentative {attempt + 1}/{retries + 1}): {error}")
+                logger.warning("MT5 connection failed", account_id=account_id, attempt=attempt + 1, max_attempts=retries + 1, error=str(error))
                 if attempt < retries:
                     time.sleep(2)
                     continue
@@ -527,7 +528,7 @@ class MT5Connector:
         if drawdown_pct > self.max_drawdown_percent:
             self.max_drawdown_percent = drawdown_pct
 
-        print(f"Historique reconstruit: {points_added} points depuis les deals MT5")
+        logger.info("History rebuilt from MT5 deals", points_added=points_added)
         return points_added
 
     def get_monthly_growth(self) -> list[MonthlyGrowth]:
@@ -784,7 +785,7 @@ class MT5Connector:
                 ))
 
             except Exception as e:
-                print(f"Erreur pour compte {account_id}: {e}")
+                logger.error("Error for account", account_id=account_id, error=str(e))
                 summaries.append(AccountSummary(
                     id=account_id,
                     name=account_name,
@@ -821,10 +822,10 @@ class MT5Connector:
         if use_cache and monthly_growth_cache.is_valid(cache_max_age_hours):
             cached = monthly_growth_cache.load()
             if cached:
-                print("Croissance mensuelle chargée depuis le cache")
+                logger.debug("Monthly growth loaded from cache")
                 return cached
 
-        print("Calcul de la croissance mensuelle...")
+        logger.info("Calculating monthly growth")
         from collections import defaultdict
 
         # Structure: {(year, month): {'profit_eur': 0, 'profit_usd': 0, 'deposit_eur': 0, 'deposit_usd': 0}}
@@ -872,7 +873,7 @@ class MT5Connector:
                         running_balance += profit
 
             except Exception as e:
-                print(f"Erreur croissance mensuelle compte {account_id}: {e}")
+                logger.error("Monthly growth error for account", account_id=account_id, error=str(e))
 
         # Convertir en liste triée
         month_names = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
@@ -909,7 +910,7 @@ class MT5Connector:
         # Sauvegarder dans le cache
         if result:
             monthly_growth_cache.save(result)
-            print(f"Croissance mensuelle sauvegardée ({len(result)} années)")
+            logger.info("Monthly growth saved", years_count=len(result))
 
         return result
 

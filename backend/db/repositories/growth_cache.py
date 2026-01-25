@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from typing import Optional
 from ..connection import get_connection
+from config.logging import logger
 
 
 class MonthlyGrowthCache:

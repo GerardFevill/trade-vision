@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from ..connection import get_connection
 from models import HistoryPoint
+from config.logging import logger
 
 
 class HistoryDatabase:

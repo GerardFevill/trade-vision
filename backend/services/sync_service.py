@@ -5,6 +5,7 @@ from typing import Optional
 from config import MT5_ACCOUNTS, MT5_TERMINALS
 from db import account_stats_repo, accounts_cache, account_balance_history
 from models import AccountSummary
+from config.logging import logger
 
 
 class SyncService:
@@ -38,15 +39,15 @@ class SyncService:
         """
         # Vérifier si changement nécessaire
         if not force and not self.has_changes(account_id):
-            print(f"Compte {account_id}: pas de changement")
+            logger.debug("Account has no changes", account_id=account_id)
             return False
 
-        print(f"Compte {account_id}: synchronisation...")
+        logger.info("Syncing account", account_id=account_id)
 
         # Récupérer les infos du compte
         info = mt5.account_info()
         if not info:
-            print(f"Compte {account_id}: impossible de récupérer les infos")
+            logger.error("Cannot retrieve account info", account_id=account_id)
             return False
 
         # Récupérer les deals
@@ -176,7 +177,7 @@ class SyncService:
         account_stats_repo.save_trades(account_id, trades_list[-100:])
 
         self.last_sync[account_id] = datetime.now()
-        print(f"Compte {account_id}: sync terminée ({total_trades} trades)")
+        logger.info("Account sync completed", account_id=account_id, total_trades=total_trades)
         return True
 
     def _calc_consecutive_wins(self, profits: list) -> int:

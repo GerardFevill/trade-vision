@@ -2,6 +2,7 @@
 from datetime import datetime
 from typing import Optional
 from ..connection import get_connection
+from config.logging import logger
 
 
 class AccountStatsRepository:
@@ -147,7 +148,7 @@ class AccountStatsRepository:
                     ))
             return True
         except Exception as e:
-            print(f"Erreur sauvegarde account_stats: {e}")
+            logger.error("Error saving account_stats", error=str(e))
             return False
 
     def get_account_stats(self, account_id: int) -> Optional[dict]:
@@ -174,7 +175,7 @@ class AccountStatsRepository:
                             'name': row[15], 'last_deal_id': row[16], 'updated_at': row[17]
                         }
         except Exception as e:
-            print(f"Erreur lecture account_stats: {e}")
+            logger.error("Error reading account_stats", error=str(e))
         return None
 
     def get_last_deal_id(self, account_id: int) -> int:
@@ -237,7 +238,7 @@ class AccountStatsRepository:
                     ))
             return True
         except Exception as e:
-            print(f"Erreur sauvegarde trade_stats: {e}")
+            logger.error("Error saving trade_stats", error=str(e))
             return False
 
     def get_trade_stats(self, account_id: int) -> Optional[dict]:
@@ -268,7 +269,7 @@ class AccountStatsRepository:
                             'expected_payoff': row[18], 'updated_at': row[19]
                         }
         except Exception as e:
-            print(f"Erreur lecture trade_stats: {e}")
+            logger.error("Error reading trade_stats", error=str(e))
         return None
 
     def save_risk_metrics(self, account_id: int, metrics: dict) -> bool:
@@ -303,7 +304,7 @@ class AccountStatsRepository:
                     ))
             return True
         except Exception as e:
-            print(f"Erreur sauvegarde risk_metrics: {e}")
+            logger.error("Error saving risk_metrics", error=str(e))
             return False
 
     def get_risk_metrics(self, account_id: int) -> Optional[dict]:
@@ -327,7 +328,7 @@ class AccountStatsRepository:
                             'current_drawdown_percent': row[8], 'updated_at': row[9]
                         }
         except Exception as e:
-            print(f"Erreur lecture risk_metrics: {e}")
+            logger.error("Error reading risk_metrics", error=str(e))
         return None
 
     def save_trades(self, account_id: int, trades: list) -> bool:
@@ -350,7 +351,7 @@ class AccountStatsRepository:
                         ))
             return True
         except Exception as e:
-            print(f"Erreur sauvegarde trades: {e}")
+            logger.error("Error saving trades", error=str(e))
             return False
 
     def get_trades(self, account_id: int, limit: int = 100) -> list:
@@ -376,7 +377,7 @@ class AccountStatsRepository:
                         for row in cur.fetchall()
                     ]
         except Exception as e:
-            print(f"Erreur lecture trades: {e}")
+            logger.error("Error reading trades", error=str(e))
             return []
 
 

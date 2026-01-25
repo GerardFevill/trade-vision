@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 from ..connection import get_connection
 from models import AccountSummary
+from config.logging import logger
 
 
 class AccountsCache:
@@ -68,7 +69,7 @@ class AccountsCache:
                         ))
             return True
         except Exception as e:
-            print(f"Erreur sauvegarde cache comptes: {e}")
+            logger.error("Error saving accounts cache", error=str(e))
             return False
 
     def load_accounts(self) -> list[AccountSummary]:
@@ -91,7 +92,7 @@ class AccountsCache:
                         for row in cur.fetchall()
                     ]
         except Exception as e:
-            print(f"Erreur chargement cache comptes: {e}")
+            logger.error("Error loading accounts cache", error=str(e))
             return []
 
     def get_last_update(self) -> Optional[datetime]:

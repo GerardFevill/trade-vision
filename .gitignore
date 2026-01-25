@@ -7,6 +7,8 @@ __pycache__/
 
 # Credentials - NE JAMAIS COMMITTER
 accounts_config.py
+accounts_local.py
+backend/config/accounts_local.py
 
 # Node
 node_modules/

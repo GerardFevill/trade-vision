@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from ..connection import get_connection
 from models import AccountSummary
+from config.logging import logger
 
 
 class AccountBalanceHistory:
@@ -40,7 +41,7 @@ class AccountBalanceHistory:
                     """, (account_id, rounded, balance, equity))
             return True
         except Exception as e:
-            print(f"Erreur sauvegarde snapshot compte {account_id}: {e}")
+            logger.error("Error saving snapshot", account_id=account_id, error=str(e))
             return False
 
     def save_snapshot_at_time(self, account_id: int, balance: float, equity: float, timestamp: datetime) -> bool:
@@ -59,7 +60,7 @@ class AccountBalanceHistory:
                     """, (account_id, rounded, balance, equity))
             return True
         except Exception as e:
-            print(f"Erreur sauvegarde snapshot historique compte {account_id}: {e}")
+            logger.error("Error saving historical snapshot", account_id=account_id, error=str(e))
             return False
 
     def save_all_snapshots(self, accounts: list[AccountSummary]) -> bool:
@@ -79,7 +80,7 @@ class AccountBalanceHistory:
                             """, (acc.id, rounded, acc.balance, acc.equity))
             return True
         except Exception as e:
-            print(f"Erreur sauvegarde snapshots: {e}")
+            logger.error("Error saving snapshots", error=str(e))
             return False
 
     def get_history(self, account_id: int, days: int = 30) -> list[dict]:
@@ -98,7 +99,7 @@ class AccountBalanceHistory:
                         for row in cur.fetchall()
                     ]
         except Exception as e:
-            print(f"Erreur chargement historique compte {account_id}: {e}")
+            logger.error("Error loading account history", account_id=account_id, error=str(e))
             return []
 
     def get_all_accounts_history(self, days: int = 30) -> dict[int, list[dict]]:
@@ -125,7 +126,7 @@ class AccountBalanceHistory:
                         })
                     return result
         except Exception as e:
-            print(f"Erreur chargement historiques: {e}")
+            logger.error("Error loading histories", error=str(e))
             return {}
 
     def get_sparkline_data(self, account_id: int, points: int = 20) -> list[float]:
@@ -141,7 +142,7 @@ class AccountBalanceHistory:
                     """, (account_id, points))
                     return [row[0] for row in cur.fetchall()][::-1]
         except Exception as e:
-            print(f"Erreur sparkline compte {account_id}: {e}")
+            logger.error("Error getting sparkline", account_id=account_id, error=str(e))
             return []
 
     def get_all_sparklines(self, points: int = 20) -> dict[int, list[float]]:
@@ -163,7 +164,7 @@ class AccountBalanceHistory:
                         result[acc_id] = [row[0] for row in cur.fetchall()][::-1]
                     return result
         except Exception as e:
-            print(f"Erreur chargement sparklines: {e}")
+            logger.error("Error loading sparklines", error=str(e))
             return {}
 
     def cleanup_old_data(self, keep_days: int = 90):
@@ -173,4 +174,4 @@ class AccountBalanceHistory:
                 with conn.cursor() as cur:
                     cur.execute("DELETE FROM account_balance_history WHERE timestamp < %s", (cutoff,))
         except Exception as e:
-            print(f"Erreur nettoyage données: {e}")
+            logger.error("Error cleaning up data", error=str(e))
