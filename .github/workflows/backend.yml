@@ -27,7 +27,7 @@ jobs:
       - run: pip install -r requirements-ci.txt -r requirements-dev.txt
 
       - name: Lint with Ruff
-        run: ruff check .
+        run: ruff check . --output-format=github
 
       - name: Type check with MyPy
         run: mypy . --ignore-missing-imports
