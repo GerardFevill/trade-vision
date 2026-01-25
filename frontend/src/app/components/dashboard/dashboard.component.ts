@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
 import { Mt5Service, HistoryPoint, DailyDrawdown } from '../../services/mt5.service';
+import { SparklineComponent } from '../sparkline/sparkline.component';
 
 import {
   Chart, LineController, LineElement, PointElement,
@@ -24,7 +25,7 @@ type Timeframe = '1H' | '1D' | '1W' | '1M' | '1Y' | 'All';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective],
+  imports: [CommonModule, BaseChartDirective, SparklineComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -60,11 +61,6 @@ export class DashboardComponent implements OnInit {
       this.updateDrawdownChart(daily);
     });
 
-    // Update all-time sparkline
-    effect(() => {
-      const history = this.mt5.history();
-      if (history.length) this.updateSparkline(history);
-    });
   }
 
   dashboard = computed(() => this.mt5.dashboard());
@@ -82,6 +78,9 @@ export class DashboardComponent implements OnInit {
   monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   currency = computed(() => this.account()?.currency || 'EUR');
   dailyDrawdown = computed(() => this.mt5.dailyDrawdown());
+
+  // Sparkline data - same source as accounts list
+  sparklineData = computed(() => this.mt5.sparkline());
 
   totalGrowth = computed(() => {
     const data = this.monthlyGrowth();
@@ -160,19 +159,6 @@ export class DashboardComponent implements OnInit {
         max: 100
       }
     }
-  };
-
-  // All-time Sparkline (no axes)
-  sparklineData: ChartConfiguration['data'] = { labels: [], datasets: [] };
-  sparklineOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-    scales: {
-      x: { display: false },
-      y: { display: false }
-    },
-    elements: { point: { radius: 0 } }
   };
 
   // Drawdown History Chart (for Risks tab)
@@ -369,23 +355,6 @@ export class DashboardComponent implements OnInit {
         borderColor: '#3b82f6',
         borderWidth: 2,
         pointBackgroundColor: '#3b82f6'
-      }]
-    };
-  }
-
-  updateSparkline(history: HistoryPoint[]): void {
-    if (!history.length) return;
-
-    // Use all history for sparkline
-    this.sparklineData = {
-      labels: history.map(() => ''),
-      datasets: [{
-        data: history.map(h => h.balance),
-        borderColor: '#22c55e',
-        backgroundColor: 'rgba(34,197,94,0.2)',
-        fill: true,
-        tension: 0.4,
-        borderWidth: 2
       }]
     };
   }

@@ -98,9 +98,7 @@
 
       <!-- ALL-TIME SPARKLINE -->
       <div class="sparkline-section">
-        <div class="sparkline-container">
-          <canvas baseChart [type]="'line'" [data]="sparklineData" [options]="sparklineOptions"></canvas>
-        </div>
+        <app-sparkline [data]="sparklineData()" [height]="80"></app-sparkline>
       </div>
 
       <!-- PROGRESS BARS -->

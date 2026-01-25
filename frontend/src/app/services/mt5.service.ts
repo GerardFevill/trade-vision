@@ -172,6 +172,7 @@ export class Mt5Service {
   trades = signal<Trade[]>([]);
   dailyDrawdown = signal<DailyDrawdown[]>([]);
   connectionStatus = signal<ConnectionStatus | null>(null);
+  sparkline = signal<number[]>([]);
   error = signal<string | null>(null);
   loading = signal<boolean>(false);
   lastUpdate = signal<Date | null>(null);
@@ -237,7 +238,18 @@ export class Mt5Service {
     });
 
     this.getHistory(3600).pipe(catchError(() => of([]))).subscribe(data => this.history.set(data));
-    this.getStatus().pipe(catchError(() => of(null))).subscribe(data => { if (data) this.connectionStatus.set(data); });
+    this.getStatus().pipe(catchError(() => of(null))).subscribe(data => {
+      if (data) {
+        this.connectionStatus.set(data);
+        // Load sparkline for current account
+        if (data.account) {
+          this.getSparklines(100).pipe(catchError(() => of({} as SparklineData))).subscribe(sparklines => {
+            const accountSparkline = sparklines[data.account!];
+            if (accountSparkline) this.sparkline.set(accountSparkline);
+          });
+        }
+      }
+    });
     this.getTrades(365).pipe(catchError(() => of([]))).subscribe(data => this.trades.set(data));
     this.getDailyDrawdown().pipe(catchError(() => of([]))).subscribe(data => this.dailyDrawdown.set(data));
   }

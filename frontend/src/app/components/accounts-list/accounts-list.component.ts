@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Mt5Service, AccountSummary, SparklineData, GlobalMonthlyGrowth } from '../../services/mt5.service';
 import { interval, Subscription } from 'rxjs';
+import { SparklineComponent } from '../sparkline/sparkline.component';
 
 type ViewMode = 'grid' | 'list';
 type BrokerFilter = 'all' | 'roboforex' | 'icmarkets';
@@ -13,7 +14,7 @@ type SortDirection = 'asc' | 'desc';
 @Component({
   selector: 'app-accounts-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SparklineComponent],
   templateUrl: './accounts-list.component.html',
   styleUrl: './accounts-list.component.scss'
 })
@@ -208,7 +209,7 @@ export class AccountsListComponent implements OnInit, OnDestroy {
   }
 
   loadSparklines(): void {
-    this.mt5.getSparklines(20).subscribe({
+    this.mt5.getSparklines(100).subscribe({
       next: (data) => {
         this.sparklines.set(data);
       },
@@ -239,34 +240,6 @@ export class AccountsListComponent implements OnInit, OnDestroy {
     return this.sparklines()[accountId] || [];
   }
 
-  getSparklinePath(accountId: number): string {
-    const data = this.getSparklineData(accountId);
-    if (data.length < 2) return '';
-
-    const width = 100;
-    const height = 30;
-    const padding = 2; // Padding to keep line visible
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    const range = max - min;
-
-    const points = data.map((value, index) => {
-      const x = (index / (data.length - 1)) * width;
-      // If no variation, draw line in the middle; otherwise scale normally
-      const y = range === 0
-        ? height / 2
-        : padding + ((max - value) / range) * (height - 2 * padding);
-      return `${x},${y}`;
-    });
-
-    return `M ${points.join(' L ')}`;
-  }
-
-  getSparklineColor(accountId: number): string {
-    const data = this.getSparklineData(accountId);
-    if (data.length < 2) return '#888888';
-    return data[data.length - 1] >= data[0] ? '#22c55e' : '#ef4444';
-  }
 
   // Auto-refresh
   startAutoRefresh(): void {

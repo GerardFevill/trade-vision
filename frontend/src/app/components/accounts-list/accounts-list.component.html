@@ -238,16 +238,7 @@
             <!-- Sparkline -->
             @if (getSparklineData(account.id).length > 1) {
               <div class="sparkline-container">
-                <svg viewBox="0 0 100 30" preserveAspectRatio="none">
-                  <path
-                    [attr.d]="getSparklinePath(account.id)"
-                    fill="none"
-                    [attr.stroke]="getSparklineColor(account.id)"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                <app-sparkline [data]="getSparklineData(account.id)" [height]="30"></app-sparkline>
               </div>
             }
           </div>
@@ -385,16 +376,7 @@
               </td>
               <td class="col-sparkline">
                 @if (getSparklineData(account.id).length > 1) {
-                  <svg class="table-sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
-                    <path
-                      [attr.d]="getSparklinePath(account.id)"
-                      fill="none"
-                      [attr.stroke]="getSparklineColor(account.id)"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
+                  <app-sparkline [data]="getSparklineData(account.id)" [height]="30" [showFill]="false"></app-sparkline>
                 } @else {
                   <span class="no-data">-</span>
                 }
