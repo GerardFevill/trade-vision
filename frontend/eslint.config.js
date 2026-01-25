@@ -35,6 +35,7 @@ module.exports = tseslint.config(
       '@angular-eslint/no-output-on-prefix': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-empty-function': 'warn',
       'eqeqeq': 'warn',
     },
   },

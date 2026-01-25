@@ -11,6 +11,7 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "E402",   # module level import not at top of file
+    "E722",   # bare except (existing codebase)
     "F401",   # imported but unused (for __init__.py re-exports)
 ]
 
