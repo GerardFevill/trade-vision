@@ -1,6 +1,16 @@
 """Sync Service - Synchronise les données MT5 vers la base de données avec détection de changements"""
-import MetaTrader5 as mt5
+import os
 from datetime import datetime, timedelta
+
+MT5_MODE = os.environ.get('MT5_MODE', 'direct')
+
+if MT5_MODE == 'bridge':
+    from .mt5_bridge_client import mt5_bridge as mt5
+else:
+    try:
+        import MetaTrader5 as mt5
+    except ImportError:
+        from . import mt5_mock as mt5
 from typing import Optional
 from config import MT5_ACCOUNTS, MT5_TERMINALS
 from db import account_stats_repo, accounts_cache, account_balance_history
