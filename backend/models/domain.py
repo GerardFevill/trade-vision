@@ -1,3 +1,4 @@
+"""Domain models - Core business entities"""
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -100,14 +101,6 @@ class HistoryPoint(BaseModel):
     timestamp: datetime
 
 
-class ConnectionStatus(BaseModel):
-    connected: bool
-    server: str | None
-    account: int | None
-    name: str | None
-    company: str | None
-
-
 class MonthlyGrowth(BaseModel):
     year: int
     months: dict[str, float | None]  # Jan -> Dec percentages
@@ -141,12 +134,3 @@ class YearlyDrawdown(BaseModel):
     drawdown_percent: float
     start_balance: float
     min_balance: float
-
-
-class FullDashboard(BaseModel):
-    account: AccountInfo
-    stats: AccountStats
-    trade_stats: TradeStats
-    risk_metrics: RiskMetrics
-    open_positions: list[Position]
-    monthly_growth: list[MonthlyGrowth]

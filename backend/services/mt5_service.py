@@ -1,49 +1,128 @@
+"""MT5 Connector Service - Core trading platform integration"""
 import MetaTrader5 as mt5
 from datetime import datetime, timedelta
 from collections import deque
 from models import (
     AccountInfo, AccountStats, TradeStats, RiskMetrics,
     Trade, Position, HistoryPoint, ConnectionStatus, FullDashboard, MonthlyGrowth, MonthlyDrawdown,
-    DailyDrawdown, WeeklyDrawdown, YearlyDrawdown
+    DailyDrawdown, WeeklyDrawdown, YearlyDrawdown, AccountSummary
 )
-from database import history_db
+from db import history_db, accounts_cache, account_balance_history, monthly_growth_cache
+from config import MT5_ACCOUNTS, MT5_TERMINALS
 
 
 class MT5Connector:
     def __init__(self, history_max_size: int = 3600):
         self.connected = False
+        self.current_account_id = None
+        self.current_terminal = None
+        self.history_max_size = history_max_size
+        self._reset_account_data()
+
+    def _reset_account_data(self):
+        """Réinitialise les données spécifiques au compte"""
         self.peak_balance = 0.0
         self.peak_equity = 0.0
         self.initial_deposit = 0.0
-        self.history: deque[HistoryPoint] = deque(maxlen=history_max_size)
+        self.history: deque[HistoryPoint] = deque(maxlen=self.history_max_size)
         self.max_drawdown = 0.0
         self.max_drawdown_percent = 0.0
-        self._load_history_from_db()
 
-    def _load_history_from_db(self):
-        """Charge l'historique depuis la base de données au démarrage"""
-        db_history = history_db.load_history(days=730)  # Charger 2 ans d'historique
+    def _load_history_from_db(self, account_id: int):
+        """Charge l'historique depuis la base de données pour un compte spécifique"""
+        db_history = history_db.load_history(account_id, days=730)  # Charger 2 ans d'historique
+        self.history.clear()
         for point in db_history:
             self.history.append(point)
         if db_history:
-            # Restaurer peak values depuis l'historique
-            self.peak_balance = max(p.balance for p in db_history)
-            self.peak_equity = max(p.equity for p in db_history)
-            self.max_drawdown = max(p.drawdown for p in db_history)
-            self.max_drawdown_percent = max(p.drawdown_percent for p in db_history)
-            print(f"Historique chargé: {len(db_history)} points")
+            # Utiliser les valeurs du dernier point comme référence (pas le max historique)
+            last_point = db_history[-1]
+            self.peak_balance = last_point.balance
+            self.peak_equity = last_point.equity
+            # Ne pas restaurer max_drawdown - le recalculer depuis les données actuelles
+            self.max_drawdown = 0.0
+            self.max_drawdown_percent = 0.0
+            print(f"Historique chargé pour compte {account_id}: {len(db_history)} points")
         else:
-            # DB vide - reconstruire depuis les deals MT5
-            print("Base de données vide, reconstruction depuis les deals MT5...")
-            self.rebuild_history_from_deals()
+            # Pas d'historique - commencer frais avec les valeurs actuelles
+            print(f"Pas d'historique pour compte {account_id}, démarrage à zéro")
+            info = mt5.account_info()
+            if info:
+                self.peak_balance = info.balance
+                self.peak_equity = info.equity
 
-    def connect(self) -> bool:
-        if not mt5.initialize():
-            return False
+    def connect(self, account_id: int = None, retries: int = 2, timeout: int = 30000) -> bool:
+        """Connecte à MT5, optionnellement à un compte spécifique
+
+        Args:
+            account_id: ID du compte MT5
+            retries: Nombre de tentatives en cas d'échec
+            timeout: Timeout de connexion en millisecondes (défaut: 30s)
+        """
+        import time
+
+        # Vérifier si on change de compte
+        switching_account = account_id and account_id != self.current_account_id
+
+        if account_id:
+            # Trouver le compte dans la config
+            account_config = None
+            for acc in MT5_ACCOUNTS:
+                if acc["id"] == account_id:
+                    account_config = acc
+                    break
+
+            if not account_config:
+                print(f"Compte {account_id} non trouvé dans la config")
+                return False
+
+            terminal_key = account_config.get("terminal", "roboforex")
+
+            # Tentatives de connexion avec retry
+            for attempt in range(retries + 1):
+                # Initialiser MT5 (utilise le terminal actif par défaut)
+                if not mt5.initialize():
+                    error = mt5.last_error()
+                    print(f"Échec initialisation MT5: {error}")
+                    if attempt < retries:
+                        time.sleep(1)
+                        continue
+                    return False
+
+                if not mt5.login(account_config["id"], account_config["password"], account_config["server"], timeout=timeout):
+                    error = mt5.last_error()
+                    print(f"Échec connexion au compte {account_id} (tentative {attempt + 1}/{retries + 1}): {error}")
+                    mt5.shutdown()
+                    if attempt < retries:
+                        time.sleep(1)
+                        continue
+                    return False
+
+                # Connexion réussie
+                break
+
+            self.current_account_id = account_id
+            self.current_terminal = terminal_key
+
+            # Réinitialiser et charger les données spécifiques au compte
+            if switching_account:
+                self._reset_account_data()
+                self._load_history_from_db(account_id)
+        else:
+            # Connexion par défaut (premier compte ou compte déjà configuré dans MT5)
+            if not mt5.initialize():
+                return False
+
         self.connected = True
         info = mt5.account_info()
         if info:
-            # Ne pas écraser les peaks si on a des données historiques plus hautes
+            # Si c'est un nouveau compte ou pas d'account_id précédent
+            if self.current_account_id != info.login:
+                self.current_account_id = info.login
+                self._reset_account_data()
+                self._load_history_from_db(info.login)
+
+            # Mettre à jour les peaks avec les valeurs actuelles si plus hautes
             self.peak_balance = max(self.peak_balance, info.balance)
             self.peak_equity = max(self.peak_equity, info.equity)
             if self.initial_deposit == 0:
@@ -98,6 +177,33 @@ class MT5Connector:
             trade_mode=trade_modes.get(info.trade_mode, "Unknown")
         )
 
+    def _calculate_monthly_growth(self, deals, current_balance: float) -> float:
+        """Calcule la croissance depuis le début du mois en cours"""
+        if not deals:
+            return 0.0
+
+        # Trouver le 1er jour du mois en cours
+        now = datetime.now()
+        start_of_month = datetime(now.year, now.month, 1)
+        start_timestamp = start_of_month.timestamp()
+
+        # Calculer la balance au début du mois
+        # = somme de tous les deals (balance + trades) avant le 1er du mois
+        balance_start_of_month = 0.0
+        for d in sorted(deals, key=lambda x: x.time):
+            if d.time < start_timestamp:
+                if d.type == mt5.DEAL_TYPE_BALANCE:
+                    balance_start_of_month += d.profit
+                elif d.type in [mt5.DEAL_TYPE_BUY, mt5.DEAL_TYPE_SELL]:
+                    balance_start_of_month += d.profit + d.commission + d.swap
+
+        if balance_start_of_month <= 0:
+            return 0.0
+
+        # Growth = (balance_actuelle - balance_debut_mois) / balance_debut_mois * 100
+        growth = (current_balance - balance_start_of_month) / balance_start_of_month * 100
+        return growth
+
     def get_account_stats(self) -> AccountStats | None:
         if not self.connected and not self.connect():
             return None
@@ -134,7 +240,10 @@ class MT5Connector:
             self.initial_deposit = total_deposits
 
         net_deposit = total_deposits - total_withdrawals
-        growth = ((info.balance - net_deposit) / net_deposit * 100) if net_deposit > 0 else 0
+        total_profit = info.balance - net_deposit if net_deposit > 0 else 0
+
+        # Calculer la croissance depuis le début du mois
+        growth = self._calculate_monthly_growth(deals, info.balance)
 
         # Store history point (en mémoire et dans la DB)
         now = datetime.now()
@@ -146,12 +255,13 @@ class MT5Connector:
             timestamp=now
         )
         self.history.append(point)
-        history_db.save_point(point)
+        if self.current_account_id:
+            history_db.save_point(point, self.current_account_id)
 
         return AccountStats(
             balance=info.balance,
             equity=info.equity,
-            profit=info.profit,
+            profit=total_profit,
             drawdown=drawdown,
             drawdown_percent=drawdown_pct,
             initial_deposit=self.initial_deposit,
@@ -394,7 +504,8 @@ class MT5Connector:
                     timestamp=deal_time
                 )
                 self.history.append(point)
-                history_db.save_point(point)
+                if self.current_account_id:
+                    history_db.save_point(point, self.current_account_id)
                 points_added += 1
                 last_date = deal_date
 
@@ -689,5 +800,230 @@ class MT5Connector:
             self.peak_balance = info.balance
             self.peak_equity = info.equity
 
+    def get_all_accounts_summary(self, use_cache: bool = True, cache_max_age: int = 60) -> list[AccountSummary]:
+        """Récupère un résumé de tous les comptes configurés
 
+        Args:
+            use_cache: Utiliser le cache SQLite si disponible
+            cache_max_age: Age max du cache en secondes (défaut: 60s)
+        """
+        # Vérifier le cache
+        if use_cache and accounts_cache.is_cache_valid(cache_max_age):
+            cached = accounts_cache.load_accounts()
+            if cached:
+                return cached
+
+        summaries = []
+
+        for acc_config in MT5_ACCOUNTS:
+            account_id = acc_config["id"]
+            account_name = acc_config["name"]
+            terminal_key = acc_config.get("terminal", "roboforex")
+            broker_name = "IC Markets" if terminal_key == "icmarkets" else "RoboForex"
+
+            try:
+                # Se connecter au compte
+                if not self.connect(account_id):
+                    # Compte non connecté
+                    summaries.append(AccountSummary(
+                        id=account_id,
+                        name=account_name,
+                        broker=broker_name,
+                        server=acc_config["server"],
+                        balance=0,
+                        equity=0,
+                        profit=0,
+                        profit_percent=0,
+                        drawdown=0,
+                        trades=0,
+                        win_rate=0,
+                        currency="USD",
+                        leverage=0,
+                        connected=False
+                    ))
+                    continue
+
+                # Récupérer les infos du compte
+                info = mt5.account_info()
+                if not info:
+                    continue
+
+                # Calculer les stats
+                deals = mt5.history_deals_get(datetime(2000, 1, 1), datetime.now())
+                total_deposits = 0.0
+                total_withdrawals = 0.0
+                trades_count = 0
+                winning_trades = 0
+
+                if deals:
+                    for d in deals:
+                        if d.type == mt5.DEAL_TYPE_BALANCE:
+                            if d.profit > 0:
+                                total_deposits += d.profit
+                            else:
+                                total_withdrawals += abs(d.profit)
+                        elif d.type in [mt5.DEAL_TYPE_BUY, mt5.DEAL_TYPE_SELL] and d.entry == mt5.DEAL_ENTRY_OUT:
+                            trades_count += 1
+                            if (d.profit + d.commission + d.swap) > 0:
+                                winning_trades += 1
+
+                net_deposit = total_deposits - total_withdrawals
+                profit = info.balance - net_deposit if net_deposit > 0 else info.profit
+                profit_percent = (profit / net_deposit * 100) if net_deposit > 0 else 0
+
+                # Calculer le drawdown
+                peak = max(info.balance, info.equity)
+                current_dd_pct = max(0, (peak - info.equity) / peak * 100) if peak > 0 else 0
+
+                win_rate = (winning_trades / trades_count * 100) if trades_count > 0 else 0
+
+                summaries.append(AccountSummary(
+                    id=info.login,
+                    name=account_name,
+                    broker=info.company or "RoboForex",
+                    server=info.server,
+                    balance=round(info.balance, 2),
+                    equity=round(info.equity, 2),
+                    profit=round(profit, 2),
+                    profit_percent=round(profit_percent, 2),
+                    drawdown=round(current_dd_pct, 2),
+                    trades=trades_count,
+                    win_rate=round(win_rate, 1),
+                    currency=info.currency,
+                    leverage=info.leverage,
+                    connected=True
+                ))
+
+            except Exception as e:
+                print(f"Erreur pour compte {account_id}: {e}")
+                summaries.append(AccountSummary(
+                    id=account_id,
+                    name=account_name,
+                    broker=broker_name,
+                    server=acc_config["server"],
+                    balance=0,
+                    equity=0,
+                    profit=0,
+                    profit_percent=0,
+                    drawdown=0,
+                    trades=0,
+                    win_rate=0,
+                    currency="USD",
+                    leverage=0,
+                    connected=False
+                ))
+
+        # Sauvegarder dans le cache
+        if summaries:
+            accounts_cache.save_accounts(summaries)
+            # Sauvegarder les snapshots pour les sparklines
+            account_balance_history.save_all_snapshots(summaries)
+
+        return summaries
+
+    def get_global_monthly_growth(self, use_cache: bool = True, cache_max_age_hours: int = 24) -> list[dict]:
+        """Récupère la croissance mensuelle agrégée de tous les comptes
+
+        Args:
+            use_cache: Utiliser le cache si disponible
+            cache_max_age_hours: Age max du cache en heures (défaut: 24h)
+        """
+        # Vérifier le cache
+        if use_cache and monthly_growth_cache.is_valid(cache_max_age_hours):
+            cached = monthly_growth_cache.load()
+            if cached:
+                print("Croissance mensuelle chargée depuis le cache")
+                return cached
+
+        print("Calcul de la croissance mensuelle...")
+        from collections import defaultdict
+
+        # Structure: {(year, month): {'profit_eur': 0, 'profit_usd': 0, 'deposit_eur': 0, 'deposit_usd': 0}}
+        monthly_data: dict[tuple[int, int], dict] = defaultdict(lambda: {
+            'profit_eur': 0, 'profit_usd': 0,
+            'deposit_eur': 0, 'deposit_usd': 0
+        })
+
+        for acc_config in MT5_ACCOUNTS:
+            account_id = acc_config["id"]
+
+            try:
+                if not self.connect(account_id):
+                    continue
+
+                info = mt5.account_info()
+                if not info:
+                    continue
+
+                currency = info.currency
+
+                deals = mt5.history_deals_get(datetime(2000, 1, 1), datetime.now())
+                if not deals:
+                    continue
+
+                running_balance = 0.0
+
+                for d in sorted(deals, key=lambda x: x.time):
+                    deal_time = datetime.fromtimestamp(d.time)
+                    key = (deal_time.year, deal_time.month)
+
+                    if d.type == mt5.DEAL_TYPE_BALANCE:
+                        if d.profit > 0:
+                            if currency == 'EUR':
+                                monthly_data[key]['deposit_eur'] += d.profit
+                            else:
+                                monthly_data[key]['deposit_usd'] += d.profit
+                        running_balance += d.profit
+                    elif d.type in [mt5.DEAL_TYPE_BUY, mt5.DEAL_TYPE_SELL]:
+                        profit = d.profit + d.commission + d.swap
+                        if currency == 'EUR':
+                            monthly_data[key]['profit_eur'] += profit
+                        else:
+                            monthly_data[key]['profit_usd'] += profit
+                        running_balance += profit
+
+            except Exception as e:
+                print(f"Erreur croissance mensuelle compte {account_id}: {e}")
+
+        # Convertir en liste triée
+        month_names = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+        years = sorted(set(k[0] for k in monthly_data.keys())) if monthly_data else []
+
+        result = []
+        for year in years:
+            year_data = {
+                'year': year,
+                'months': {},
+                'year_total_eur': 0,
+                'year_total_usd': 0
+            }
+
+            for month_idx in range(1, 13):
+                key = (year, month_idx)
+                month_name = month_names[month_idx - 1]
+
+                if key in monthly_data:
+                    data = monthly_data[key]
+                    year_data['months'][month_name] = {
+                        'profit_eur': round(data['profit_eur'], 2),
+                        'profit_usd': round(data['profit_usd'], 2)
+                    }
+                    year_data['year_total_eur'] += data['profit_eur']
+                    year_data['year_total_usd'] += data['profit_usd']
+                else:
+                    year_data['months'][month_name] = None
+
+            year_data['year_total_eur'] = round(year_data['year_total_eur'], 2)
+            year_data['year_total_usd'] = round(year_data['year_total_usd'], 2)
+            result.append(year_data)
+
+        # Sauvegarder dans le cache
+        if result:
+            monthly_growth_cache.save(result)
+            print(f"Croissance mensuelle sauvegardée ({len(result)} années)")
+
+        return result
+
+
+# Global instance
 mt5_connector = MT5Connector()
