@@ -174,8 +174,29 @@ export class AccountDetailPageComponent implements OnInit {
     this.monthlyDisplayMode.set(mode);
   }
 
+  // Refresh from cache/DB
   refresh(): void {
     this.api.refresh();
+  }
+
+  // Sync from MT5 (force refresh from MetaTrader)
+  syncing = signal<boolean>(false);
+
+  syncFromMT5(): void {
+    const status = this.status();
+    if (!status?.account) return;
+
+    this.syncing.set(true);
+    this.api.syncAccount(status.account, true).subscribe({
+      next: () => {
+        // After sync, refresh from DB
+        this.api.refresh();
+        this.syncing.set(false);
+      },
+      error: () => {
+        this.syncing.set(false);
+      }
+    });
   }
 
   resetDrawdown(): void {

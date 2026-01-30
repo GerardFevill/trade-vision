@@ -883,6 +883,78 @@ class MT5Connector:
 
         return summaries
 
+    def get_single_account_summary(self, account_id: int) -> AccountSummary | None:
+        """Récupère le résumé d'un seul compte (déjà connecté)"""
+        # Trouver la config du compte
+        acc_config = None
+        for acc in MT5_ACCOUNTS:
+            if acc["id"] == account_id:
+                acc_config = acc
+                break
+
+        if not acc_config:
+            return None
+
+        account_name = acc_config["name"]
+        terminal_key = acc_config.get("terminal", "roboforex")
+        broker_name = "IC Markets" if terminal_key == "icmarkets" else "RoboForex"
+        client = acc_config.get("client")
+
+        try:
+            info = mt5.account_info()
+            if not info:
+                return None
+
+            # Calculer les stats
+            deals = mt5.history_deals_get(datetime(2000, 1, 1), datetime.now())
+            total_deposits = 0.0
+            total_withdrawals = 0.0
+            trades_count = 0
+            winning_trades = 0
+
+            if deals:
+                for d in deals:
+                    if d.type == mt5.DEAL_TYPE_BALANCE:
+                        if d.profit > 0:
+                            total_deposits += d.profit
+                        else:
+                            total_withdrawals += abs(d.profit)
+                    elif d.type in [mt5.DEAL_TYPE_BUY, mt5.DEAL_TYPE_SELL] and d.entry == mt5.DEAL_ENTRY_OUT:
+                        trades_count += 1
+                        if (d.profit + d.commission + d.swap) > 0:
+                            winning_trades += 1
+
+            net_deposit = total_deposits - total_withdrawals
+            profit = info.balance - net_deposit if net_deposit > 0 else info.profit
+            profit_percent = (profit / net_deposit * 100) if net_deposit > 0 else 0
+
+            # Calculer le drawdown
+            peak = max(info.balance, info.equity)
+            current_dd_pct = max(0, (peak - info.equity) / peak * 100) if peak > 0 else 0
+
+            win_rate = (winning_trades / trades_count * 100) if trades_count > 0 else 0
+
+            return AccountSummary(
+                id=info.login,
+                name=account_name,
+                broker=info.company or broker_name,
+                server=info.server,
+                balance=round(info.balance, 2),
+                equity=round(info.equity, 2),
+                profit=round(profit, 2),
+                profit_percent=round(profit_percent, 2),
+                drawdown=round(current_dd_pct, 2),
+                trades=trades_count,
+                win_rate=round(win_rate, 1),
+                currency=info.currency,
+                leverage=info.leverage,
+                connected=True,
+                client=client
+            )
+        except Exception as e:
+            logger.error("Error getting single account summary", account_id=account_id, error=str(e))
+            return None
+
     def get_global_monthly_growth(self, use_cache: bool = True, cache_max_age_hours: int = 24) -> list[dict]:
         """Récupère la croissance mensuelle agrégée de tous les comptes
 

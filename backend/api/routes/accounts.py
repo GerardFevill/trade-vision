@@ -10,9 +10,14 @@ router = APIRouter()
 
 @router.get("/accounts", response_model=list[AccountSummary])
 async def get_all_accounts(
-    refresh: bool = Query(default=False, description="Forcer le rafraîchissement du cache")
+    refresh: bool = Query(default=False, description="Forcer le rafraîchissement du cache"),
+    force_mt5: bool = Query(default=False, description="Forcer la lecture directe depuis MT5 (synchrone)")
 ):
-    """Récupère la liste de tous les comptes (toujours depuis le cache, rafraîchissement en arrière-plan)"""
+    """Récupère la liste de tous les comptes"""
+    # Si force_mt5, lire directement depuis MT5 (synchrone, peut être lent)
+    if force_mt5:
+        return mt5_connector.get_all_accounts_summary(use_cache=False)
+
     # Toujours retourner le cache d'abord (même ancien)
     cached = accounts_cache.load_accounts()
 
@@ -78,13 +83,18 @@ async def sync_account(
     account_id: int = Path(..., description="ID du compte MT5"),
     force: bool = Query(default=False, description="Forcer la sync même si pas de changement")
 ):
-    """Synchronise les données d'un compte vers la DB (uniquement si changements détectés)"""
+    """Synchronise les données d'un compte vers la DB et rafraîchit le cache"""
     # Se connecter au compte
     if not mt5_connector.connect(account_id):
         raise HTTPException(503, f"Impossible de se connecter au compte {account_id}")
 
     # Synchroniser
     synced = sync_service.sync_account(account_id, force=force)
+
+    # Récupérer et mettre à jour ce compte dans le cache
+    summary = mt5_connector.get_single_account_summary(account_id)
+    if summary:
+        accounts_cache.update_account(summary)
 
     return {
         "message": f"Compte {account_id} {'synchronisé' if synced else 'pas de changement'}",
@@ -97,10 +107,14 @@ async def sync_account(
 async def sync_all_accounts(
     force: bool = Query(default=False, description="Forcer la sync même si pas de changement")
 ):
-    """Synchronise tous les comptes vers la DB (uniquement ceux avec des changements)"""
+    """Synchronise tous les comptes vers la DB et rafraîchit le cache"""
     # Lancer en arrière-plan pour ne pas bloquer
     def do_sync():
-        return sync_service.sync_all_accounts(force=force)
+        # Sync all accounts
+        result = sync_service.sync_all_accounts(force=force)
+        # Then refresh the accounts cache
+        mt5_connector.get_all_accounts_summary(use_cache=False)
+        return result
 
     thread = threading.Thread(target=do_sync, daemon=True)
     thread.start()

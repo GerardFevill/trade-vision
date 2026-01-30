@@ -127,3 +127,35 @@ class AccountsCache:
             return False
         age = (datetime.now() - last_update).total_seconds()
         return age < max_age_seconds
+
+    def update_account(self, account: AccountSummary) -> bool:
+        """Met à jour un seul compte dans le cache"""
+        try:
+            with get_connection() as conn:
+                with conn.cursor() as cur:
+                    now = datetime.now()
+                    cur.execute("""
+                        INSERT INTO accounts_cache
+                        (id, name, broker, server, balance, equity, profit, profit_percent,
+                         drawdown, trades, win_rate, currency, leverage, connected, client, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (id) DO UPDATE SET
+                            balance = EXCLUDED.balance,
+                            equity = EXCLUDED.equity,
+                            profit = EXCLUDED.profit,
+                            profit_percent = EXCLUDED.profit_percent,
+                            drawdown = EXCLUDED.drawdown,
+                            trades = EXCLUDED.trades,
+                            win_rate = EXCLUDED.win_rate,
+                            connected = EXCLUDED.connected,
+                            updated_at = EXCLUDED.updated_at
+                    """, (
+                        account.id, account.name, account.broker, account.server,
+                        account.balance, account.equity, account.profit, account.profit_percent,
+                        account.drawdown, account.trades, account.win_rate,
+                        account.currency, account.leverage, account.connected, account.client, now
+                    ))
+            return True
+        except Exception as e:
+            logger.error("Error updating account cache", error=str(e))
+            return False

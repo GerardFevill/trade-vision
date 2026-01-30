@@ -25,9 +25,12 @@
           <i class="fa fa-list"></i>
         </button>
       </div>
-      <button class="btn-refresh" (click)="refresh()" [disabled]="loading()">
+      <button class="btn-sync" (click)="syncFromMT5()" [disabled]="syncing()" title="Synchroniser depuis MT5">
+        <i class="fa fa-download" [class.fa-spin]="syncing()"></i>
+        MT5
+      </button>
+      <button class="btn-refresh" (click)="refresh()" [disabled]="loading()" title="Actualiser depuis le cache">
         <i class="fa fa-sync" [class.fa-spin]="loading()"></i>
-        Actualiser
       </button>
     </div>
   </header>

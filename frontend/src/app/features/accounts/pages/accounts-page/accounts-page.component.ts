@@ -192,6 +192,26 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   }
 
   refresh(): void { this.loadAccounts(); }
+
+  // Sync from MT5 (force refresh from MetaTrader)
+  syncing = signal<boolean>(false);
+
+  syncFromMT5(): void {
+    this.syncing.set(true);
+    // Get accounts directly from MT5 (synchronous, bypasses cache)
+    this.api.getAccounts(true).subscribe({
+      next: (accounts) => {
+        this.accounts.set(accounts);
+        this.lastRefreshTime.set(new Date());
+        this.syncing.set(false);
+        this.loadSparklines();
+      },
+      error: () => {
+        this.syncing.set(false);
+      }
+    });
+  }
+
   setViewMode(mode: ViewMode): void { this.viewMode.set(mode); }
   setClientFilter(filter: ClientFilter): void { this.clientFilter.set(filter); }
   setSearchQuery(query: string): void { this.searchQuery.set(query); }
