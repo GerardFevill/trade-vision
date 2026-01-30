@@ -1,150 +1,137 @@
-<div class="mql-layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-section">
+<div class="account-detail-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
       <button class="btn-back" (click)="goBack()">
-        <i class="fa-solid fa-arrow-left"></i>
-        Mes Comptes
+        <i class="fa fa-arrow-left"></i>
       </button>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-title"><i class="fa-solid fa-chart-line"></i> MT5 Monitor</div>
-    </div>
-
-    <div class="sidebar-section stats-summary">
-      <div class="stat-row highlight">
-        <span class="stat-label">Croissance</span>
-        <span class="stat-value" [class]="getProfitClass(stats()?.growth_percent)">{{ fmtPct(stats()?.growth_percent) }}</span>
+      <div class="account-identity">
+        <h1 class="account-name">{{ account()?.name }}</h1>
+        <span class="account-id">#{{ account()?.login }}</span>
       </div>
-      <div class="stat-row">
-        <span class="stat-label">Profit</span>
-        <span class="stat-value">{{ fmtCurrency(tradeStats()?.gross_profit) }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Fonds propres</span>
-        <span class="stat-value">{{ fmtCurrency(stats()?.equity) }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Solde</span>
-        <span class="stat-value">{{ fmtCurrency(stats()?.balance) }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Dépôt initial</span>
-        <span class="stat-value">{{ fmtCurrency(stats()?.initial_deposit) }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Retraits</span>
-        <span class="stat-value">{{ fmtCurrency(stats()?.total_withdrawals) }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Dépôts</span>
-        <span class="stat-value">{{ fmtCurrency(stats()?.total_deposits) }}</span>
-      </div>
-    </div>
-
-    <div class="sidebar-section account-info">
-      <div class="broker-badge">
-        <i class="fa-solid fa-building"></i>
-        <span>{{ account()?.server }}</span>
-        <span class="leverage">1:{{ account()?.leverage }}</span>
-      </div>
-    </div>
-
-    <div class="sidebar-section stats-secondary">
-      <div class="stat-row">
-        <span class="stat-label">Total trades</span>
-        <span class="stat-value">{{ tradeStats()?.total_trades }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Dernier trade</span>
-        <span class="stat-value">{{ fmtDate(stats()?.timestamp) }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">Temps moyen</span>
-        <span class="stat-value">{{ fmtTime(tradeStats()?.avg_holding_time_seconds) }}</span>
-      </div>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="connection-badge" [class.connected]="isConnected()">
-        <i class="fa-solid fa-circle"></i>
+      <div class="connection-status" [class.online]="isConnected()">
+        <span class="dot"></span>
         <span>{{ isConnected() ? 'Connecté' : 'Déconnecté' }}</span>
       </div>
     </div>
-
-    <div class="sidebar-section refresh-section">
+    <div class="header-right">
+      <div class="broker-info">
+        <span class="server">{{ account()?.server }}</span>
+        <span class="leverage">1:{{ account()?.leverage }}</span>
+      </div>
       <button class="btn-refresh" (click)="refresh()" [disabled]="loading()">
-        <i class="fa-solid fa-rotate" [class.fa-spin]="loading()"></i>
-        {{ loading() ? 'Chargement...' : 'Actualiser' }}
+        <i class="fa fa-sync" [class.fa-spin]="loading()"></i>
       </button>
-      @if (lastUpdate()) {
-        <div class="last-update">
-          Mis à jour: {{ lastUpdate() | date:'HH:mm:ss' }}
-        </div>
+    </div>
+  </header>
+
+  <!-- Key Metrics -->
+  <div class="metrics-grid">
+    <div class="metric-card hero">
+      <div class="metric-icon growth"><i class="fa fa-chart-line"></i></div>
+      <div class="metric-data">
+        <span class="metric-value" [class]="getProfitClass(stats()?.growth_percent)">
+          {{ fmtPct(stats()?.growth_percent) }}
+        </span>
+        <span class="metric-label">Croissance</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-data">
+        <span class="metric-value">{{ fmtCurrency(stats()?.balance) }}</span>
+        <span class="metric-label">Solde</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-data">
+        <span class="metric-value">{{ fmtCurrency(stats()?.equity) }}</span>
+        <span class="metric-label">Fonds propres</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-data">
+        <span class="metric-value" [class]="getProfitClass(stats()?.profit)">
+          {{ fmtCurrency(stats()?.profit) }}
+        </span>
+        <span class="metric-label">Profit</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-data">
+        <span class="metric-value">{{ fmtCurrency(stats()?.initial_deposit) }}</span>
+        <span class="metric-label">Dépôt initial</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-data">
+        <span class="metric-value">{{ tradeStats()?.total_trades }}</span>
+        <span class="metric-label">Trades</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sparkline + Radar -->
+  <div class="charts-row">
+    <div class="chart-card sparkline-card">
+      <h3>Evolution</h3>
+      @if (sparklineData().length > 1) {
+        <app-sparkline [data]="sparklineData()" [height]="100"></app-sparkline>
       }
     </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="main-content">
-    <!-- TOP SECTION -->
-    <div class="top-section">
-      <!-- RADAR CHART -->
-      <div class="radar-section">
-        <div class="radar-container">
-          <canvas baseChart [type]="'radar'" [data]="radarData" [options]="radarOptions"></canvas>
-        </div>
+    <div class="chart-card radar-card">
+      <h3>Performance</h3>
+      <div class="radar-container">
+        <canvas baseChart [type]="'radar'" [data]="radarData" [options]="radarOptions"></canvas>
       </div>
-
-      <!-- ALL-TIME SPARKLINE -->
-      <div class="sparkline-section">
-        <app-sparkline [data]="sparklineData()" [height]="80"></app-sparkline>
-      </div>
-
-      <!-- PROGRESS BARS -->
-      <div class="bars-section">
-        <div class="progress-item">
-          <span class="progress-label">Fonds propres</span>
-          <span class="progress-value">{{ fmtCurrency(stats()?.equity) }}</span>
-          <div class="progress-bar"><div class="progress-fill equity" [style.width.%]="getBarPercent(stats()?.equity, stats()?.total_deposits)"></div></div>
+    </div>
+    <div class="chart-card stats-card">
+      <h3>Statistiques</h3>
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <span class="label">Win Rate</span>
+          <span class="value">{{ fmtPct(tradeStats()?.win_rate) }}</span>
         </div>
-        <div class="progress-item">
-          <span class="progress-label">Profit</span>
-          <span class="progress-value" [class]="getProfitClass(stats()?.profit)">{{ fmtCurrency(stats()?.profit) }}</span>
-          <div class="progress-bar"><div class="progress-fill profit" [style.width.%]="getBarPercent(stats()?.profit, stats()?.equity)"></div></div>
+        <div class="mini-stat">
+          <span class="label">Profit Factor</span>
+          <span class="value">{{ fmt(tradeStats()?.profit_factor) }}</span>
         </div>
-        <div class="progress-item">
-          <span class="progress-label">Dépôt initial</span>
-          <span class="progress-value">{{ fmtCurrency(stats()?.initial_deposit) }}</span>
-          <div class="progress-bar"><div class="progress-fill deposit" [style.width.%]="getBarPercent(stats()?.initial_deposit, stats()?.total_deposits)"></div></div>
+        <div class="mini-stat">
+          <span class="label">Max DD</span>
+          <span class="value warning">{{ fmtPct(risk()?.max_drawdown_percent) }}</span>
         </div>
-        <div class="progress-item">
-          <span class="progress-label">Retraits</span>
-          <span class="progress-value">{{ fmtCurrency(stats()?.total_withdrawals) }}</span>
-          <div class="progress-bar"><div class="progress-fill withdrawal" [style.width.%]="getBarPercent(stats()?.total_withdrawals, stats()?.total_deposits)"></div></div>
-        </div>
-        <div class="progress-item">
-          <span class="progress-label">Dépôts</span>
-          <span class="progress-value">{{ fmtCurrency(stats()?.total_deposits) }}</span>
-          <div class="progress-bar"><div class="progress-fill full" [style.width.%]="100"></div></div>
+        <div class="mini-stat">
+          <span class="label">Sharpe</span>
+          <span class="value">{{ fmt(risk()?.sharpe_ratio) }}</span>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- TABS -->
-    <nav class="tabs-nav">
-      <button [class.active]="activeTab() === 'account'" (click)="setTab('account')">Compte</button>
-      <button [class.active]="activeTab() === 'history'" (click)="setTab('history')">Historique de trading</button>
-      <button [class.active]="activeTab() === 'statistics'" (click)="setTab('statistics')">Statistiques</button>
-      <button [class.active]="activeTab() === 'risks'" (click)="setTab('risks')">Risques</button>
-    </nav>
+  <!-- Tabs -->
+  <nav class="tabs-nav">
+    <button [class.active]="activeTab() === 'account'" (click)="setTab('account')">
+      <i class="fa fa-wallet"></i> Compte
+    </button>
+    <button [class.active]="activeTab() === 'history'" (click)="setTab('history')">
+      <i class="fa fa-history"></i> Historique
+    </button>
+    <button [class.active]="activeTab() === 'statistics'" (click)="setTab('statistics')">
+      <i class="fa fa-chart-bar"></i> Statistiques
+    </button>
+    <button [class.active]="activeTab() === 'risks'" (click)="setTab('risks')">
+      <i class="fa fa-shield-alt"></i> Risques
+    </button>
+  </nav>
 
-    <!-- TAB CONTENT -->
-    <div class="tab-content">
-      <!-- ACCOUNT TAB -->
-      @if (activeTab() === 'account') {
-        <div class="trades-table">
-          <table>
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- ACCOUNT TAB -->
+    @if (activeTab() === 'account') {
+      <!-- Open Positions -->
+      <section class="content-section">
+        <h3><i class="fa fa-crosshairs"></i> Positions ouvertes</h3>
+        <div class="table-wrapper">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>Symbole</th>
@@ -154,259 +141,207 @@
                 <th>Prix</th>
                 <th>S/L</th>
                 <th>T/P</th>
-                <th>Profit</th>
+                <th class="text-right">Profit</th>
               </tr>
             </thead>
             <tbody>
               @for (pos of positions(); track pos.ticket) {
                 <tr>
                   <td class="symbol">{{ pos.symbol }}</td>
-                  <td>{{ fmtDate(pos.open_time) }}</td>
-                  <td [class]="pos.type === 'BUY' ? 'buy' : 'sell'">{{ pos.type === 'BUY' ? 'Achat' : 'Vente' }}</td>
+                  <td class="muted">{{ fmtDate(pos.open_time) }}</td>
+                  <td><span class="type-badge" [class]="pos.type === 'BUY' ? 'buy' : 'sell'">{{ pos.type }}</span></td>
                   <td>{{ pos.volume }}</td>
                   <td>{{ pos.open_price }}</td>
-                  <td>{{ pos.sl || '-' }}</td>
-                  <td>{{ pos.tp || '-' }}</td>
-                  <td [class]="getProfitClass(pos.profit)">{{ fmtCurrency(pos.profit) }}</td>
+                  <td class="muted">{{ pos.sl || '-' }}</td>
+                  <td class="muted">{{ pos.tp || '-' }}</td>
+                  <td class="text-right" [class]="getProfitClass(pos.profit)">{{ fmtCurrency(pos.profit) }}</td>
                 </tr>
               } @empty {
-                <tr><td colspan="8" class="empty">Aucune position ouverte</td></tr>
+                <tr><td colspan="8" class="empty-row">Aucune position ouverte</td></tr>
               }
             </tbody>
           </table>
         </div>
+      </section>
 
-        <!-- MONTHLY GROWTH TABLE -->
-        <div class="monthly-growth-section">
-          <div class="monthly-header">
-            <span class="monthly-title">Croissance mensuelle</span>
-            <div class="monthly-toggles">
-              <button [class.active]="monthlyDisplayMode() === 'percent'" (click)="setMonthlyDisplay('percent')">%</button>
-              <button [class.active]="monthlyDisplayMode() === 'value'" (click)="setMonthlyDisplay('value')">Montant</button>
-            </div>
-          </div>
-          <div class="monthly-growth-table">
-            <table>
-              <thead>
-                <tr>
-                  <th class="year-col"></th>
-                  @for (month of monthNames; track month) {
-                    <th>{{ month }}</th>
-                  }
-                  <th class="year-total">Year</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of monthlyGrowth(); track row.year) {
-                  <tr>
-                    <td class="year-col">{{ row.year }}</td>
-                    @for (month of monthNames; track month) {
-                      @if (monthlyDisplayMode() === 'percent') {
-                        <td [class]="getProfitClass(row.months[month])">
-                          {{ row.months[month] != null ? fmtPct(row.months[month]) : '' }}
-                        </td>
-                      } @else {
-                        <td [class]="getProfitClass(row.values[month])">
-                          {{ row.values[month] != null ? fmtCurrency(row.values[month]) : '' }}
-                        </td>
-                      }
-                    }
-                    @if (monthlyDisplayMode() === 'percent') {
-                      <td class="year-total" [class]="getProfitClass(row.year_total)">
-                        {{ row.year_total != null ? fmtPct(row.year_total) : '' }}
-                      </td>
-                    } @else {
-                      <td class="year-total" [class]="getProfitClass(row.year_total_value)">
-                        {{ row.year_total_value != null ? fmtCurrency(row.year_total_value) : '' }}
-                      </td>
-                    }
-                  </tr>
-                }
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="13" class="total-row">
-                    <span class="total-label">Total:</span>
-                    @if (monthlyDisplayMode() === 'percent') {
-                      <span class="total-value" [class]="getProfitClass(totalGrowth())">{{ fmtPct(totalGrowth()) }}</span>
-                    } @else {
-                      <span class="total-value" [class]="getProfitClass(totalValue())">{{ fmtCurrency(totalValue()) }}</span>
-                    }
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+      <!-- Monthly Growth -->
+      <section class="content-section">
+        <div class="section-header">
+          <h3><i class="fa fa-calendar-alt"></i> Croissance mensuelle</h3>
+          <div class="toggle-group">
+            <button [class.active]="monthlyDisplayMode() === 'percent'" (click)="setMonthlyDisplay('percent')">%</button>
+            <button [class.active]="monthlyDisplayMode() === 'value'" (click)="setMonthlyDisplay('value')">€</button>
           </div>
         </div>
-      }
+        <div class="table-wrapper monthly-table-wrapper">
+          <table class="data-table monthly-table">
+            <thead>
+              <tr>
+                <th class="sticky-col"></th>
+                @for (month of monthNames; track month) {
+                  <th>{{ month }}</th>
+                }
+                <th class="year-col">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of monthlyGrowth(); track row.year) {
+                <tr>
+                  <td class="sticky-col year">{{ row.year }}</td>
+                  @for (month of monthNames; track month) {
+                    @if (monthlyDisplayMode() === 'percent') {
+                      <td [class]="getProfitClass(row.months[month])">
+                        {{ row.months[month] != null ? fmtPct(row.months[month]) : '' }}
+                      </td>
+                    } @else {
+                      <td [class]="getProfitClass(row.values[month])">
+                        {{ row.values[month] != null ? fmtCurrency(row.values[month]) : '' }}
+                      </td>
+                    }
+                  }
+                  @if (monthlyDisplayMode() === 'percent') {
+                    <td class="year-col" [class]="getProfitClass(row.year_total)">
+                      {{ row.year_total != null ? fmtPct(row.year_total) : '' }}
+                    </td>
+                  } @else {
+                    <td class="year-col" [class]="getProfitClass(row.year_total_value)">
+                      {{ row.year_total_value != null ? fmtCurrency(row.year_total_value) : '' }}
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
 
-      <!-- HISTORY TAB -->
-      @if (activeTab() === 'history') {
-        <div class="trades-table">
-          <table>
+    <!-- HISTORY TAB -->
+    @if (activeTab() === 'history') {
+      <section class="content-section">
+        <h3><i class="fa fa-list"></i> Historique des trades</h3>
+        <div class="table-wrapper">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>Symbole</th>
-                <th>Temps</th>
+                <th>Date</th>
                 <th>Type</th>
                 <th>Volume</th>
                 <th>Prix</th>
                 <th>Commission</th>
                 <th>Swap</th>
-                <th>Profit</th>
+                <th class="text-right">Profit</th>
               </tr>
             </thead>
             <tbody>
               @for (trade of trades(); track trade.ticket) {
                 <tr>
                   <td class="symbol">{{ trade.symbol }}</td>
-                  <td>{{ fmtDate(trade.open_time) }}</td>
-                  <td [class]="trade.type === 'BUY' ? 'buy' : 'sell'">{{ trade.type === 'BUY' ? 'Achat' : 'Vente' }}</td>
+                  <td class="muted">{{ fmtDate(trade.open_time) }}</td>
+                  <td><span class="type-badge" [class]="trade.type === 'BUY' ? 'buy' : 'sell'">{{ trade.type }}</span></td>
                   <td>{{ trade.volume }}</td>
                   <td>{{ trade.open_price }}</td>
-                  <td>{{ fmtCurrency(trade.commission) }}</td>
-                  <td>{{ fmtCurrency(trade.swap) }}</td>
-                  <td [class]="getProfitClass(trade.profit)">{{ fmtCurrency(trade.profit) }}</td>
+                  <td class="muted">{{ fmtCurrency(trade.commission) }}</td>
+                  <td class="muted">{{ fmtCurrency(trade.swap) }}</td>
+                  <td class="text-right" [class]="getProfitClass(trade.profit)">{{ fmtCurrency(trade.profit) }}</td>
                 </tr>
               } @empty {
-                <tr><td colspan="8" class="empty">Aucun trade</td></tr>
+                <tr><td colspan="8" class="empty-row">Aucun trade</td></tr>
               }
             </tbody>
           </table>
         </div>
-      }
+      </section>
+    }
 
-      <!-- STATISTICS TAB -->
-      @if (activeTab() === 'statistics') {
-        <div class="stats-grid">
-          <div class="stats-block">
-            <div class="stats-block-title">Trades</div>
-            <div class="stats-row"><span>Total</span><span>{{ tradeStats()?.total_trades }}</span></div>
-            <div class="stats-row"><span>Bénéfice trades</span><span class="positive">{{ tradeStats()?.winning_trades }} ({{ fmtPct(tradeStats()?.win_rate) }})</span></div>
-            <div class="stats-row"><span>Perte trades</span><span class="negative">{{ tradeStats()?.losing_trades }}</span></div>
-            <div class="stats-row"><span>Meilleure transaction</span><span class="positive">{{ fmtCurrency(tradeStats()?.best_trade) }}</span></div>
-            <div class="stats-row"><span>Pire transaction</span><span class="negative">{{ fmtCurrency(tradeStats()?.worst_trade) }}</span></div>
-          </div>
-          <div class="stats-block">
-            <div class="stats-block-title">Profit</div>
-            <div class="stats-row"><span>Bénéfice brut</span><span class="positive">{{ fmtCurrency(tradeStats()?.gross_profit) }}</span></div>
-            <div class="stats-row"><span>Perte brute</span><span class="negative">{{ fmtCurrency(tradeStats()?.gross_loss) }}</span></div>
-            <div class="stats-row"><span>Bénéfice moyen</span><span>{{ fmtCurrency(tradeStats()?.average_profit) }}</span></div>
-            <div class="stats-row"><span>Perte moyenne</span><span>{{ fmtCurrency(tradeStats()?.average_loss) }}</span></div>
-            <div class="stats-row"><span>Rendement attendu</span><span>{{ fmtCurrency(tradeStats()?.expected_payoff) }}</span></div>
-          </div>
-          <div class="stats-block">
-            <div class="stats-block-title">Ratios</div>
-            <div class="stats-row"><span>Facteur de profit</span><span>{{ fmt(tradeStats()?.profit_factor) }}</span></div>
-            <div class="stats-row"><span>Ratio de Sharpe</span><span>{{ fmt(risk()?.sharpe_ratio) }}</span></div>
-            <div class="stats-row"><span>Facteur de récupération</span><span>{{ fmt(risk()?.recovery_factor) }}</span></div>
-            <div class="stats-row"><span>Gains consécutifs max</span><span>{{ tradeStats()?.max_consecutive_wins }}</span></div>
-            <div class="stats-row"><span>Pertes consécutives max</span><span>{{ tradeStats()?.max_consecutive_losses }}</span></div>
-          </div>
-          <div class="stats-block">
-            <div class="stats-block-title">Positions</div>
-            <div class="stats-row"><span>Longs</span><span>{{ tradeStats()?.longs_count }} (gagnés: {{ tradeStats()?.longs_won }})</span></div>
-            <div class="stats-row"><span>Courts</span><span>{{ tradeStats()?.shorts_count }} (gagnés: {{ tradeStats()?.shorts_won }})</span></div>
-            <div class="stats-row"><span>Temps de détention moyen</span><span>{{ fmtTime(tradeStats()?.avg_holding_time_seconds) }}</span></div>
-          </div>
+    <!-- STATISTICS TAB -->
+    @if (activeTab() === 'statistics') {
+      <div class="stats-grid">
+        <div class="stats-block">
+          <h4>Trades</h4>
+          <div class="stat-row"><span>Total</span><span>{{ tradeStats()?.total_trades }}</span></div>
+          <div class="stat-row"><span>Gagnants</span><span class="positive">{{ tradeStats()?.winning_trades }} ({{ fmtPct(tradeStats()?.win_rate) }})</span></div>
+          <div class="stat-row"><span>Perdants</span><span class="negative">{{ tradeStats()?.losing_trades }}</span></div>
+          <div class="stat-row"><span>Meilleur</span><span class="positive">{{ fmtCurrency(tradeStats()?.best_trade) }}</span></div>
+          <div class="stat-row"><span>Pire</span><span class="negative">{{ fmtCurrency(tradeStats()?.worst_trade) }}</span></div>
         </div>
-      }
-
-      <!-- RISKS TAB -->
-      @if (activeTab() === 'risks') {
-        <div class="stats-grid">
-          <div class="stats-block wide">
-            <div class="stats-block-title">Prélèvement (Drawdown)</div>
-            <div class="stats-row"><span>Prélèvement maximum</span><span class="warning">{{ fmtCurrency(risk()?.max_drawdown) }} ({{ fmtPct(risk()?.max_drawdown_percent) }})</span></div>
-            <div class="stats-row"><span>Prélèvement actuel</span><span class="warning">{{ fmtCurrency(risk()?.current_drawdown) }} ({{ fmtPct(risk()?.current_drawdown_percent) }})</span></div>
-            <div class="stats-row"><span>Prélèvement relatif (solde)</span><span>{{ fmtPct(risk()?.relative_drawdown_balance) }}</span></div>
-            <div class="stats-row"><span>Prélèvement relatif (équité)</span><span>{{ fmtPct(risk()?.relative_drawdown_equity) }}</span></div>
-          </div>
-          <div class="stats-block wide">
-            <div class="stats-block-title">Charge</div>
-            <div class="stats-row"><span>Charge de dépôt maximale</span><span>{{ fmtPct(risk()?.max_deposit_load) }}</span></div>
-            <div class="stats-row"><span>Marge utilisée</span><span>{{ fmtCurrency(account()?.margin) }}</span></div>
-            <div class="stats-row"><span>Marge libre</span><span>{{ fmtCurrency(account()?.free_margin) }}</span></div>
-            <div class="stats-row"><span>Niveau de marge</span><span>{{ fmtPct(account()?.margin_level) }}</span></div>
-          </div>
+        <div class="stats-block">
+          <h4>Profit</h4>
+          <div class="stat-row"><span>Profit brut</span><span class="positive">{{ fmtCurrency(tradeStats()?.gross_profit) }}</span></div>
+          <div class="stat-row"><span>Perte brute</span><span class="negative">{{ fmtCurrency(tradeStats()?.gross_loss) }}</span></div>
+          <div class="stat-row"><span>Profit moyen</span><span>{{ fmtCurrency(tradeStats()?.average_profit) }}</span></div>
+          <div class="stat-row"><span>Perte moyenne</span><span>{{ fmtCurrency(tradeStats()?.average_loss) }}</span></div>
+          <div class="stat-row"><span>Espérance</span><span>{{ fmtCurrency(tradeStats()?.expected_payoff) }}</span></div>
         </div>
-
-        <!-- DAILY DRAWDOWN TABLE -->
-        <div class="monthly-growth-section">
-          <div class="monthly-header">
-            <span class="monthly-title">Drawdown journalier</span>
-          </div>
-          <div class="drawdown-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Solde début</th>
-                  <th>Solde min</th>
-                  <th>Drawdown</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of dailyDrawdown(); track row.date) {
-                  <tr>
-                    <td>{{ row.date }}</td>
-                    <td>{{ fmtCurrency(row.start_balance) }}</td>
-                    <td>{{ fmtCurrency(row.min_balance) }}</td>
-                    <td [class]="getDrawdownClass(row.drawdown_percent)">{{ fmtPct(row.drawdown_percent) }}</td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="4" class="empty">Aucune donnée</td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
+        <div class="stats-block">
+          <h4>Ratios</h4>
+          <div class="stat-row"><span>Profit Factor</span><span>{{ fmt(tradeStats()?.profit_factor) }}</span></div>
+          <div class="stat-row"><span>Sharpe Ratio</span><span>{{ fmt(risk()?.sharpe_ratio) }}</span></div>
+          <div class="stat-row"><span>Recovery Factor</span><span>{{ fmt(risk()?.recovery_factor) }}</span></div>
+          <div class="stat-row"><span>Gains consécutifs max</span><span>{{ tradeStats()?.max_consecutive_wins }}</span></div>
+          <div class="stat-row"><span>Pertes consécutives max</span><span>{{ tradeStats()?.max_consecutive_losses }}</span></div>
         </div>
-
-        <!-- DRAWDOWN HISTORY CHART -->
-        <div class="drawdown-chart-section">
-          <div class="chart-title">Historique du Drawdown</div>
-          <div class="drawdown-chart-container">
-            <canvas baseChart [type]="chartType" [data]="drawdownChartData" [options]="drawdownChartOptions"></canvas>
-          </div>
-        </div>
-
-        <div class="actions-row">
-          <button class="btn-action" (click)="resetDrawdown()"><i class="fa-solid fa-rotate"></i> Réinitialiser Drawdown</button>
-        </div>
-      }
-    </div>
-
-    <!-- CHART SECTION -->
-    <div class="chart-section">
-      <div class="chart-header">
-        <div class="chart-stats">
-          <div class="chart-stat">
-            <span class="chart-stat-value" [class]="getProfitClass(stats()?.growth_percent)">{{ fmtPct(stats()?.growth_percent) }}</span>
-            <span class="chart-stat-label">Croissance</span>
-          </div>
-          <div class="chart-stat">
-            <span class="chart-stat-value">{{ fmtCurrency(stats()?.total_deposits) }}</span>
-            <span class="chart-stat-label">Dépôts</span>
-          </div>
-          <div class="chart-stat">
-            <span class="chart-stat-value">{{ fmtCurrency(stats()?.total_withdrawals) }}</span>
-            <span class="chart-stat-label">Retraits</span>
-          </div>
-        </div>
-        <div class="chart-toggles">
-          <button [class.active]="activeChart() === 'all'" (click)="setChart('all')">All</button>
-          <button [class.active]="activeChart() === 'growth'" (click)="setChart('growth')">Croissance</button>
-          <button [class.active]="activeChart() === 'drawdown'" (click)="setChart('drawdown')">Prélèvement</button>
+        <div class="stats-block">
+          <h4>Positions</h4>
+          <div class="stat-row"><span>Long</span><span>{{ tradeStats()?.longs_count }} (gagnés: {{ tradeStats()?.longs_won }})</span></div>
+          <div class="stat-row"><span>Short</span><span>{{ tradeStats()?.shorts_count }} (gagnés: {{ tradeStats()?.shorts_won }})</span></div>
+          <div class="stat-row"><span>Durée moyenne</span><span>{{ fmtTime(tradeStats()?.avg_holding_time_seconds) }}</span></div>
         </div>
       </div>
-      <div class="timeframe-bar">
+    }
+
+    <!-- RISKS TAB -->
+    @if (activeTab() === 'risks') {
+      <div class="stats-grid">
+        <div class="stats-block wide">
+          <h4>Drawdown</h4>
+          <div class="stat-row"><span>Maximum</span><span class="warning">{{ fmtCurrency(risk()?.max_drawdown) }} ({{ fmtPct(risk()?.max_drawdown_percent) }})</span></div>
+          <div class="stat-row"><span>Actuel</span><span class="warning">{{ fmtCurrency(risk()?.current_drawdown) }} ({{ fmtPct(risk()?.current_drawdown_percent) }})</span></div>
+          <div class="stat-row"><span>Relatif (solde)</span><span>{{ fmtPct(risk()?.relative_drawdown_balance) }}</span></div>
+          <div class="stat-row"><span>Relatif (équité)</span><span>{{ fmtPct(risk()?.relative_drawdown_equity) }}</span></div>
+        </div>
+        <div class="stats-block wide">
+          <h4>Marge</h4>
+          <div class="stat-row"><span>Charge max</span><span>{{ fmtPct(risk()?.max_deposit_load) }}</span></div>
+          <div class="stat-row"><span>Marge utilisée</span><span>{{ fmtCurrency(account()?.margin) }}</span></div>
+          <div class="stat-row"><span>Marge libre</span><span>{{ fmtCurrency(account()?.free_margin) }}</span></div>
+          <div class="stat-row"><span>Niveau marge</span><span>{{ fmtPct(account()?.margin_level) }}</span></div>
+        </div>
+      </div>
+
+      <!-- Drawdown Chart -->
+      <section class="content-section">
+        <h3><i class="fa fa-chart-area"></i> Historique Drawdown</h3>
+        <div class="chart-container">
+          <canvas baseChart [type]="chartType" [data]="drawdownChartData" [options]="drawdownChartOptions"></canvas>
+        </div>
+      </section>
+
+      <div class="actions-row">
+        <button class="btn-action" (click)="resetDrawdown()">
+          <i class="fa fa-redo"></i> Réinitialiser Drawdown
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Main Chart -->
+  <section class="main-chart-section">
+    <div class="chart-header">
+      <div class="chart-toggles">
+        <button [class.active]="activeChart() === 'all'" (click)="setChart('all')">Tout</button>
+        <button [class.active]="activeChart() === 'growth'" (click)="setChart('growth')">Croissance</button>
+        <button [class.active]="activeChart() === 'drawdown'" (click)="setChart('drawdown')">Drawdown</button>
+      </div>
+      <div class="timeframe-toggles">
         @for (tf of timeframes; track tf) {
           <button [class.active]="activeTimeframe() === tf" (click)="setTimeframe(tf)">{{ tf }}</button>
         }
       </div>
-      <div class="chart-container">
-        <canvas baseChart [type]="chartType" [data]="chartData" [options]="chartOptions"></canvas>
-      </div>
     </div>
-  </main>
+    <div class="chart-container large">
+      <canvas baseChart [type]="chartType" [data]="chartData" [options]="chartOptions"></canvas>
+    </div>
+  </section>
 </div>

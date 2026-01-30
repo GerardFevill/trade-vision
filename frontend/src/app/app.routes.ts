@@ -17,5 +17,11 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/account-detail/account-detail.routes').then(m => m.ACCOUNT_DETAIL_ROUTES),
     title: 'Détails du compte'
+  },
+  {
+    path: 'portfolios',
+    loadChildren: () =>
+      import('./features/portfolios/portfolios.routes').then(m => m.PORTFOLIOS_ROUTES),
+    title: 'Portefeuilles'
   }
 ];

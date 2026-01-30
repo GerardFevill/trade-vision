@@ -9,7 +9,7 @@ import { SparklineComponent, formatCurrency, formatPercentSigned, getProfitClass
 import { AccountsHeaderComponent } from '../../ui';
 
 type ViewMode = 'grid' | 'list';
-type BrokerFilter = 'all' | 'roboforex' | 'icmarkets';
+type ClientFilter = 'all' | 'CosmosElite' | 'Akaj';
 type SortColumn = 'name' | 'balance' | 'profit' | 'profit_percent' | 'win_rate' | 'drawdown' | 'trades';
 
 /**
@@ -33,7 +33,7 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
   viewMode = signal<ViewMode>('grid');
-  brokerFilter = signal<BrokerFilter>('all');
+  clientFilter = signal<ClientFilter>('all');
   searchQuery = signal<string>('');
   sortColumn = signal<SortColumn>('balance');
   sortDirection = signal<'asc' | 'desc'>('desc');
@@ -52,11 +52,9 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   // Computed
   filteredAccounts = computed(() => {
     let result = this.accounts();
-    const brokerF = this.brokerFilter();
-    if (brokerF === 'roboforex') {
-      result = result.filter(a => a.broker.toLowerCase().includes('roboforex'));
-    } else if (brokerF === 'icmarkets') {
-      result = result.filter(a => !a.broker.toLowerCase().includes('roboforex'));
+    const clientF = this.clientFilter();
+    if (clientF !== 'all') {
+      result = result.filter(a => a.client === clientF);
     }
 
     const query = this.searchQuery().toLowerCase().trim();
@@ -64,7 +62,8 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
       result = result.filter(a =>
         a.name.toLowerCase().includes(query) ||
         a.id.toString().includes(query) ||
-        a.broker.toLowerCase().includes(query)
+        a.broker.toLowerCase().includes(query) ||
+        (a.client && a.client.toLowerCase().includes(query))
       );
     }
 
@@ -92,15 +91,15 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     return result;
   });
 
-  connectedCount = computed(() => this.accounts().filter(a => a.connected).length);
-  totalEUR = computed(() => this.accounts().filter(a => a.currency === 'EUR' && a.connected).reduce((s, a) => s + a.balance, 0));
-  totalUSD = computed(() => this.accounts().filter(a => a.currency === 'USD' && a.connected).reduce((s, a) => s + a.balance, 0));
-  totalProfitEUR = computed(() => this.accounts().filter(a => a.currency === 'EUR' && a.connected).reduce((s, a) => s + a.profit, 0));
-  totalProfitUSD = computed(() => this.accounts().filter(a => a.currency === 'USD' && a.connected).reduce((s, a) => s + a.profit, 0));
-  totalTrades = computed(() => this.accounts().filter(a => a.connected).reduce((s, a) => s + a.trades, 0));
+  connectedCount = computed(() => this.filteredAccounts().filter(a => a.connected).length);
+  totalEUR = computed(() => this.filteredAccounts().filter(a => a.currency === 'EUR' && a.connected).reduce((s, a) => s + a.balance, 0));
+  totalUSD = computed(() => this.filteredAccounts().filter(a => a.currency === 'USD' && a.connected).reduce((s, a) => s + a.balance, 0));
+  totalProfitEUR = computed(() => this.filteredAccounts().filter(a => a.currency === 'EUR' && a.connected).reduce((s, a) => s + a.profit, 0));
+  totalProfitUSD = computed(() => this.filteredAccounts().filter(a => a.currency === 'USD' && a.connected).reduce((s, a) => s + a.profit, 0));
+  totalTrades = computed(() => this.filteredAccounts().filter(a => a.connected).reduce((s, a) => s + a.trades, 0));
 
   globalWinRate = computed(() => {
-    const connected = this.accounts().filter(a => a.connected && a.trades > 0);
+    const connected = this.filteredAccounts().filter(a => a.connected && a.trades > 0);
     if (!connected.length) return 0;
     const totalW = connected.reduce((s, a) => s + (a.win_rate * a.trades), 0);
     const totalT = connected.reduce((s, a) => s + a.trades, 0);
@@ -108,7 +107,7 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   });
 
   globalGrowthEUR = computed(() => {
-    const eur = this.accounts().filter(a => a.currency === 'EUR' && a.connected);
+    const eur = this.filteredAccounts().filter(a => a.currency === 'EUR' && a.connected);
     if (!eur.length) return 0;
     const dep = eur.reduce((s, a) => s + (a.balance - a.profit), 0);
     const prof = eur.reduce((s, a) => s + a.profit, 0);
@@ -116,15 +115,15 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   });
 
   globalGrowthUSD = computed(() => {
-    const usd = this.accounts().filter(a => a.currency === 'USD' && a.connected);
+    const usd = this.filteredAccounts().filter(a => a.currency === 'USD' && a.connected);
     if (!usd.length) return 0;
     const dep = usd.reduce((s, a) => s + (a.balance - a.profit), 0);
     const prof = usd.reduce((s, a) => s + a.profit, 0);
     return dep > 0 ? (prof / dep) * 100 : 0;
   });
 
-  roboforexCount = computed(() => this.accounts().filter(a => a.broker.toLowerCase().includes('roboforex')).length);
-  icmarketsCount = computed(() => this.accounts().filter(a => !a.broker.toLowerCase().includes('roboforex')).length);
+  cosmosEliteCount = computed(() => this.accounts().filter(a => a.client === 'CosmosElite').length);
+  akajCount = computed(() => this.accounts().filter(a => a.client === 'Akaj').length);
 
   constructor(
     private router: Router,
@@ -194,7 +193,7 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
 
   refresh(): void { this.loadAccounts(); }
   setViewMode(mode: ViewMode): void { this.viewMode.set(mode); }
-  setBrokerFilter(filter: BrokerFilter): void { this.brokerFilter.set(filter); }
+  setClientFilter(filter: ClientFilter): void { this.clientFilter.set(filter); }
   setSearchQuery(query: string): void { this.searchQuery.set(query); }
 
   sortBy(column: SortColumn): void {

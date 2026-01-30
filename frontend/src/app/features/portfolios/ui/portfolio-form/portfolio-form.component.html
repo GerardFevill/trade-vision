@@ -1,0 +1,89 @@
+<div class="portfolio-form">
+  <header class="form-header">
+    <h2><i class="fa fa-plus-circle"></i> Nouveau Portefeuille</h2>
+    <button class="btn-close" (click)="onCancel()">
+      <i class="fa fa-times"></i>
+    </button>
+  </header>
+
+  <form (ngSubmit)="onSubmit()">
+    <!-- Name -->
+    <div class="form-group">
+      <label for="name">Nom du portefeuille</label>
+      <input
+        type="text"
+        id="name"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        name="name"
+        placeholder="Ex: Mon Portefeuille Conservateur"
+        required
+      />
+    </div>
+
+    <!-- Client -->
+    <div class="form-group">
+      <label for="client">Client</label>
+      <select
+        id="client"
+        [ngModel]="client()"
+        (ngModelChange)="client.set($event)"
+        name="client"
+        required
+      >
+        <option value="" disabled>Choisir un client</option>
+        @for (c of clients; track c) {
+          <option [value]="c">{{ c }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Type -->
+    <div class="form-group">
+      <label>Type de portefeuille</label>
+      <div class="type-options">
+        @for (t of portfolioTypes; track t) {
+          <label class="type-option" [class.selected]="type() === t" [class]="'type-' + t.toLowerCase()">
+            <input
+              type="radio"
+              name="type"
+              [value]="t"
+              [checked]="type() === t"
+              (change)="type.set(t)"
+            />
+            <div class="type-content">
+              <span class="type-name">{{ t }}</span>
+              <span class="type-desc">{{ getTypeDescription(t) }}</span>
+              <div class="type-factors">
+                @for (f of getFactorsForType(t); track f) {
+                  <span class="factor">{{ f }}x</span>
+                }
+              </div>
+            </div>
+          </label>
+        }
+      </div>
+    </div>
+
+    <!-- Error -->
+    @if (error()) {
+      <div class="error-message">
+        <i class="fa fa-exclamation-circle"></i> {{ error() }}
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="onCancel()">
+        Annuler
+      </button>
+      <button type="submit" class="btn-submit" [disabled]="loading()">
+        @if (loading()) {
+          <i class="fa fa-spinner fa-spin"></i> Creation...
+        } @else {
+          <i class="fa fa-check"></i> Creer le portefeuille
+        }
+      </button>
+    </div>
+  </form>
+</div>

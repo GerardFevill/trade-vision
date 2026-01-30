@@ -1,0 +1,45 @@
+<div class="account-selector">
+  <header class="selector-header">
+    <h3><i class="fa fa-user-plus"></i> Ajouter un compte ({{ selectedFactor }}x)</h3>
+    <button class="btn-close" (click)="onCancel()">
+      <i class="fa fa-times"></i>
+    </button>
+  </header>
+
+  <div class="search-box">
+    <i class="fa fa-search"></i>
+    <input
+      type="text"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+      placeholder="Rechercher un compte..."
+    />
+  </div>
+
+  <div class="accounts-list">
+    @for (account of filteredAccounts(); track account.id) {
+      <div class="account-item" (click)="selectAccount(account)">
+        <div class="account-info">
+          <span class="account-name">{{ account.name }}</span>
+          <span class="account-id">#{{ account.id }}</span>
+        </div>
+        <div class="account-balance">
+          {{ fmt.formatCurrency(account.balance, account.currency) }}
+        </div>
+        <div class="account-client">
+          {{ account.client || 'N/A' }}
+        </div>
+        <i class="fa fa-chevron-right"></i>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <i class="fa fa-inbox"></i>
+        <p>Aucun compte disponible</p>
+      </div>
+    }
+  </div>
+
+  <footer class="selector-footer">
+    <button class="btn-cancel" (click)="onCancel()">Annuler</button>
+  </footer>
+</div>

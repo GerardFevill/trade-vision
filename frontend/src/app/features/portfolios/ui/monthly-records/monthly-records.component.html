@@ -1,0 +1,211 @@
+<div class="monthly-records">
+  <header class="records-header">
+    <div class="header-left">
+      <h3><i class="fa fa-calendar-alt"></i> Ajustements Mensuels</h3>
+      <span class="withdrawal-badge">{{ withdrawalPct() }}% des gains</span>
+    </div>
+    <button class="btn-close" (click)="onClose()">
+      <i class="fa fa-times"></i>
+    </button>
+  </header>
+
+  <!-- Month tabs -->
+  <div class="month-tabs">
+    <button
+      class="tab"
+      [class.active]="!selectedMonth()"
+      (click)="loadCurrentPreview()">
+      <i class="fa fa-clock"></i> En cours
+    </button>
+    @for (month of months(); track month) {
+      <button
+        class="tab"
+        [class.active]="selectedMonth() === month"
+        (click)="loadMonth(month)">
+        {{ formatMonth(month) }}
+      </button>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="fa fa-spinner fa-spin"></i>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="error-banner">
+      <i class="fa fa-exclamation-triangle"></i> {{ error() }}
+    </div>
+  }
+
+  <!-- Current Month Preview -->
+  @if (currentPreview(); as preview) {
+    <div class="preview-section">
+      <div class="preview-header">
+        <h4>{{ formatMonth(preview.month) }} - Mois en cours</h4>
+        <div class="date-range">
+          <i class="fa fa-calendar"></i>
+          {{ preview.month_start }} → {{ preview.current_date }}
+          <span class="days-progress">({{ preview.days_elapsed }}/{{ preview.days_in_month }} jours)</span>
+        </div>
+      </div>
+
+      <div class="summary-bar">
+        <div class="summary-item">
+          <span class="label">Balance debut</span>
+          <span class="value">{{ fmt.formatCurrency(preview.total_starting, 'USD') }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Balance actuelle</span>
+          <span class="value">{{ fmt.formatCurrency(preview.total_current, 'USD') }}</span>
+        </div>
+        <div class="summary-item highlight">
+          <span class="label">Profit du mois</span>
+          <span class="value" [class]="getProfitClass(preview.total_profit)">
+            {{ fmt.formatCurrency(preview.total_profit, 'USD') }}
+            ({{ preview.total_profit_percent.toFixed(1) }}%)
+          </span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Retrait suggere ({{ preview.withdrawal_percentage }}%)</span>
+          <span class="value suggested">{{ fmt.formatCurrency(preview.total_suggested_withdrawal, 'USD') }}</span>
+        </div>
+      </div>
+
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Compte</th>
+            <th>Facteur</th>
+            <th>Debut</th>
+            <th>Actuel</th>
+            <th>Profit mois</th>
+            <th>%</th>
+            <th>Retrait suggere</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (acc of preview.accounts; track acc.account_id) {
+            <tr>
+              <td class="account-cell">
+                <span class="account-name">{{ acc.account_name }}</span>
+                <span class="account-id">#{{ acc.account_id }}</span>
+              </td>
+              <td class="factor">{{ acc.lot_factor }}x</td>
+              <td>{{ fmt.formatCurrency(acc.starting_balance, acc.currency) }}</td>
+              <td>{{ fmt.formatCurrency(acc.current_balance, acc.currency) }}</td>
+              <td [class]="getProfitClass(acc.monthly_profit)">
+                {{ fmt.formatCurrency(acc.monthly_profit, acc.currency) }}
+              </td>
+              <td [class]="getProfitClass(acc.profit_percent)">
+                {{ acc.profit_percent.toFixed(1) }}%
+              </td>
+              <td class="suggested">{{ fmt.formatCurrency(acc.suggested_withdrawal, acc.currency) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Monthly Snapshot -->
+  @if (snapshot(); as snap) {
+    <div class="snapshot-section">
+      <div class="snapshot-header">
+        <h4>{{ formatMonth(snap.month) }}</h4>
+        <div class="header-actions">
+          @if (!editMode()) {
+            <button class="btn-secondary" (click)="toggleEditMode()">
+              <i class="fa fa-edit"></i> Modifier
+            </button>
+          } @else {
+            <button class="btn-ghost" (click)="applySuggested()">
+              <i class="fa fa-magic"></i> Appliquer suggere
+            </button>
+            <button class="btn-ghost" (click)="toggleEditMode()">
+              <i class="fa fa-times"></i> Annuler
+            </button>
+            <button class="btn-primary" (click)="saveWithdrawals()">
+              <i class="fa fa-save"></i> Sauvegarder
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="summary-bar">
+        <div class="summary-item">
+          <span class="label">Balance debut</span>
+          <span class="value">{{ fmt.formatCurrency(snap.total_starting, 'USD') }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Balance fin</span>
+          <span class="value">{{ fmt.formatCurrency(snap.total_ending, 'USD') }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Profit</span>
+          <span class="value" [class]="getProfitClass(snap.total_profit)">
+            {{ fmt.formatCurrency(snap.total_profit, 'USD') }}
+            ({{ snap.total_profit_percent.toFixed(1) }}%)
+          </span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Total retraits</span>
+          <span class="value withdrawn">{{ fmt.formatCurrency(snap.total_withdrawal, 'USD') }}</span>
+        </div>
+      </div>
+
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Compte</th>
+            <th>Facteur</th>
+            <th>Debut</th>
+            <th>Fin</th>
+            <th>Profit</th>
+            <th>Suggere</th>
+            <th>Retrait</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (acc of snap.accounts; track acc.account_id) {
+            <tr>
+              <td class="account-cell">
+                <span class="account-name">{{ acc.account_name }}</span>
+                <span class="account-id">#{{ acc.account_id }}</span>
+              </td>
+              <td class="factor">{{ acc.lot_factor }}x</td>
+              <td>{{ fmt.formatCurrency(acc.starting_balance, acc.currency) }}</td>
+              <td>{{ fmt.formatCurrency(acc.ending_balance, acc.currency) }}</td>
+              <td [class]="getProfitClass(acc.profit)">
+                {{ fmt.formatCurrency(acc.profit, acc.currency) }}
+                <small>({{ acc.profit_percent.toFixed(1) }}%)</small>
+              </td>
+              <td class="suggested">{{ fmt.formatCurrency(acc.suggested_withdrawal, acc.currency) }}</td>
+              <td class="withdrawal-cell">
+                @if (editMode()) {
+                  <input
+                    type="number"
+                    class="withdrawal-input"
+                    [value]="withdrawalEdits().get(acc.account_id) || 0"
+                    (input)="updateWithdrawal(acc.account_id, +$any($event.target).value)"
+                  />
+                } @else {
+                  <span class="withdrawn">{{ fmt.formatCurrency(acc.actual_withdrawal, acc.currency) }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (snap.is_closed) {
+        <div class="closed-badge">
+          <i class="fa fa-check-circle"></i> Retraits enregistres
+        </div>
+      }
+    </div>
+  }
+</div>

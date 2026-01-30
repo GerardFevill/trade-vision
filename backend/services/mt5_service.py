@@ -201,7 +201,7 @@ class MT5Connector:
             name=info.name,
             login=info.login,
             currency=info.currency,
-            trade_mode=trade_modes.get(info.trade_mode, "Unknown")
+            trade_mode=trade_modes.get(getattr(info, 'trade_mode', 2), "Unknown")
         )
 
     def _calculate_monthly_growth(self, deals, current_balance: float) -> float:
@@ -230,6 +230,58 @@ class MT5Connector:
         # Growth = (balance_actuelle - balance_debut_mois) / balance_debut_mois * 100
         growth = (current_balance - balance_start_of_month) / balance_start_of_month * 100
         return growth
+
+    def get_current_month_profit(self) -> dict | None:
+        """Get profit for current month from MT5 deals (accurate, excluding deposits/withdrawals)"""
+        if not self.connected and not self.connect():
+            return None
+
+        info = mt5.account_info()
+        if not info:
+            return None
+
+        current_balance = info.balance
+        deals = mt5.history_deals_get(datetime(2000, 1, 1), datetime.now())
+        if not deals:
+            return {"starting_balance": current_balance, "profit": 0.0, "current_balance": current_balance, "deposits": 0.0, "withdrawals": 0.0}
+
+        now = datetime.now()
+        start_of_month = datetime(now.year, now.month, 1)
+        start_timestamp = start_of_month.timestamp()
+
+        # Calculate balance at start of month and track deposits/withdrawals this month
+        balance_start_of_month = 0.0
+        deposits_this_month = 0.0
+        withdrawals_this_month = 0.0
+
+        for d in sorted(deals, key=lambda x: x.time):
+            if d.time < start_timestamp:
+                # Before this month - add to starting balance
+                if d.type == mt5.DEAL_TYPE_BALANCE:
+                    balance_start_of_month += d.profit
+                elif d.type in [mt5.DEAL_TYPE_BUY, mt5.DEAL_TYPE_SELL]:
+                    balance_start_of_month += d.profit + d.commission + d.swap
+            else:
+                # This month - track deposits/withdrawals separately
+                if d.type == mt5.DEAL_TYPE_BALANCE:
+                    if d.profit > 0:
+                        deposits_this_month += d.profit
+                    else:
+                        withdrawals_this_month += abs(d.profit)
+
+        # Effective starting balance = starting + deposits - withdrawals
+        effective_starting = balance_start_of_month + deposits_this_month - withdrawals_this_month
+
+        # Trading profit = current balance - effective starting balance
+        trading_profit = current_balance - effective_starting
+
+        return {
+            "starting_balance": round(effective_starting, 2),
+            "profit": round(trading_profit, 2),
+            "current_balance": round(current_balance, 2),
+            "deposits": round(deposits_this_month, 2),
+            "withdrawals": round(withdrawals_this_month, 2)
+        }
 
     def get_account_stats(self) -> AccountStats | None:
         if not self.connected and not self.connect():
@@ -269,8 +321,8 @@ class MT5Connector:
         net_deposit = total_deposits - total_withdrawals
         total_profit = info.balance - net_deposit if net_deposit > 0 else 0
 
-        # Calculer la croissance depuis le début du mois
-        growth = self._calculate_monthly_growth(deals, info.balance)
+        # Calculer la croissance totale (profit / dépôt net)
+        growth = (total_profit / net_deposit * 100) if net_deposit > 0 else 0
 
         # Store history point (en mémoire et dans la DB)
         now = datetime.now()
@@ -726,6 +778,7 @@ class MT5Connector:
             account_name = acc_config["name"]
             terminal_key = acc_config.get("terminal", "roboforex")
             broker_name = "IC Markets" if terminal_key == "icmarkets" else "RoboForex"
+            client = acc_config.get("client")
 
             try:
                 # Se connecter au compte
@@ -745,7 +798,8 @@ class MT5Connector:
                         win_rate=0,
                         currency="USD",
                         leverage=0,
-                        connected=False
+                        connected=False,
+                        client=client
                     ))
                     continue
 
@@ -797,7 +851,8 @@ class MT5Connector:
                     win_rate=round(win_rate, 1),
                     currency=info.currency,
                     leverage=info.leverage,
-                    connected=True
+                    connected=True,
+                    client=client
                 ))
 
             except Exception as e:
@@ -816,7 +871,8 @@ class MT5Connector:
                     win_rate=0,
                     currency="USD",
                     leverage=0,
-                    connected=False
+                    connected=False,
+                    client=client
                 ))
 
         # Sauvegarder dans le cache

@@ -13,6 +13,18 @@ import {
   GlobalMonthlyGrowth
 } from '../models';
 
+import {
+  Portfolio,
+  PortfolioSummary,
+  PortfolioDetail,
+  CreatePortfolioRequest,
+  UpdatePortfolioRequest,
+  AddAccountRequest,
+  MonthlySnapshot,
+  CurrentMonthPreview,
+  UpdateWithdrawalRequest
+} from '../models/portfolio.model';
+
 /**
  * MT5 API Service
  * Handles all HTTP communication with the backend
@@ -115,5 +127,120 @@ export class Mt5ApiService {
 
   startPolling(): void {
     this.refresh();
+  }
+
+  // Portfolio endpoints
+  getPortfolioTypes(): Observable<{ types: Record<string, number[]>; all_factors: number[] }> {
+    return this.http.get<{ types: Record<string, number[]>; all_factors: number[] }>(
+      `${this.apiUrl}/portefeuilles/types`
+    );
+  }
+
+  getPortfolioClients(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/portefeuilles/clients`);
+  }
+
+  getUsedAccountIds(): Observable<number[]> {
+    return this.http.get<number[]>(`${this.apiUrl}/portefeuilles/used-accounts`);
+  }
+
+  getPortfolios(client?: string): Observable<PortfolioSummary[]> {
+    const url = client
+      ? `${this.apiUrl}/portefeuilles?client=${encodeURIComponent(client)}`
+      : `${this.apiUrl}/portefeuilles`;
+    return this.http.get<PortfolioSummary[]>(url);
+  }
+
+  getPortfolio(id: number): Observable<PortfolioDetail> {
+    return this.http.get<PortfolioDetail>(`${this.apiUrl}/portefeuilles/${id}`);
+  }
+
+  createPortfolio(request: CreatePortfolioRequest): Observable<Portfolio> {
+    return this.http.post<Portfolio>(`${this.apiUrl}/portefeuilles`, request);
+  }
+
+  updatePortfolio(id: number, request: UpdatePortfolioRequest): Observable<Portfolio> {
+    return this.http.put<Portfolio>(`${this.apiUrl}/portefeuilles/${id}`, request);
+  }
+
+  deletePortfolio(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/portefeuilles/${id}`);
+  }
+
+  addAccountToPortfolio(portfolioId: number, request: AddAccountRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/accounts`,
+      request
+    );
+  }
+
+  removeAccountFromPortfolio(portfolioId: number, accountId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/accounts/${accountId}`
+    );
+  }
+
+  // Monthly records endpoints
+  getMonthlyHistory(portfolioId: number): Observable<{ months: string[] }> {
+    return this.http.get<{ months: string[] }>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly`
+    );
+  }
+
+  getMonthlySnapshot(portfolioId: number, month: string): Observable<MonthlySnapshot> {
+    return this.http.get<MonthlySnapshot>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly/${month}`
+    );
+  }
+
+  createMonthlySnapshot(portfolioId: number, month: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly/${month}`,
+      {}
+    );
+  }
+
+  closeMonthlySnapshot(portfolioId: number, month: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly/${month}/close`,
+      {}
+    );
+  }
+
+  updateMonthlyWithdrawals(
+    portfolioId: number,
+    month: string,
+    withdrawals: UpdateWithdrawalRequest[]
+  ): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly/${month}`,
+      { withdrawals }
+    );
+  }
+
+  getCurrentMonthPreview(portfolioId: number): Observable<CurrentMonthPreview> {
+    return this.http.get<CurrentMonthPreview>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly-current`
+    );
+  }
+
+  updateStartingBalance(portfolioId: number, accountId: number, startingBalance: number): Observable<any> {
+    return this.http.put(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly-current/starting-balance`,
+      { account_id: accountId, starting_balance: startingBalance }
+    );
+  }
+
+  closeCurrentMonth(portfolioId: number): Observable<{ message: string; phase?: number; accounts_closed: number }> {
+    return this.http.post<{ message: string; phase?: number; accounts_closed: number }>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly-current/close`,
+      {}
+    );
+  }
+
+  getEliteMonthlyHistory(portfolioId: number, month: string): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/portefeuilles/${portfolioId}/monthly/${month}/elite`
+    );
   }
 }

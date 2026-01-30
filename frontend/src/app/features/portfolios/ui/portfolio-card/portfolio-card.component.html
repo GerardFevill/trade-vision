@@ -1,0 +1,59 @@
+<article class="portfolio-card" [class]="getTypeClass()">
+  <!-- Delete Button -->
+  <button class="btn-delete" (click)="onDelete($event)" title="Supprimer">
+    <i class="fa fa-trash"></i>
+  </button>
+
+  <!-- Header -->
+  <header class="card-header">
+    <div class="type-icon" [class]="getTypeClass()">
+      <i class="fa" [class]="getTypeIcon()"></i>
+    </div>
+    <div class="card-identity">
+      <h3 class="portfolio-name">{{ portfolio.name }}</h3>
+      <span class="portfolio-client">{{ portfolio.client }}</span>
+    </div>
+    <span class="type-badge" [class]="getTypeClass()">{{ portfolio.type }}</span>
+  </header>
+
+  <!-- Balance (Hero) -->
+  <div class="portfolio-balance">
+    <span class="balance-value">{{ fmt.formatCurrency(portfolio.total_balance, 'USD') }}</span>
+    <span class="balance-label">Balance Totale</span>
+  </div>
+
+  <!-- Stats -->
+  <div class="portfolio-stats">
+    <div class="stat-item">
+      <span class="stat-value" [class]="fmt.getProfitClass(portfolio.total_profit)">
+        {{ fmt.formatCurrency(portfolio.total_profit, 'USD') }}
+      </span>
+      <span class="stat-label">Profit</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">{{ portfolio.account_count }}</span>
+      <span class="stat-label">Comptes</span>
+    </div>
+  </div>
+
+  <!-- Factors Preview -->
+  <div class="factors-preview">
+    <span class="factors-label">Facteurs:</span>
+    <div class="factors-list">
+      @for (factor of getAvailableFactors(); track factor) {
+        <span class="factor-chip">{{ factor }}x</span>
+      }
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="card-footer">
+    <span class="created-date">
+      <i class="fa fa-calendar"></i>
+      {{ portfolio.created_at | date:'dd/MM/yyyy' }}
+    </span>
+    <span class="view-link">
+      Voir details <i class="fa fa-arrow-right"></i>
+    </span>
+  </footer>
+</article>

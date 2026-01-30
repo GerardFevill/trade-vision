@@ -45,6 +45,7 @@ export interface AccountSummary {
   currency: string;
   leverage: number;
   connected: boolean;
+  client: string | null;
 }
 
 export interface ConnectionStatus {

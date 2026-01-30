@@ -1,6 +1,6 @@
 """API module"""
 from fastapi import APIRouter
-from .routes import accounts, dashboard, analytics, trades, drawdown
+from .routes import accounts, dashboard, analytics, trades, drawdown, portefeuilles
 
 # Main API router
 api_router = APIRouter(prefix="/api")
@@ -11,5 +11,6 @@ api_router.include_router(dashboard.router, tags=["dashboard"])
 api_router.include_router(analytics.router, tags=["analytics"])
 api_router.include_router(trades.router, tags=["trades"])
 api_router.include_router(drawdown.router, tags=["drawdown"])
+api_router.include_router(portefeuilles.router, tags=["portefeuilles"])
 
 __all__ = ['api_router']

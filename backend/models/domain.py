@@ -114,3 +114,67 @@ class DailyDrawdown(BaseModel):
     drawdown_percent: float
     start_balance: float
     min_balance: float
+
+
+# Portfolio management
+LOT_FACTORS = [0.2, 0.6, 1.0, 1.4, 1.8, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
+
+PORTFOLIO_TYPES = {
+    "Conservateur": [0.2, 0.6, 1.0, 1.4, 1.8],
+    "Modere": [2.0],
+    "Agressif": [2.5, 3.0, 3.5, 4.0, 4.5],
+}
+
+
+class Portefeuille(BaseModel):
+    id: int
+    name: str  # "Conservateur", "Modere", "Agressif" or custom name
+    type: str  # "Conservateur", "Modere", "Agressif"
+    client: str  # "Akaj", "CosmosElite"
+    created_at: datetime
+    updated_at: datetime
+
+
+class PortefeuilleAccount(BaseModel):
+    portfolio_id: int
+    account_id: int
+    lot_factor: float  # 0.2 -> 4.5
+
+
+class PortefeuilleMonthlyRecord(BaseModel):
+    """Monthly snapshot for a portfolio account"""
+    id: int
+    portfolio_id: int
+    account_id: int
+    month: str  # YYYY-MM format
+    lot_factor: float
+    starting_balance: float
+    ending_balance: float
+    profit: float
+    withdrawal: float
+    note: str | None
+    created_at: datetime
+
+
+class PortefeuilleMonthlySnapshot(BaseModel):
+    """Monthly summary for entire portfolio"""
+    month: str  # YYYY-MM
+    total_starting: float
+    total_ending: float
+    total_profit: float
+    total_withdrawal: float
+    accounts: list["PortefeuilleAccountMonthly"]
+
+
+class PortefeuilleAccountMonthly(BaseModel):
+    """Monthly data for one account in portfolio"""
+    account_id: int
+    account_name: str
+    lot_factor: float
+    starting_balance: float
+    ending_balance: float
+    profit: float
+    profit_percent: float
+    suggested_withdrawal: float  # Based on lot factor distribution
+    actual_withdrawal: float
+    currency: str

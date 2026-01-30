@@ -3,9 +3,20 @@
   <header class="page-header">
     <div class="header-left">
       <h1 class="page-title"><i class="fa fa-signal"></i> Mes Signaux</h1>
-      <span class="signals-count">{{ connectedCount() }}/{{ accounts().length }} connectés</span>
+      <span class="signals-count">{{ connectedCount() }}/{{ filteredAccounts().length }} connectés</span>
     </div>
     <div class="header-right">
+      <div class="client-filter">
+        <button class="btn-filter" [class.active]="clientFilter() === 'all'" (click)="setClientFilter('all')">
+          Tous ({{ accounts().length }})
+        </button>
+        <button class="btn-filter cosmos" [class.active]="clientFilter() === 'CosmosElite'" (click)="setClientFilter('CosmosElite')">
+          CosmosElite ({{ cosmosEliteCount() }})
+        </button>
+        <button class="btn-filter akaj" [class.active]="clientFilter() === 'Akaj'" (click)="setClientFilter('Akaj')">
+          Akaj ({{ akajCount() }})
+        </button>
+      </div>
       <div class="view-toggle">
         <button class="btn-view" [class.active]="viewMode() === 'grid'" (click)="setViewMode('grid')">
           <i class="fa fa-th-large"></i>
@@ -92,10 +103,10 @@
             </div>
           </header>
 
-          <!-- Growth (Hero Metric) -->
-          <div class="signal-growth" [class]="fmt.getProfitClass(account.profit_percent)">
-            <span class="growth-value">{{ fmt.formatPercentSigned(account.profit_percent) }}</span>
-            <span class="growth-label">Croissance</span>
+          <!-- Balance (Hero Metric) -->
+          <div class="signal-balance">
+            <span class="balance-value">{{ fmt.formatCurrency(account.balance, account.currency) }}</span>
+            <span class="balance-label">Solde</span>
           </div>
 
           <!-- Sparkline -->
@@ -108,8 +119,8 @@
           <!-- Key Stats -->
           <div class="signal-stats">
             <div class="stat-item">
-              <span class="stat-value">{{ fmt.formatCurrency(account.balance, account.currency) }}</span>
-              <span class="stat-label">Solde</span>
+              <span class="stat-value" [class]="fmt.getProfitClass(account.profit_percent)">{{ fmt.formatPercentSigned(account.profit_percent) }}</span>
+              <span class="stat-label">Croissance</span>
             </div>
             <div class="stat-item">
               <span class="stat-value" [class]="fmt.getProfitClass(account.profit)">{{ fmt.formatCurrency(account.profit, account.currency) }}</span>
@@ -135,7 +146,9 @@
 
           <!-- Footer -->
           <footer class="signal-footer">
-            <span class="broker"><i class="fa fa-building"></i> {{ account.broker }}</span>
+            <span class="client-badge" [class.cosmos]="account.client === 'CosmosElite'" [class.akaj]="account.client === 'Akaj'">
+              {{ account.client || 'N/A' }}
+            </span>
             <span class="leverage">1:{{ account.leverage }}</span>
           </footer>
         </article>
@@ -172,7 +185,7 @@
               Trades <i class="fa" [class]="getSortIcon('trades')"></i>
             </th>
             <th class="th-sparkline">Tendance</th>
-            <th class="th-broker">Broker</th>
+            <th class="th-client">Client</th>
           </tr>
         </thead>
         <tbody>
@@ -209,8 +222,10 @@
                   <app-sparkline [data]="getSparklineData(account.id)" [height]="30"></app-sparkline>
                 }
               </td>
-              <td class="td-broker">
-                <span class="broker-badge">{{ account.broker }}</span>
+              <td class="td-client">
+                <span class="client-badge" [class.cosmos]="account.client === 'CosmosElite'" [class.akaj]="account.client === 'Akaj'">
+                  {{ account.client || 'N/A' }}
+                </span>
               </td>
             </tr>
           }

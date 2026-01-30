@@ -1,0 +1,254 @@
+// Theme
+$bg-card: #141414;
+$bg-input: #1c1c1c;
+$border: #252525;
+$border-light: #333;
+$text: #e8e8e8;
+$text-secondary: #999;
+$text-muted: #666;
+$accent: #2962ff;
+$positive: #00c853;
+$negative: #ff1744;
+
+// Type colors
+$conservateur: #10b981;
+$modere: #f59e0b;
+$agressif: #ef4444;
+
+.portfolio-form {
+  padding: 0;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid $border;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: $text;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    i { color: $accent; }
+  }
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255,255,255,0.05);
+    color: $text;
+  }
+}
+
+form {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: $text-secondary;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 12px 14px;
+    background: $bg-input;
+    border: 1px solid $border;
+    border-radius: 8px;
+    color: $text;
+    font-size: 14px;
+    transition: all 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $accent;
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 10.5l-4-4h8l-4 4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+  }
+}
+
+// Type options
+.type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.type-option {
+  position: relative;
+  padding: 14px 16px;
+  background: $bg-input;
+  border: 2px solid $border;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  &:hover {
+    border-color: $border-light;
+  }
+
+  &.selected {
+    border-color: $accent;
+    background: rgba($accent, 0.05);
+  }
+
+  &.type-conservateur.selected {
+    border-color: $conservateur;
+    background: rgba($conservateur, 0.05);
+  }
+
+  &.type-modere.selected {
+    border-color: $modere;
+    background: rgba($modere, 0.05);
+  }
+
+  &.type-agressif.selected {
+    border-color: $agressif;
+    background: rgba($agressif, 0.05);
+  }
+}
+
+.type-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.type-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text;
+}
+
+.type-desc {
+  font-size: 11px;
+  color: $text-muted;
+}
+
+.type-factors {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.factor {
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-secondary;
+}
+
+// Error
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba($negative, 0.1);
+  border: 1px solid rgba($negative, 0.3);
+  border-radius: 8px;
+  color: $negative;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+// Actions
+.form-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid $border;
+  margin-top: 24px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid $border;
+  border-radius: 8px;
+  color: $text-secondary;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: $border-light;
+    color: $text;
+  }
+}
+
+.btn-submit {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: $accent;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: lighten($accent, 8%);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}

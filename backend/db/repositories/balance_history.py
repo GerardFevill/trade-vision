@@ -175,3 +175,51 @@ class AccountBalanceHistory:
                     cur.execute("DELETE FROM account_balance_history WHERE timestamp < %s", (cutoff,))
         except Exception as e:
             logger.error("Error cleaning up data", error=str(e))
+
+    def get_balance_at_date(self, account_id: int, target_date: datetime) -> float | None:
+        """Get the balance closest to a target date (looking back first, then forward)"""
+        try:
+            with get_connection() as conn:
+                with conn.cursor() as cur:
+                    # First try to get balance on or just before target date
+                    cur.execute("""
+                        SELECT balance FROM account_balance_history
+                        WHERE account_id = %s AND timestamp <= %s
+                        ORDER BY timestamp DESC
+                        LIMIT 1
+                    """, (account_id, target_date))
+                    row = cur.fetchone()
+                    if row:
+                        return row[0]
+
+                    # If no balance before, get the first balance after
+                    cur.execute("""
+                        SELECT balance FROM account_balance_history
+                        WHERE account_id = %s AND timestamp > %s
+                        ORDER BY timestamp ASC
+                        LIMIT 1
+                    """, (account_id, target_date))
+                    row = cur.fetchone()
+                    if row:
+                        return row[0]
+
+                    return None
+        except Exception as e:
+            logger.error("Error getting balance at date", account_id=account_id, error=str(e))
+            return None
+
+    def get_balances_at_month_start(self, account_ids: list[int], month: str) -> dict[int, float]:
+        """Get balances for multiple accounts at the start of a month (YYYY-MM format)"""
+        try:
+            year, mon = map(int, month.split('-'))
+            month_start = datetime(year, mon, 1, 0, 0, 0)
+
+            result = {}
+            for acc_id in account_ids:
+                balance = self.get_balance_at_date(acc_id, month_start)
+                if balance is not None:
+                    result[acc_id] = balance
+            return result
+        except Exception as e:
+            logger.error("Error getting month start balances", error=str(e))
+            return {}

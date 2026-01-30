@@ -169,17 +169,27 @@ class SyncService:
         }
         account_stats_repo.save_trade_stats(account_id, trade_stats)
 
-        # Sauvegarder les métriques de risque
+        # Calculer les métriques de risque depuis l'historique des deals
+        max_drawdown, max_drawdown_pct, peak_balance = self._calc_max_drawdown(deals)
+        current_dd = max(0, peak_balance - info.balance) if peak_balance > 0 else 0
+        current_dd_pct = (current_dd / peak_balance * 100) if peak_balance > 0 else 0
+
+        # Sharpe ratio simplifié (basé sur les profits des trades)
+        sharpe_ratio = self._calc_sharpe_ratio(profits)
+
+        # Recovery factor = profit net / max drawdown
+        recovery_factor = (total_profit / max_drawdown) if max_drawdown > 0 else 0
+
         risk_metrics = {
-            'max_drawdown': 0,
-            'max_drawdown_percent': 0,
-            'relative_drawdown_balance': 0,
-            'relative_drawdown_equity': 0,
+            'max_drawdown': max_drawdown,
+            'max_drawdown_percent': max_drawdown_pct,
+            'relative_drawdown_balance': max_drawdown_pct,
+            'relative_drawdown_equity': current_dd_pct,
             'max_deposit_load': (info.margin / info.equity * 100) if info.equity > 0 else 0,
-            'sharpe_ratio': 0,
-            'recovery_factor': 0,
-            'current_drawdown': 0,
-            'current_drawdown_percent': 0
+            'sharpe_ratio': round(sharpe_ratio, 2),
+            'recovery_factor': round(recovery_factor, 2),
+            'current_drawdown': current_dd,
+            'current_drawdown_percent': current_dd_pct
         }
         account_stats_repo.save_risk_metrics(account_id, risk_metrics)
 
@@ -209,6 +219,72 @@ class SyncService:
             else:
                 current = 0
         return max_losses
+
+    def _calc_max_drawdown(self, deals) -> tuple:
+        """Calcule le drawdown maximum depuis l'historique des deals.
+
+        Drawdown = (pic_équité - creux_équité) / pic_équité * 100
+        On reconstruit l'historique de la balance et on calcule le drawdown max.
+
+        Returns:
+            tuple: (max_drawdown_value, max_drawdown_percent, current_peak)
+        """
+        if not deals:
+            return 0, 0, 0
+
+        # Reconstituer l'historique de la balance chronologiquement
+        balance = 0.0
+        peak_balance = 0.0
+        max_drawdown = 0.0
+        max_drawdown_pct = 0.0
+
+        sorted_deals = sorted(deals, key=lambda x: x.time)
+
+        for d in sorted_deals:
+            if d.type == mt5.DEAL_TYPE_BALANCE:
+                # Dépôt ou retrait
+                balance += d.profit
+            elif d.type in [mt5.DEAL_TYPE_BUY, mt5.DEAL_TYPE_SELL]:
+                # Trade fermé
+                balance += d.profit + d.commission + d.swap
+
+            # Mettre à jour le pic si nouveau maximum
+            if balance > peak_balance:
+                peak_balance = balance
+
+            # Calculer le drawdown courant (uniquement si on a un pic positif)
+            if peak_balance > 0 and balance < peak_balance:
+                current_dd = peak_balance - balance
+                current_dd_pct = (current_dd / peak_balance) * 100
+
+                # Garder le max drawdown
+                if current_dd > max_drawdown:
+                    max_drawdown = current_dd
+                if current_dd_pct > max_drawdown_pct:
+                    max_drawdown_pct = current_dd_pct
+
+        # Limiter le % à 100 max (ne peut pas perdre plus que 100%)
+        max_drawdown_pct = min(max_drawdown_pct, 100.0)
+
+        return round(max_drawdown, 2), round(max_drawdown_pct, 2), round(peak_balance, 2)
+
+    def _calc_sharpe_ratio(self, profits: list) -> float:
+        """Calcule le ratio de Sharpe simplifié basé sur les profits des trades.
+
+        Sharpe = moyenne des returns / écart-type des returns
+        """
+        if len(profits) < 10:
+            return 0.0
+
+        avg_profit = sum(profits) / len(profits)
+        variance = sum((p - avg_profit) ** 2 for p in profits) / len(profits)
+        std_dev = variance ** 0.5
+
+        if std_dev == 0:
+            return 0.0
+
+        # Sharpe simplifié (sans taux sans risque)
+        return avg_profit / std_dev
 
     def sync_all_accounts(self, force: bool = False) -> dict:
         """Synchronise tous les comptes configurés

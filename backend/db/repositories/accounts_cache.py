@@ -31,8 +31,23 @@ class AccountsCache:
                         currency TEXT,
                         leverage INTEGER,
                         connected BOOLEAN,
+                        client TEXT,
                         updated_at TIMESTAMP NOT NULL
                     )
+                """)
+                # Migration: rename profile to client if needed
+                cur.execute("""
+                    DO $$
+                    BEGIN
+                        IF EXISTS (SELECT 1 FROM information_schema.columns
+                                   WHERE table_name='accounts_cache' AND column_name='profile') THEN
+                            ALTER TABLE accounts_cache RENAME COLUMN profile TO client;
+                        END IF;
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                                       WHERE table_name='accounts_cache' AND column_name='client') THEN
+                            ALTER TABLE accounts_cache ADD COLUMN client TEXT;
+                        END IF;
+                    END $$;
                 """)
 
     def save_accounts(self, accounts: list[AccountSummary]) -> bool:
@@ -44,8 +59,8 @@ class AccountsCache:
                         cur.execute("""
                             INSERT INTO accounts_cache
                             (id, name, broker, server, balance, equity, profit, profit_percent,
-                             drawdown, trades, win_rate, currency, leverage, connected, updated_at)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             drawdown, trades, win_rate, currency, leverage, connected, client, updated_at)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             ON CONFLICT (id) DO UPDATE SET
                                 name = EXCLUDED.name,
                                 broker = EXCLUDED.broker,
@@ -60,12 +75,13 @@ class AccountsCache:
                                 currency = EXCLUDED.currency,
                                 leverage = EXCLUDED.leverage,
                                 connected = EXCLUDED.connected,
+                                client = EXCLUDED.client,
                                 updated_at = EXCLUDED.updated_at
                         """, (
                             acc.id, acc.name, acc.broker, acc.server,
                             acc.balance, acc.equity, acc.profit, acc.profit_percent,
                             acc.drawdown, acc.trades, acc.win_rate,
-                            acc.currency, acc.leverage, acc.connected, now
+                            acc.currency, acc.leverage, acc.connected, acc.client, now
                         ))
             return True
         except Exception as e:
@@ -78,7 +94,7 @@ class AccountsCache:
                 with conn.cursor() as cur:
                     cur.execute("""
                         SELECT id, name, broker, server, balance, equity, profit, profit_percent,
-                               drawdown, trades, win_rate, currency, leverage, connected
+                               drawdown, trades, win_rate, currency, leverage, connected, client
                         FROM accounts_cache
                         ORDER BY id
                     """)
@@ -87,7 +103,7 @@ class AccountsCache:
                             id=row[0], name=row[1], broker=row[2], server=row[3],
                             balance=row[4], equity=row[5], profit=row[6], profit_percent=row[7],
                             drawdown=row[8], trades=row[9], win_rate=row[10],
-                            currency=row[11], leverage=row[12], connected=row[13]
+                            currency=row[11], leverage=row[12], connected=row[13], client=row[14]
                         )
                         for row in cur.fetchall()
                     ]

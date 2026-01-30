@@ -111,6 +111,44 @@ $warning: #ff9100;
   i { font-size: 12px; }
 }
 
+// Client Filter
+.client-filter {
+  display: flex;
+  background: $bg-input;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.btn-filter {
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: $text-muted;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover { color: $text; background: rgba(255,255,255,0.05); }
+
+  &.active {
+    background: $accent;
+    color: #fff;
+  }
+
+  &.cosmos.active {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+  }
+
+  &.akaj.active {
+    background: linear-gradient(135deg, #059669, #10b981);
+  }
+}
+
+
 // ==================== SUMMARY CARDS ====================
 .summary-grid {
   display: grid;
@@ -292,22 +330,23 @@ $warning: #ff9100;
   &.online { color: $positive; }
 }
 
-// Growth (Hero)
-.signal-growth {
+// Balance (Hero)
+.signal-balance {
   text-align: center;
   padding: 16px;
   margin: 0 16px;
   background: $bg-input;
   border-radius: 8px;
 
-  .growth-value {
+  .balance-value {
     display: block;
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 700;
     line-height: 1.1;
+    color: $text;
   }
 
-  .growth-label {
+  .balance-label {
     display: block;
     font-size: 10px;
     color: $text-muted;
@@ -567,6 +606,34 @@ $warning: #ff9100;
   font-size: 11px;
   color: $text-secondary;
 }
+
+// Client Badge
+.client-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: $bg-input;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.cosmos {
+    background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(168,85,247,0.2));
+    color: #a855f7;
+    border: 1px solid rgba(168,85,247,0.3);
+  }
+
+  &.akaj {
+    background: linear-gradient(135deg, rgba(5,150,105,0.2), rgba(16,185,129,0.2));
+    color: #10b981;
+    border: 1px solid rgba(16,185,129,0.3);
+  }
+}
+
+.th-client { min-width: 100px; }
+.td-client { text-align: center; }
 
 // ==================== UTILITIES ====================
 .positive { color: $positive !important; }
