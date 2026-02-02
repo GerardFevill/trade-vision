@@ -31,7 +31,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class Mt5ApiService {
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = '/api';
 
   // Reactive state signals
   readonly dashboard = signal<FullDashboard | null>(null);
