@@ -16,9 +16,9 @@ export class AccountSelectorComponent {
   @Input({ required: true }) accounts: AccountSummary[] = [];
   @Input({ required: true }) usedAccountIds = new Set<number>();
   @Input({ required: true }) selectedFactor = 0;
-  @Input() portfolioClient: string = ''; // Filter accounts by client
+  @Input() portfolioClient = ''; // Filter accounts by client
   @Output() selected = new EventEmitter<number>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
 
   searchQuery = signal<string>('');
   fmt = { formatCurrency };
@@ -47,6 +47,6 @@ export class AccountSelectorComponent {
   }
 
   onCancel(): void {
-    this.cancel.emit();
+    this.cancelled.emit();
   }
 }

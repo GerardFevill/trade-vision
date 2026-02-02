@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { Mt5ApiService } from '@app/data-access';
-import { MonthlySnapshot, MonthlyAccountRecord, CurrentMonthPreview, WITHDRAWAL_PERCENTAGES } from '@app/data-access/models/portfolio.model';
+import { MonthlySnapshot, CurrentMonthPreview, WITHDRAWAL_PERCENTAGES } from '@app/data-access/models/portfolio.model';
 import { formatCurrency } from '@app/shared';
 
 @Component({
@@ -16,7 +16,7 @@ import { formatCurrency } from '@app/shared';
 export class MonthlyRecordsComponent implements OnInit {
   @Input({ required: true }) portfolioId!: number;
   @Input({ required: true }) portfolioType!: string;
-  @Output() close = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
 
   months = signal<string[]>([]);
   selectedMonth = signal<string>('');
@@ -150,6 +150,6 @@ export class MonthlyRecordsComponent implements OnInit {
   }
 
   onClose(): void {
-    this.close.emit();
+    this.closed.emit();
   }
 }

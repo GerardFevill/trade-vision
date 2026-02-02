@@ -468,7 +468,7 @@
           [selectedFactor]="selectedFactor()!"
           [portfolioClient]="portfolio()?.client || ''"
           (selected)="onAccountSelected($event)"
-          (cancel)="closeAccountSelector()">
+          (cancelled)="closeAccountSelector()">
         </app-account-selector>
       </div>
     </div>

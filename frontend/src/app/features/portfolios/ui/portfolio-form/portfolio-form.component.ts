@@ -14,7 +14,7 @@ import { PortfolioType, PORTFOLIO_TYPES, CreatePortfolioRequest } from '@app/dat
 })
 export class PortfolioFormComponent {
   @Output() created = new EventEmitter<void>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
 
   // Form state
   name = signal<string>('');
@@ -71,6 +71,6 @@ export class PortfolioFormComponent {
   }
 
   onCancel(): void {
-    this.cancel.emit();
+    this.cancelled.emit();
   }
 }

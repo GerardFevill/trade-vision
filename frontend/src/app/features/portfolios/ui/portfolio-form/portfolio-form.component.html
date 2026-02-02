@@ -39,8 +39,8 @@
     </div>
 
     <!-- Type -->
-    <div class="form-group">
-      <label>Type de portefeuille</label>
+    <fieldset class="form-group">
+      <legend>Type de portefeuille</legend>
       <div class="type-options">
         @for (t of portfolioTypes; track t) {
           <label class="type-option" [class.selected]="type() === t" [class]="'type-' + t.toLowerCase()">
@@ -63,7 +63,7 @@
           </label>
         }
       </div>
-    </div>
+    </fieldset>
 
     <!-- Error -->
     @if (error()) {
