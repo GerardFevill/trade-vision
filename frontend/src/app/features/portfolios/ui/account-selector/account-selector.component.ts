@@ -14,8 +14,8 @@ import { formatCurrency } from '@app/shared';
 })
 export class AccountSelectorComponent {
   @Input({ required: true }) accounts: AccountSummary[] = [];
-  @Input({ required: true }) usedAccountIds: Set<number> = new Set();
-  @Input({ required: true }) selectedFactor: number = 0;
+  @Input({ required: true }) usedAccountIds = new Set<number>();
+  @Input({ required: true }) selectedFactor = 0;
   @Input() portfolioClient: string = ''; // Filter accounts by client
   @Output() selected = new EventEmitter<number>();
   @Output() cancel = new EventEmitter<void>();
