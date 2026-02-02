@@ -35,18 +35,36 @@
         </div>
       </div>
       <div class="header-stats">
+        @if (p.type === 'Securise' && totalsByCurrency().length > 1) {
+          <!-- Multiple currencies for Securise -->
+          @for (t of totalsByCurrency(); track t.currency) {
+            <div class="stat currency-stat">
+              <span class="currency-label">{{ t.currency }}</span>
+              <span class="value">{{ fmt.formatCurrency(t.balance, t.currency) }}</span>
+              <span class="value profit" [class]="fmt.getProfitClass(t.profit)">
+                {{ fmt.formatCurrency(t.profit, t.currency) }}
+              </span>
+            </div>
+          }
+        } @else {
+          <!-- Single currency or other types -->
+          <div class="stat">
+            <span class="value">{{ fmt.formatCurrency(p.total_balance, totalsByCurrency()[0]?.currency || 'EUR') }}</span>
+            <span class="label">Balance</span>
+          </div>
+          <div class="stat">
+            <span class="value" [class]="fmt.getProfitClass(p.total_profit)">
+              {{ fmt.formatCurrency(p.total_profit, totalsByCurrency()[0]?.currency || 'EUR') }}
+            </span>
+            <span class="label">Profit global</span>
+          </div>
+        }
         <div class="stat">
-          <span class="value">{{ fmt.formatCurrency(p.total_balance, 'EUR') }}</span>
-          <span class="label">Balance</span>
-        </div>
-        <div class="stat">
-          <span class="value" [class]="fmt.getProfitClass(p.total_profit)">
-            {{ fmt.formatCurrency(p.total_profit, 'EUR') }}
-          </span>
-          <span class="label">Profit global</span>
-        </div>
-        <div class="stat">
-          <span class="value">{{ p.account_count }}/{{ p.available_factors.length }}</span>
+          @if (p.type === 'Securise') {
+            <span class="value">{{ p.account_count }}</span>
+          } @else {
+            <span class="value">{{ p.account_count }}/{{ p.available_factors.length }}</span>
+          }
           <span class="label">Comptes</span>
         </div>
       </div>
@@ -158,10 +176,12 @@
                   <tr>
                     <td class="col-level">
                       <span class="level-chip level-{{ acc.level }}">{{ acc.level }}</span>
+                      <br>
                       <span class="factor-text">{{ acc.lot_factor }}x</span>
                     </td>
                     <td class="col-account">
                       <span class="account-name">{{ acc.account_name }}</span>
+                      <span class="account-id">#{{ acc.account_id }}</span>
                     </td>
                     <td class="col-number">{{ fmt.formatCurrency(acc.starting_balance, acc.currency) }}</td>
                     <td class="col-number">{{ fmt.formatCurrency(acc.current_balance, acc.currency) }}</td>
@@ -185,12 +205,18 @@
               <div class="transfers-flow">
                 @for (t of preview.transfers; track t.from_level) {
                   <div class="transfer-flow-item">
-                    <span class="flow-from level-{{ t.from_level }}">{{ t.from_level }}</span>
+                    <div class="flow-endpoint">
+                      <span class="flow-from level-{{ t.from_level }}">{{ t.from_level }}</span>
+                      <span class="flow-account-id">#{{ t.from_account_id }}</span>
+                    </div>
                     <div class="flow-arrow">
                       <span class="flow-amount">{{ fmt.formatCurrency(t.amount, 'EUR') }}</span>
                       <i class="fa fa-long-arrow-alt-right"></i>
                     </div>
-                    <span class="flow-to level-{{ t.to_level }}">{{ t.to_level }}</span>
+                    <div class="flow-endpoint">
+                      <span class="flow-to level-{{ t.to_level }}">{{ t.to_level }}</span>
+                      <span class="flow-account-id">#{{ t.to_account_id }}</span>
+                    </div>
                   </div>
                 }
               </div>
@@ -225,7 +251,10 @@
               <tbody>
                 @for (acc of preview.accounts; track acc.account_id) {
                   <tr>
-                    <td class="col-account">{{ acc.account_name }}</td>
+                    <td class="col-account">
+                      <span class="account-name">{{ acc.account_name }}</span>
+                      <span class="account-id">#{{ acc.account_id }}</span>
+                    </td>
                     <td class="col-factor">{{ acc.lot_factor }}x</td>
                     <td class="col-number">
                       @if (editingStartingBalance() === acc.account_id) {
@@ -311,7 +340,10 @@
                           @if (acc.level) {
                             <td class="col-level"><span class="level-chip level-{{ acc.level }}">{{ acc.level }}</span></td>
                           }
-                          <td>{{ acc.account_name }}</td>
+                          <td>
+                            <span class="account-name">{{ acc.account_name }}</span>
+                            <span class="account-id">#{{ acc.account_id }}</span>
+                          </td>
                           <td class="col-number" [class]="fmt.getProfitClass(acc.monthly_profit || acc.profit)">
                             {{ fmt.formatCurrency(acc.monthly_profit || acc.profit, acc.currency) }}
                           </td>
@@ -330,50 +362,99 @@
       </section>
     }
 
-    <!-- Accounts by Factor -->
+    <!-- Accounts Section -->
     <section class="factors-section">
       <h2><i class="fa fa-layer-group"></i> Comptes</h2>
-      <div class="factors-grid">
-        @for (factor of p.available_factors; track factor) {
-          <div class="factor-card">
-            <div class="factor-header">
-              <span class="factor-value">{{ factor }}x</span>
-              <span class="factor-count">{{ (accountsByFactor().get(factor) || []).length }}</span>
-            </div>
-            <div class="factor-body">
-              @for (acc of accountsByFactor().get(factor) || []; track acc.account_id) {
-                @if (acc.account) {
-                  <div class="factor-account">
-                    <div class="account-info">
-                      <span class="name">{{ acc.account.name }}</span>
-                      <span class="balance">{{ fmt.formatCurrency(acc.account.balance, acc.account.currency) }}</span>
+
+      @if (p.type === 'Securise') {
+        <!-- Securise: Accounts grouped by currency -->
+        <div class="securise-accounts">
+          @for (currencyGroup of accountsByCurrency() | keyvalue; track currencyGroup.key) {
+            <div class="currency-group">
+              <div class="currency-header">
+                <span class="currency-badge">{{ currencyGroup.key }}</span>
+                <span class="currency-total">
+                  {{ fmt.formatCurrency(getCurrencyTotal(currencyGroup.key), currencyGroup.key) }}
+                </span>
+              </div>
+              <div class="accounts-list">
+                @for (acc of currencyGroup.value; track acc.account_id) {
+                  @if (acc.account) {
+                    <div class="factor-account">
+                      <div class="account-info">
+                        <span class="name">{{ acc.account.name }}</span>
+                        <span class="account-id">#{{ acc.account_id }}</span>
+                        <span class="balance">{{ fmt.formatCurrency(acc.account.balance, acc.account.currency) }}</span>
+                      </div>
+                      <button class="btn-remove-mini" (click)="removeAccount(acc.account_id, $event)">
+                        <i class="fa fa-times"></i>
+                      </button>
                     </div>
-                    <button class="btn-remove-mini" (click)="removeAccount(acc.account_id, $event)">
-                      <i class="fa fa-times"></i>
-                    </button>
-                  </div>
-                } @else {
-                  <div class="factor-account missing">
-                    <span>#{{ acc.account_id }} introuvable</span>
-                    <button class="btn-remove-mini" (click)="removeAccount(acc.account_id, $event)">
-                      <i class="fa fa-times"></i>
-                    </button>
+                  } @else {
+                    <div class="factor-account missing">
+                      <span>#{{ acc.account_id }} introuvable</span>
+                      <button class="btn-remove-mini" (click)="removeAccount(acc.account_id, $event)">
+                        <i class="fa fa-times"></i>
+                      </button>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-factor" (click)="openAccountSelector(1)">
+              <i class="fa fa-plus"></i> Ajouter un compte
+            </div>
+          }
+          <div class="add-more" (click)="openAccountSelector(1)">
+            <i class="fa fa-plus"></i> Ajouter un compte
+          </div>
+        </div>
+      } @else {
+        <!-- Other types: Accounts by Factor -->
+        <div class="factors-grid">
+          @for (factor of p.available_factors; track factor) {
+            <div class="factor-card">
+              <div class="factor-header">
+                <span class="factor-value">{{ factor }}x</span>
+                <span class="factor-count">{{ (accountsByFactor().get(factor) || []).length }}</span>
+              </div>
+              <div class="factor-body">
+                @for (acc of accountsByFactor().get(factor) || []; track acc.account_id) {
+                  @if (acc.account) {
+                    <div class="factor-account">
+                      <div class="account-info">
+                        <span class="name">{{ acc.account.name }}</span>
+                        <span class="account-id">#{{ acc.account_id }}</span>
+                        <span class="balance">{{ fmt.formatCurrency(acc.account.balance, acc.account.currency) }}</span>
+                      </div>
+                      <button class="btn-remove-mini" (click)="removeAccount(acc.account_id, $event)">
+                        <i class="fa fa-times"></i>
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="factor-account missing">
+                      <span>#{{ acc.account_id }} introuvable</span>
+                      <button class="btn-remove-mini" (click)="removeAccount(acc.account_id, $event)">
+                        <i class="fa fa-times"></i>
+                      </button>
+                    </div>
+                  }
+                } @empty {
+                  <div class="empty-factor" (click)="openAccountSelector(factor)">
+                    <i class="fa fa-plus"></i> Ajouter
                   </div>
                 }
-              } @empty {
-                <div class="empty-factor" (click)="openAccountSelector(factor)">
-                  <i class="fa fa-plus"></i> Ajouter
-                </div>
-              }
-              @if ((accountsByFactor().get(factor) || []).length > 0 && p.type === 'Modere') {
-                <div class="add-more" (click)="openAccountSelector(factor)">
-                  <i class="fa fa-plus"></i>
-                </div>
-              }
+                @if ((accountsByFactor().get(factor) || []).length > 0 && p.type === 'Modere') {
+                  <div class="add-more" (click)="openAccountSelector(factor)">
+                    <i class="fa fa-plus"></i>
+                  </div>
+                }
+              </div>
             </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
     </section>
   }
 

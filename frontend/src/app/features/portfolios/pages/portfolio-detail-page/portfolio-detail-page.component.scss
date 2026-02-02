@@ -13,6 +13,7 @@ $negative: #ff1744;
 $warning: #ff9100;
 
 // Type colors
+$securise: #3b82f6;
 $conservateur: #10b981;
 $modere: #f59e0b;
 $agressif: #ef4444;
@@ -65,9 +66,6 @@ $level-n1: #10b981;
   gap: 20px;
   flex-wrap: wrap;
 
-  &.type-conservateur { border-left: 4px solid $conservateur; }
-  &.type-modere { border-left: 4px solid $modere; }
-  &.type-agressif { border-left: 4px solid $agressif; }
 }
 
 .header-main {
@@ -84,6 +82,7 @@ $level-n1: #10b981;
   align-items: center;
   justify-content: center;
   i { font-size: 20px; color: #fff; }
+  &.type-securise { background: $securise; }
   &.type-conservateur { background: $conservateur; }
   &.type-modere { background: $modere; }
   &.type-agressif { background: $agressif; }
@@ -114,6 +113,7 @@ $level-n1: #10b981;
     color: $text-secondary;
   }
   &.type {
+    &.type-securise { background: rgba($securise, 0.15); color: $securise; }
     &.type-conservateur { background: rgba($conservateur, 0.15); color: $conservateur; }
     &.type-modere { background: rgba($modere, 0.15); color: $modere; }
     &.type-agressif { background: rgba($agressif, 0.15); color: $agressif; }
@@ -379,7 +379,16 @@ $level-n1: #10b981;
   .col-number { text-align: right; white-space: nowrap; }
   .col-factor { text-align: center; color: $accent; font-weight: 600; }
 
-  .account-name { font-weight: 500; }
+  .account-name {
+    display: block;
+    font-weight: 500;
+  }
+  .account-id {
+    display: block;
+    font-size: 10px;
+    color: $text-muted;
+    margin-top: 2px;
+  }
 
   small {
     color: $text-muted;
@@ -444,6 +453,18 @@ $level-n1: #10b981;
   padding: 10px 14px;
   background: $bg-input;
   border-radius: 8px;
+}
+
+.flow-endpoint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.flow-account-id {
+  font-size: 9px;
+  color: $text-muted;
 }
 
 .flow-from, .flow-to {
@@ -587,6 +608,17 @@ $level-n1: #10b981;
   .col-level { width: 40px; }
   .col-number { text-align: right; }
   .remun-value { color: $remun-color; font-weight: 600; }
+
+  .account-name {
+    display: block;
+    font-weight: 500;
+  }
+  .account-id {
+    display: block;
+    font-size: 10px;
+    color: $text-muted;
+    margin-top: 2px;
+  }
 }
 
 // Factors Section
@@ -663,6 +695,11 @@ $level-n1: #10b981;
     font-size: 12px;
     font-weight: 500;
   }
+  .account-id {
+    display: block;
+    font-size: 10px;
+    color: $text-muted;
+  }
   .balance {
     font-size: 11px;
     color: $text-secondary;
@@ -708,6 +745,91 @@ $level-n1: #10b981;
 
 .add-more {
   padding: 8px;
+}
+
+// Securise accounts list
+.securise-accounts {
+  .accounts-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .add-more {
+    padding: 12px;
+    max-width: 250px;
+  }
+}
+
+// Currency groups for Securise
+.currency-group {
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.currency-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: $bg-input;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid $border;
+  border-bottom: none;
+}
+
+.currency-badge {
+  padding: 4px 12px;
+  background: $accent;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.currency-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text;
+}
+
+.currency-group .accounts-list {
+  background: $bg-input;
+  border: 1px solid $border;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 12px;
+}
+
+// Header currency stats
+.header-stats .stat.currency-stat {
+  padding: 8px 16px;
+  background: $bg-input;
+  border-radius: 8px;
+  border: 1px solid $border;
+
+  .currency-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    color: $accent;
+    margin-bottom: 4px;
+  }
+
+  .value {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+
+    &.profit {
+      font-size: 12px;
+      margin-top: 2px;
+    }
+  }
 }
 
 // Utilities

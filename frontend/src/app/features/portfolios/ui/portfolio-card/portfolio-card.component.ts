@@ -19,6 +19,7 @@ export class PortfolioCardComponent {
 
   getTypeClass(): string {
     switch (this.portfolio.type) {
+      case 'Securise': return 'type-securise';
       case 'Conservateur': return 'type-conservateur';
       case 'Modere': return 'type-modere';
       case 'Agressif': return 'type-agressif';
@@ -28,6 +29,7 @@ export class PortfolioCardComponent {
 
   getTypeIcon(): string {
     switch (this.portfolio.type) {
+      case 'Securise': return 'fa-lock';
       case 'Conservateur': return 'fa-shield-alt';
       case 'Modere': return 'fa-balance-scale';
       case 'Agressif': return 'fa-bolt';

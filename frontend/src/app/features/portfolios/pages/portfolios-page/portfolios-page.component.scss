@@ -110,67 +110,71 @@ $warning: #ff9100;
   i { font-size: 12px; }
 }
 
-// ==================== SUMMARY CARDS ====================
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 20px 24px;
+// ==================== SUMMARY ROW ====================
+.summary-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 24px;
   border-bottom: 1px solid $border;
+  background: $bg-card;
+}
 
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: $bg-input;
+  border-radius: 8px;
+  border-left: 3px solid $accent;
+
+  i {
+    font-size: 16px;
+    color: $accent;
+  }
+
+  .label {
+    font-size: 11px;
+    color: $text-muted;
+    text-transform: uppercase;
+  }
+
+  .value {
+    font-size: 18px;
+    font-weight: 700;
+    color: $text;
+  }
+
+  &.securise {
+    border-left-color: #3b82f6;
+    i { color: #3b82f6; }
   }
 }
 
-.summary-card {
+.view-toggle {
+  margin-left: auto;
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
-  background: $bg-card;
-  border: 1px solid $border;
-  border-radius: 10px;
+  background: $bg-input;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.btn-view {
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: $text-muted;
+  cursor: pointer;
   transition: all 0.2s;
 
-  &:hover {
-    border-color: $border-light;
-    background: $bg-card-hover;
+  &:hover { color: $text; }
+
+  &.active {
+    background: $accent;
+    color: #fff;
   }
-}
-
-.summary-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  i { font-size: 18px; color: #fff; }
-
-  &.balance { background: linear-gradient(135deg, #2962ff, #1e88e5); }
-  &.profit { background: linear-gradient(135deg, #00c853, #00e676); }
-  &.accounts { background: linear-gradient(135deg, #ff9100, #ffb300); }
-}
-
-.summary-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.summary-label {
-  font-size: 11px;
-  color: $text-muted;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.summary-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: $text;
 }
 
 // ==================== PORTFOLIOS GRID ====================
@@ -179,6 +183,88 @@ $warning: #ff9100;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
   padding: 24px;
+}
+
+// ==================== PORTFOLIOS LIST ====================
+.portfolios-list {
+  padding: 24px;
+}
+
+.portfolio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid $border;
+  }
+
+  th {
+    font-size: 10px;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    background: $bg-card;
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: $bg-card-hover;
+    }
+  }
+
+  .col-name {
+    font-weight: 600;
+    color: $text;
+  }
+
+  .col-client {
+    color: $text-secondary;
+  }
+
+  .col-number {
+    text-align: right;
+    font-family: 'SF Mono', Monaco, monospace;
+  }
+
+  .col-actions {
+    width: 40px;
+    text-align: center;
+  }
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.type-securise { background: rgba(#3b82f6, 0.15); color: #3b82f6; }
+  &.type-conservateur { background: rgba(#10b981, 0.15); color: #10b981; }
+  &.type-modere { background: rgba(#f59e0b, 0.15); color: #f59e0b; }
+  &.type-agressif { background: rgba(#ef4444, 0.15); color: #ef4444; }
+}
+
+.btn-delete {
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba($negative, 0.1);
+    color: $negative;
+  }
 }
 
 // ==================== STATES ====================

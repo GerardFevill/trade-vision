@@ -120,6 +120,7 @@ class DailyDrawdown(BaseModel):
 LOT_FACTORS = [0.2, 0.6, 1.0, 1.4, 1.8, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
 
 PORTFOLIO_TYPES = {
+    "Securise": [],  # Pas de facteur - nombre illimite de comptes
     "Conservateur": [0.2, 0.6, 1.0, 1.4, 1.8],
     "Modere": [2.0],
     "Agressif": [2.5, 3.0, 3.5, 4.0, 4.5],

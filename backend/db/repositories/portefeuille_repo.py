@@ -255,7 +255,8 @@ class PortefeuilleRepository:
             return False
 
         available_factors = PORTFOLIO_TYPES.get(portfolio.type, [])
-        if lot_factor not in available_factors:
+        # Securise portfolios have no factor restrictions (empty list = unlimited accounts)
+        if available_factors and lot_factor not in available_factors:
             logger.error("Invalid lot factor for portfolio type",
                         lot_factor=lot_factor, type=portfolio.type,
                         available=available_factors)

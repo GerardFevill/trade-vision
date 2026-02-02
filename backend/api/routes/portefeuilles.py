@@ -1,4 +1,4 @@
-"""Portfolio management routes"""
+"""Portfolio management routes - v2"""
 from fastapi import APIRouter, HTTPException, Query, Path
 from pydantic import BaseModel
 from typing import Optional
@@ -30,7 +30,7 @@ class UpdatePortfolioRequest(BaseModel):
 
 class AddAccountRequest(BaseModel):
     account_id: int
-    lot_factor: float
+    lot_factor: Optional[float] = None  # Optional for Securise portfolios
 
 
 class UpdateWithdrawalRequest(BaseModel):
@@ -50,6 +50,7 @@ class UpdateStartingBalanceRequest(BaseModel):
 
 # Withdrawal percentages by portfolio type (for Modere and Agressif)
 WITHDRAWAL_PERCENTAGES = {
+    "Securise": 0.50,      # 50% des gains - tres conservateur
     "Conservateur": 0.70,  # Not used - uses Elite level system instead
     "Modere": 0.80,        # 80% des gains
     "Agressif": 0.90,      # 90% des gains
@@ -238,14 +239,23 @@ async def add_account_to_portfolio(
     if not portfolio:
         raise HTTPException(404, f"Portfolio {portfolio_id} not found")
 
-    # Validate lot factor for this portfolio type
+    # Handle lot factor based on portfolio type
     available_factors = PORTFOLIO_TYPES.get(portfolio.type, [])
-    if request.lot_factor not in available_factors:
-        raise HTTPException(
-            400,
-            f"Invalid lot factor {request.lot_factor} for portfolio type {portfolio.type}. "
-            f"Available factors: {available_factors}"
-        )
+
+    if portfolio.type == "Securise":
+        # Securise portfolios: no lot factor, unlimited accounts
+        lot_factor = 1.0  # Default factor for calculations
+    else:
+        # Other portfolio types require valid lot factor
+        if request.lot_factor is None:
+            raise HTTPException(400, f"lot_factor is required for portfolio type {portfolio.type}")
+        if request.lot_factor not in available_factors:
+            raise HTTPException(
+                400,
+                f"Invalid lot factor {request.lot_factor} for portfolio type {portfolio.type}. "
+                f"Available factors: {available_factors}"
+            )
+        lot_factor = request.lot_factor
 
     # Check if account is already in another portfolio
     existing_portfolio = repo.is_account_in_portfolio(request.account_id)
@@ -255,12 +265,12 @@ async def add_account_to_portfolio(
             f"Account {request.account_id} is already in portfolio {existing_portfolio}"
         )
 
-    success = repo.add_account(portfolio_id, request.account_id, request.lot_factor)
+    success = repo.add_account(portfolio_id, request.account_id, lot_factor)
     if not success:
         raise HTTPException(500, "Failed to add account to portfolio")
 
     return {
-        "message": f"Account {request.account_id} added to portfolio {portfolio_id} with factor {request.lot_factor}"
+        "message": f"Account {request.account_id} added to portfolio {portfolio_id}"
     }
 
 
@@ -629,6 +639,7 @@ async def get_current_month_preview(
                 "profit": monthly_profit,
                 "transfer": transfer,
                 "account_name": acc.name,
+                "account_id": acc.id,
             }
 
             accounts.append({
@@ -658,7 +669,9 @@ async def get_current_month_preview(
                     "to_level": to_level,
                     "amount": round(level_profits[from_level]["transfer"], 2),
                     "from_account": level_profits[from_level]["account_name"],
+                    "from_account_id": level_profits[from_level]["account_id"],
                     "to_account": level_profits.get(to_level, {}).get("account_name", "N/A"),
+                    "to_account_id": level_profits.get(to_level, {}).get("account_id"),
                 })
 
         # Calculate days in month

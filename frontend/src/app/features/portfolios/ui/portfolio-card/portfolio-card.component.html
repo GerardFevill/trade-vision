@@ -18,7 +18,7 @@
 
   <!-- Balance (Hero) -->
   <div class="portfolio-balance">
-    <span class="balance-value">{{ fmt.formatCurrency(portfolio.total_balance, 'USD') }}</span>
+    <span class="balance-value">{{ fmt.formatCurrency(portfolio.total_balance, 'EUR') }}</span>
     <span class="balance-label">Balance Totale</span>
   </div>
 
@@ -26,7 +26,7 @@
   <div class="portfolio-stats">
     <div class="stat-item">
       <span class="stat-value" [class]="fmt.getProfitClass(portfolio.total_profit)">
-        {{ fmt.formatCurrency(portfolio.total_profit, 'USD') }}
+        {{ fmt.formatCurrency(portfolio.total_profit, 'EUR') }}
       </span>
       <span class="stat-label">Profit</span>
     </div>

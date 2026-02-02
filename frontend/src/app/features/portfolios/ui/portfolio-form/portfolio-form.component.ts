@@ -18,13 +18,13 @@ export class PortfolioFormComponent {
 
   // Form state
   name = signal<string>('');
-  type = signal<PortfolioType>('Conservateur');
+  type = signal<PortfolioType>('Securise');
   client = signal<string>('');
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
 
   // Options
-  portfolioTypes: PortfolioType[] = ['Conservateur', 'Modere', 'Agressif'];
+  portfolioTypes: PortfolioType[] = ['Securise', 'Conservateur', 'Modere', 'Agressif'];
   clients: string[] = ['Akaj', 'CosmosElite'];
 
   constructor(private api: Mt5ApiService) {}
@@ -35,6 +35,7 @@ export class PortfolioFormComponent {
 
   getTypeDescription(type: PortfolioType): string {
     switch (type) {
+      case 'Securise': return 'Sans multiplicateur - Comptes illimites';
       case 'Conservateur': return 'Risque faible - Facteurs 0.2x a 1.8x';
       case 'Modere': return 'Risque modere - Facteur 2.0x (x10)';
       case 'Agressif': return 'Risque eleve - Facteurs 2.5x a 4.5x';

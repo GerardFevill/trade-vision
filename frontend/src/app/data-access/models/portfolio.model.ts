@@ -4,9 +4,10 @@
 
 import { AccountSummary } from './account.model';
 
-export type PortfolioType = 'Conservateur' | 'Modere' | 'Agressif';
+export type PortfolioType = 'Securise' | 'Conservateur' | 'Modere' | 'Agressif';
 
 export const PORTFOLIO_TYPES: Record<PortfolioType, number[]> = {
+  Securise: [],  // Pas de facteur - nombre illimite de comptes
   Conservateur: [0.2, 0.6, 1.0, 1.4, 1.8],
   Modere: [2.0],
   Agressif: [2.5, 3.0, 3.5, 4.0, 4.5],
@@ -106,7 +107,9 @@ export interface EliteTransfer {
   to_level: EliteLevel;
   amount: number;
   from_account: string;
+  from_account_id: number;
   to_account: string;
+  to_account_id?: number;
 }
 
 export interface EliteAccountPreview {
@@ -177,6 +180,7 @@ export interface UpdateWithdrawalRequest {
 
 // Withdrawal percentages by type
 export const WITHDRAWAL_PERCENTAGES: Record<string, number> = {
+  Securise: 50,
   Conservateur: 70,
   Modere: 80,
   Agressif: 90,

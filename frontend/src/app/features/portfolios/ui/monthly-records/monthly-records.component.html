@@ -56,22 +56,22 @@
       <div class="summary-bar">
         <div class="summary-item">
           <span class="label">Balance debut</span>
-          <span class="value">{{ fmt.formatCurrency(preview.total_starting, 'USD') }}</span>
+          <span class="value">{{ fmt.formatCurrency(preview.total_starting, 'EUR') }}</span>
         </div>
         <div class="summary-item">
           <span class="label">Balance actuelle</span>
-          <span class="value">{{ fmt.formatCurrency(preview.total_current, 'USD') }}</span>
+          <span class="value">{{ fmt.formatCurrency(preview.total_current, 'EUR') }}</span>
         </div>
         <div class="summary-item highlight">
           <span class="label">Profit du mois</span>
           <span class="value" [class]="getProfitClass(preview.total_profit)">
-            {{ fmt.formatCurrency(preview.total_profit, 'USD') }}
+            {{ fmt.formatCurrency(preview.total_profit, 'EUR') }}
             ({{ preview.total_profit_percent.toFixed(1) }}%)
           </span>
         </div>
         <div class="summary-item">
           <span class="label">Retrait suggere ({{ preview.withdrawal_percentage }}%)</span>
-          <span class="value suggested">{{ fmt.formatCurrency(preview.total_suggested_withdrawal, 'USD') }}</span>
+          <span class="value suggested">{{ fmt.formatCurrency(preview.total_suggested_withdrawal, 'EUR') }}</span>
         </div>
       </div>
 
@@ -138,22 +138,22 @@
       <div class="summary-bar">
         <div class="summary-item">
           <span class="label">Balance debut</span>
-          <span class="value">{{ fmt.formatCurrency(snap.total_starting, 'USD') }}</span>
+          <span class="value">{{ fmt.formatCurrency(snap.total_starting, 'EUR') }}</span>
         </div>
         <div class="summary-item">
           <span class="label">Balance fin</span>
-          <span class="value">{{ fmt.formatCurrency(snap.total_ending, 'USD') }}</span>
+          <span class="value">{{ fmt.formatCurrency(snap.total_ending, 'EUR') }}</span>
         </div>
         <div class="summary-item">
           <span class="label">Profit</span>
           <span class="value" [class]="getProfitClass(snap.total_profit)">
-            {{ fmt.formatCurrency(snap.total_profit, 'USD') }}
+            {{ fmt.formatCurrency(snap.total_profit, 'EUR') }}
             ({{ snap.total_profit_percent.toFixed(1) }}%)
           </span>
         </div>
         <div class="summary-item">
           <span class="label">Total retraits</span>
-          <span class="value withdrawn">{{ fmt.formatCurrency(snap.total_withdrawal, 'USD') }}</span>
+          <span class="value withdrawn">{{ fmt.formatCurrency(snap.total_withdrawal, 'EUR') }}</span>
         </div>
       </div>
 

@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 // Theme
 $bg-card: #141414;
 $bg-card-hover: #1a1a1a;
@@ -12,6 +14,7 @@ $negative: #ff1744;
 $warning: #ff9100;
 
 // Type colors
+$securise: #3b82f6;
 $conservateur: #10b981;
 $modere: #f59e0b;
 $agressif: #ef4444;
@@ -83,9 +86,10 @@ $agressif: #ef4444;
 
   i { font-size: 18px; color: #fff; }
 
-  &.type-conservateur { background: linear-gradient(135deg, $conservateur, lighten($conservateur, 10%)); }
-  &.type-modere { background: linear-gradient(135deg, $modere, lighten($modere, 10%)); }
-  &.type-agressif { background: linear-gradient(135deg, $agressif, lighten($agressif, 10%)); }
+  &.type-securise { background: linear-gradient(135deg, $securise, color.adjust($securise, $lightness: 10%)); }
+  &.type-conservateur { background: linear-gradient(135deg, $conservateur, color.adjust($conservateur, $lightness: 10%)); }
+  &.type-modere { background: linear-gradient(135deg, $modere, color.adjust($modere, $lightness: 10%)); }
+  &.type-agressif { background: linear-gradient(135deg, $agressif, color.adjust($agressif, $lightness: 10%)); }
 }
 
 .card-identity {
@@ -115,6 +119,11 @@ $agressif: #ef4444;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+
+  &.type-securise {
+    background: rgba($securise, 0.15);
+    color: $securise;
+  }
 
   &.type-conservateur {
     background: rgba($conservateur, 0.15);

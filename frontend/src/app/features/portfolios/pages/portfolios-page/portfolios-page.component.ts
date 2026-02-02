@@ -11,6 +11,18 @@ import { PortfolioFormComponent } from '../../ui/portfolio-form/portfolio-form.c
 
 type ClientFilter = 'all' | string;
 
+// Order: most aggressive to most secure
+const TYPE_ORDER: Record<string, number> = {
+  'agressif': 0,
+  'modere': 1,
+  'conservateur': 2,
+  'securise': 3,
+};
+
+function getTypeOrder(type: string): number {
+  return TYPE_ORDER[type.toLowerCase()] ?? 99;
+}
+
 @Component({
   selector: 'app-portfolios-page',
   standalone: true,
@@ -31,6 +43,7 @@ export class PortfoliosPageComponent implements OnInit {
   error = signal<string | null>(null);
   clientFilter = signal<ClientFilter>('all');
   showCreateModal = signal<boolean>(false);
+  viewMode = signal<'cards' | 'list'>('cards');
 
   // Template helpers
   fmt = { formatCurrency, formatPercentSigned, getProfitClass };
@@ -38,20 +51,46 @@ export class PortfoliosPageComponent implements OnInit {
   // Computed
   filteredPortfolios = computed(() => {
     const filter = this.clientFilter();
-    if (filter === 'all') return this.portfolios();
-    return this.portfolios().filter(p => p.client === filter);
+    let list = this.portfolios();
+    if (filter !== 'all') {
+      list = list.filter(p => p.client === filter);
+    }
+    // Sort by type: Agressif → Modere → Conservateur → Securise
+    return [...list].sort((a, b) => getTypeOrder(a.type) - getTypeOrder(b.type));
   });
 
-  totalBalance = computed(() =>
-    this.filteredPortfolios().reduce((sum, p) => sum + p.total_balance, 0)
+  // Securise portfolios
+  securisePortfolios = computed(() =>
+    this.filteredPortfolios().filter(p => p.type.toLowerCase() === 'securise')
   );
 
-  totalProfit = computed(() =>
-    this.filteredPortfolios().reduce((sum, p) => sum + p.total_profit, 0)
+  securiseBalance = computed(() =>
+    this.securisePortfolios().reduce((sum, p) => sum + p.total_balance, 0)
   );
 
-  totalAccounts = computed(() =>
-    this.filteredPortfolios().reduce((sum, p) => sum + p.account_count, 0)
+  securiseProfit = computed(() =>
+    this.securisePortfolios().reduce((sum, p) => sum + p.total_profit, 0)
+  );
+
+  securiseAccounts = computed(() =>
+    this.securisePortfolios().reduce((sum, p) => sum + p.account_count, 0)
+  );
+
+  // Trading portfolios (Agressif, Modere, Conservateur)
+  tradingPortfolios = computed(() =>
+    this.filteredPortfolios().filter(p => p.type.toLowerCase() !== 'securise')
+  );
+
+  tradingBalance = computed(() =>
+    this.tradingPortfolios().reduce((sum, p) => sum + p.total_balance, 0)
+  );
+
+  tradingProfit = computed(() =>
+    this.tradingPortfolios().reduce((sum, p) => sum + p.total_profit, 0)
+  );
+
+  tradingAccounts = computed(() =>
+    this.tradingPortfolios().reduce((sum, p) => sum + p.account_count, 0)
   );
 
   portfoliosByClient = computed(() => {
@@ -59,6 +98,10 @@ export class PortfoliosPageComponent implements OnInit {
     for (const p of this.filteredPortfolios()) {
       if (!grouped[p.client]) grouped[p.client] = [];
       grouped[p.client].push(p);
+    }
+    // Sort each client's portfolios by type order
+    for (const client of Object.keys(grouped)) {
+      grouped[client].sort((a, b) => getTypeOrder(a.type) - getTypeOrder(b.type));
     }
     return grouped;
   });
@@ -99,6 +142,10 @@ export class PortfoliosPageComponent implements OnInit {
     this.clientFilter.set(filter);
   }
 
+  setViewMode(mode: 'cards' | 'list'): void {
+    this.viewMode.set(mode);
+  }
+
   openPortfolio(portfolio: PortfolioSummary): void {
     this.router.navigate(['/portfolios', portfolio.id]);
   }
@@ -129,6 +176,7 @@ export class PortfoliosPageComponent implements OnInit {
 
   getTypeClass(type: string): string {
     switch (type) {
+      case 'Securise': return 'type-securise';
       case 'Conservateur': return 'type-conservateur';
       case 'Modere': return 'type-modere';
       case 'Agressif': return 'type-agressif';

@@ -1,5 +1,5 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, KeyValuePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { Mt5ApiService, AccountSummary } from '@app/data-access';
@@ -41,6 +41,46 @@ export class PortfolioDetailPageComponent implements OnInit {
       grouped.set(factor, p.accounts.filter(a => a.lot_factor === factor));
     }
     return grouped;
+  });
+
+  // Group accounts by currency (for Securise portfolios)
+  accountsByCurrency = computed(() => {
+    const p = this.portfolio();
+    if (!p) return new Map<string, PortfolioAccountDetail[]>();
+
+    const grouped = new Map<string, PortfolioAccountDetail[]>();
+    for (const acc of p.accounts) {
+      const currency = acc.account?.currency || 'EUR';
+      if (!grouped.has(currency)) {
+        grouped.set(currency, []);
+      }
+      grouped.get(currency)!.push(acc);
+    }
+    return grouped;
+  });
+
+  // Get totals by currency
+  totalsByCurrency = computed(() => {
+    const p = this.portfolio();
+    if (!p) return [];
+
+    const totals = new Map<string, { balance: number; profit: number }>();
+    for (const acc of p.accounts) {
+      if (acc.account) {
+        const currency = acc.account.currency || 'EUR';
+        if (!totals.has(currency)) {
+          totals.set(currency, { balance: 0, profit: 0 });
+        }
+        const t = totals.get(currency)!;
+        t.balance += acc.account.balance || 0;
+        t.profit += acc.account.profit || 0;
+      }
+    }
+    return Array.from(totals.entries()).map(([currency, data]) => ({
+      currency,
+      balance: data.balance,
+      profit: data.profit
+    }));
   });
 
   constructor(
@@ -140,6 +180,7 @@ export class PortfolioDetailPageComponent implements OnInit {
     const p = this.portfolio();
     if (!p) return '';
     switch (p.type) {
+      case 'Securise': return 'type-securise';
       case 'Conservateur': return 'type-conservateur';
       case 'Modere': return 'type-modere';
       case 'Agressif': return 'type-agressif';
@@ -151,6 +192,7 @@ export class PortfolioDetailPageComponent implements OnInit {
     const p = this.portfolio();
     if (!p) return 'fa-folder';
     switch (p.type) {
+      case 'Securise': return 'fa-lock';
       case 'Conservateur': return 'fa-shield-alt';
       case 'Modere': return 'fa-balance-scale';
       case 'Agressif': return 'fa-bolt';
@@ -278,5 +320,11 @@ export class PortfolioDetailPageComponent implements OnInit {
       case 'transfer': return (history.total_transfer / total) * 100;
       default: return 0;
     }
+  }
+
+  getCurrencyTotal(currency: string): number {
+    const totals = this.totalsByCurrency();
+    const found = totals.find(t => t.currency === currency);
+    return found?.balance || 0;
   }
 }

@@ -11,6 +11,7 @@ $positive: #00c853;
 $negative: #ff1744;
 
 // Type colors
+$securise: #3b82f6;
 $conservateur: #10b981;
 $modere: #f59e0b;
 $agressif: #ef4444;
@@ -135,6 +136,11 @@ form {
   &.selected {
     border-color: $accent;
     background: rgba($accent, 0.05);
+  }
+
+  &.type-securise.selected {
+    border-color: $securise;
+    background: rgba($securise, 0.05);
   }
 
   &.type-conservateur.selected {
