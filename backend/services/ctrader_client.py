@@ -1,248 +1,325 @@
-"""cTrader Open API WebSocket Client - JSON protocol over WebSocket"""
-import json
+"""cTrader Open API Client - Protobuf over TCP/TLS"""
+import socket
 import ssl
+import struct
 import threading
 import time
 from typing import Optional
+
+from ctrader_open_api.messages.OpenApiCommonMessages_pb2 import (
+    ProtoMessage,
+    ProtoHeartbeatEvent,
+)
+from ctrader_open_api.messages.OpenApiMessages_pb2 import (
+    ProtoOAApplicationAuthReq,
+    ProtoOAApplicationAuthRes,
+    ProtoOAAccountAuthReq,
+    ProtoOAAccountAuthRes,
+    ProtoOAGetAccountListByAccessTokenReq,
+    ProtoOAGetAccountListByAccessTokenRes,
+    ProtoOATraderReq,
+    ProtoOATraderRes,
+    ProtoOAReconcileReq,
+    ProtoOAReconcileRes,
+    ProtoOADealListReq,
+    ProtoOADealListRes,
+    ProtoOAErrorRes,
+)
 from config.logging import logger
 
-
-class PayloadType:
-    """cTrader Open API v2 payload types"""
-    # Proto
-    HEARTBEAT_EVENT = 51
-    ERROR_RES = 50
-    # Application auth
-    OA_APPLICATION_AUTH_REQ = 2100
-    OA_APPLICATION_AUTH_RES = 2101
-    # Account auth
-    OA_ACCOUNT_AUTH_REQ = 2102
-    OA_ACCOUNT_AUTH_RES = 2103
-    # Trader info
-    OA_TRADER_REQ = 2121
-    OA_TRADER_RES = 2122
-    # Reconcile (open positions + pending orders)
-    OA_RECONCILE_REQ = 2124
-    OA_RECONCILE_RES = 2125
-    # Deal list (closed trades history)
-    OA_DEAL_LIST_REQ = 2133
-    OA_DEAL_LIST_RES = 2134
-    # Account list by access token
-    OA_GET_ACCOUNT_LIST_REQ = 2149
-    OA_GET_ACCOUNT_LIST_RES = 2150
-    # Symbols
-    OA_SYMBOL_BY_ID_REQ = 2114
-    OA_SYMBOL_BY_ID_RES = 2115
+HEARTBEAT_TYPE = 51
+ERROR_TYPE = 2142
 
 
 class CTraderClient:
-    """WebSocket client for cTrader Open API using JSON encoding.
+    """TCP/TLS client for cTrader Open API using Protobuf encoding.
 
-    Connects to cTrader Open API via WebSocket and sends/receives
-    JSON-encoded messages (text frames).
+    Connects to cTrader Open API via raw TCP socket with TLS and
+    sends/receives length-prefixed Protobuf messages.
     """
 
     def __init__(self, host: str, port: int):
         self.host = host
         self.port = port
-        self.url = f"wss://{host}:{port}"
-        self.ws = None
+        self.sock: Optional[ssl.SSLSocket] = None
         self._msg_id = 0
         self._lock = threading.Lock()
         self._connected = False
 
     @property
     def is_connected(self) -> bool:
-        return self._connected and self.ws is not None
+        return self._connected and self.sock is not None
 
     def connect(self) -> bool:
-        """Connect to cTrader WebSocket API"""
+        """Connect to cTrader via TCP/TLS"""
         try:
-            import websocket
-            self.ws = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
-            self.ws.settimeout(15)
-            self.ws.connect(self.url)
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            raw_sock = socket.create_connection((self.host, self.port), timeout=15)
+            self.sock = ctx.wrap_socket(raw_sock, server_hostname=self.host)
             self._connected = True
-            logger.info("cTrader WebSocket connected", url=self.url)
+            logger.info("cTrader TCP connected", host=self.host, port=self.port)
             return True
         except Exception as e:
-            logger.error("cTrader WebSocket connection failed", url=self.url, error=str(e))
+            logger.error("cTrader TCP connection failed", error=str(e))
             self._connected = False
             return False
 
     def disconnect(self):
-        """Close WebSocket connection"""
-        if self.ws:
+        """Close TCP connection"""
+        if self.sock:
             try:
-                self.ws.close()
+                self.sock.close()
             except Exception:
                 pass
         self._connected = False
-        self.ws = None
-        logger.info("cTrader WebSocket disconnected")
+        self.sock = None
+        logger.info("cTrader TCP disconnected")
 
     def _next_msg_id(self) -> str:
         with self._lock:
             self._msg_id += 1
             return str(self._msg_id)
 
-    def _send_request(self, payload_type: int, payload: dict,
-                      expected_response_type: int = None,
-                      timeout: float = 15.0) -> Optional[dict]:
-        """Send a request and wait for the matching response.
+    def _recv_exact(self, n: int) -> Optional[bytes]:
+        """Read exactly n bytes from socket"""
+        data = b""
+        while len(data) < n:
+            chunk = self.sock.recv(n - len(data))
+            if not chunk:
+                return None
+            data += chunk
+        return data
 
-        Args:
-            payload_type: Request message type
-            payload: Message payload as dict
-            expected_response_type: Expected response type (default: payload_type + 1)
-            timeout: Response timeout in seconds
+    def _send_proto(self, message) -> str:
+        """Send a protobuf message wrapped in ProtoMessage with length prefix"""
+        msg_id = self._next_msg_id()
+        wrapper = ProtoMessage()
+        wrapper.payloadType = message.payloadType
+        wrapper.payload = message.SerializeToString()
+        wrapper.clientMsgId = msg_id
 
-        Returns:
-            Response payload dict or None on error
+        data = wrapper.SerializeToString()
+        length_prefix = struct.pack(">I", len(data))
+        self.sock.sendall(length_prefix + data)
+        return msg_id
+
+    def _recv_proto(self, timeout: float = 15.0) -> Optional[ProtoMessage]:
+        """Receive a length-prefixed ProtoMessage"""
+        self.sock.settimeout(timeout)
+        length_data = self._recv_exact(4)
+        if not length_data:
+            return None
+        length = struct.unpack(">I", length_data)[0]
+        msg_data = self._recv_exact(length)
+        if not msg_data:
+            return None
+        msg = ProtoMessage()
+        msg.ParseFromString(msg_data)
+        return msg
+
+    def _send_request(self, request_msg, response_type: int,
+                      timeout: float = 15.0) -> Optional[bytes]:
+        """Send request and wait for matching response payload.
+
+        Returns the raw payload bytes of the response, or None on error.
         """
         if not self.is_connected:
             return None
 
-        if expected_response_type is None:
-            expected_response_type = payload_type + 1
-
-        msg_id = self._next_msg_id()
-        message = {
-            "clientMsgId": msg_id,
-            "payloadType": payload_type,
-            "payload": payload
-        }
-
         try:
-            self.ws.settimeout(timeout)
-            self.ws.send(json.dumps(message))
+            self._send_proto(request_msg)
 
             deadline = time.time() + timeout
             while time.time() < deadline:
-                raw = self.ws.recv()
-                if not raw:
-                    continue
-
-                response = json.loads(raw)
-                resp_type = response.get("payloadType")
+                remaining = max(1.0, deadline - time.time())
+                msg = self._recv_proto(timeout=remaining)
+                if msg is None:
+                    self._connected = False
+                    return None
 
                 # Handle heartbeat
-                if resp_type == PayloadType.HEARTBEAT_EVENT:
-                    self.ws.send(json.dumps({"payloadType": PayloadType.HEARTBEAT_EVENT}))
+                if msg.payloadType == HEARTBEAT_TYPE:
+                    hb = ProtoHeartbeatEvent()
+                    self._send_proto(hb)
                     continue
 
                 # Handle error
-                if resp_type == PayloadType.ERROR_RES:
-                    err = response.get("payload", {})
+                if msg.payloadType == ERROR_TYPE:
+                    err = ProtoOAErrorRes()
+                    err.ParseFromString(msg.payload)
                     logger.error("cTrader API error",
-                                 error_code=err.get("errorCode"),
-                                 description=err.get("description"),
-                                 maintenance=err.get("maintenanceEndTimestamp"))
+                                 error_code=err.errorCode,
+                                 description=err.description if err.HasField("description") else "")
                     return None
 
                 # Check for expected response
-                if resp_type == expected_response_type:
-                    return response.get("payload", {})
+                if msg.payloadType == response_type:
+                    return msg.payload
 
-                # Skip unexpected messages (events, etc.)
-                logger.debug("cTrader unexpected message", payload_type=resp_type)
+                logger.debug("cTrader skipping message", payload_type=msg.payloadType)
 
         except Exception as e:
-            logger.error("cTrader request failed",
-                         payload_type=payload_type, error=str(e))
+            logger.error("cTrader request failed", error=str(e))
             self._connected = False
             return None
 
-        logger.error("cTrader request timeout", payload_type=payload_type)
+        logger.error("cTrader request timeout")
         return None
 
     # ── API Methods ──────────────────────────────────────────
 
     def application_auth(self, client_id: str, client_secret: str) -> bool:
-        """Authenticate the application (ProtoOAApplicationAuthReq)"""
-        result = self._send_request(
-            PayloadType.OA_APPLICATION_AUTH_REQ,
-            {"clientId": client_id, "clientSecret": client_secret}
-        )
-        if result is not None:
+        """Authenticate the application"""
+        req = ProtoOAApplicationAuthReq()
+        req.clientId = client_id
+        req.clientSecret = client_secret
+
+        payload = self._send_request(req, ProtoOAApplicationAuthRes().payloadType)
+        if payload is not None:
             logger.info("cTrader application authenticated")
             return True
         return False
 
     def get_accounts_by_token(self, access_token: str) -> list[dict]:
-        """Get account list for access token (ProtoOAGetAccountListByAccessTokenReq)
+        """Get account list for access token.
 
-        Returns list of ctidTraderAccount objects with:
-        - ctidTraderAccountId: int (API account ID)
-        - traderLogin: int (visible login number)
+        Returns list of dicts with:
+        - ctidTraderAccountId: int
+        - traderLogin: int
         - isLive: bool
         """
-        result = self._send_request(
-            PayloadType.OA_GET_ACCOUNT_LIST_REQ,
-            {"accessToken": access_token}
+        req = ProtoOAGetAccountListByAccessTokenReq()
+        req.accessToken = access_token
+
+        payload = self._send_request(
+            req, ProtoOAGetAccountListByAccessTokenRes().payloadType
         )
-        if result:
-            return result.get("ctidTraderAccount", [])
-        return []
+        if not payload:
+            return []
+
+        res = ProtoOAGetAccountListByAccessTokenRes()
+        res.ParseFromString(payload)
+
+        accounts = []
+        for acc in res.ctidTraderAccount:
+            accounts.append({
+                "ctidTraderAccountId": acc.ctidTraderAccountId,
+                "traderLogin": acc.traderLogin,
+                "isLive": acc.isLive,
+            })
+        return accounts
 
     def account_auth(self, ctid_trader_account_id: int, access_token: str) -> bool:
-        """Authenticate a trading account (ProtoOAAccountAuthReq)"""
-        result = self._send_request(
-            PayloadType.OA_ACCOUNT_AUTH_REQ,
-            {
-                "ctidTraderAccountId": ctid_trader_account_id,
-                "accessToken": access_token
-            }
-        )
-        return result is not None
+        """Authenticate a trading account"""
+        req = ProtoOAAccountAuthReq()
+        req.ctidTraderAccountId = ctid_trader_account_id
+        req.accessToken = access_token
+
+        payload = self._send_request(req, ProtoOAAccountAuthRes().payloadType)
+        return payload is not None
 
     def get_trader(self, ctid_trader_account_id: int) -> Optional[dict]:
-        """Get trader account info (ProtoOATraderReq)
+        """Get trader account info.
 
-        Returns trader object with:
-        - balance: int (in cents, divide by 10^moneyDigits)
-        - moneyDigits: int (typically 2)
-        - leverageInCents: int
-        - depositAssetId: int
-        - registrationTimestamp: int
-        - totalMarginCalculationType: int
+        Returns dict with: balance, moneyDigits, leverageInCents,
+        depositAssetId, registrationTimestamp, etc.
         """
-        return self._send_request(
-            PayloadType.OA_TRADER_REQ,
-            {"ctidTraderAccountId": ctid_trader_account_id}
-        )
+        req = ProtoOATraderReq()
+        req.ctidTraderAccountId = ctid_trader_account_id
+
+        payload = self._send_request(req, ProtoOATraderRes().payloadType)
+        if not payload:
+            return None
+
+        res = ProtoOATraderRes()
+        res.ParseFromString(payload)
+        trader = res.trader
+
+        return {
+            "balance": trader.balance,
+            "moneyDigits": trader.moneyDigits,
+            "leverageInCents": trader.leverageInCents,
+            "depositAssetId": trader.depositAssetId,
+            "registrationTimestamp": trader.registrationTimestamp,
+        }
 
     def get_reconcile(self, ctid_trader_account_id: int) -> Optional[dict]:
-        """Get open positions and pending orders (ProtoOAReconcileReq)
+        """Get open positions and pending orders.
 
-        Returns:
-        - position: list of open positions
-        - order: list of pending orders
+        Returns dict with:
+        - position: list of position dicts
+        - order: list of order dicts
         """
-        return self._send_request(
-            PayloadType.OA_RECONCILE_REQ,
-            {"ctidTraderAccountId": ctid_trader_account_id}
-        )
+        req = ProtoOAReconcileReq()
+        req.ctidTraderAccountId = ctid_trader_account_id
+
+        payload = self._send_request(req, ProtoOAReconcileRes().payloadType)
+        if not payload:
+            return None
+
+        res = ProtoOAReconcileRes()
+        res.ParseFromString(payload)
+
+        positions = []
+        for pos in res.position:
+            positions.append({
+                "swap": pos.swap,
+                "commission": pos.commission,
+                "unrealizedPnl": pos.unrealizedPnl if pos.HasField("unrealizedPnl") else 0,
+            })
+
+        return {"position": positions, "order": list(res.order)}
 
     def get_deal_list(self, ctid_trader_account_id: int,
                       from_timestamp_ms: int, to_timestamp_ms: int) -> Optional[dict]:
-        """Get closed deals history (ProtoOADealListReq)
+        """Get closed deals history.
 
-        Args:
-            ctid_trader_account_id: Account ID
-            from_timestamp_ms: Start time in milliseconds
-            to_timestamp_ms: End time in milliseconds
-
-        Returns:
-        - deal: list of deal objects
+        Returns dict with:
+        - deal: list of deal dicts
         - hasMore: bool
         """
-        return self._send_request(
-            PayloadType.OA_DEAL_LIST_REQ,
-            {
-                "ctidTraderAccountId": ctid_trader_account_id,
-                "fromTimestamp": from_timestamp_ms,
-                "toTimestamp": to_timestamp_ms,
-            },
-            timeout=30.0
+        req = ProtoOADealListReq()
+        req.ctidTraderAccountId = ctid_trader_account_id
+        req.fromTimestamp = from_timestamp_ms
+        req.toTimestamp = to_timestamp_ms
+
+        payload = self._send_request(
+            req, ProtoOADealListRes().payloadType, timeout=30.0
         )
+        if not payload:
+            return None
+
+        res = ProtoOADealListRes()
+        res.ParseFromString(payload)
+
+        deals = []
+        for deal in res.deal:
+            deal_dict = {
+                "dealId": deal.dealId,
+                "orderId": deal.orderId,
+                "positionId": deal.positionId,
+                "volume": deal.volume,
+                "filledVolume": deal.filledVolume,
+                "dealStatus": str(deal.dealStatus),
+                "tradeSide": str(deal.tradeSide),
+                "commission": deal.commission if deal.HasField("commission") else 0,
+            }
+
+            # Close position details
+            if deal.HasField("closePositionDetail"):
+                cpd = deal.closePositionDetail
+                deal_dict["closePositionDetail"] = {
+                    "grossProfit": cpd.grossProfit,
+                    "swap": cpd.swap,
+                    "commission": cpd.commission,
+                    "balance": cpd.balance,
+                }
+
+            deals.append(deal_dict)
+
+        return {
+            "deal": deals,
+            "hasMore": res.hasMore,
+        }
