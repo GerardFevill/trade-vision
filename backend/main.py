@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from services import mt5_connector
+from services import mt5_connector, ctrader_connector
 from api import api_router
 from config.settings import settings
 
@@ -11,9 +11,11 @@ __version__ = "1.0.0"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan - connect/disconnect MT5"""
+    """Application lifespan - connect/disconnect MT5 and cTrader"""
     mt5_connector.connect()
+    ctrader_connector.connect()
     yield
+    ctrader_connector.disconnect()
     mt5_connector.disconnect()
 
 
