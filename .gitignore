@@ -11,6 +11,8 @@ nul
 accounts_config.py
 accounts_local.py
 backend/config/accounts_local.py
+ctrader_accounts_local.py
+backend/config/ctrader_accounts_local.py
 
 # Node
 node_modules/

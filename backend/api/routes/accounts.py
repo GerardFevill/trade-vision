@@ -1,11 +1,33 @@
 """Account management routes"""
 from fastapi import APIRouter, HTTPException, Query, Path
-from services import mt5_connector, sync_service
+from services import mt5_connector, sync_service, ctrader_connector
 from db import accounts_cache
 from models import AccountSummary
+from config.logging import logger
 import threading
 
 router = APIRouter()
+
+
+def _fetch_all_accounts(use_cache: bool = True) -> list[AccountSummary]:
+    """Fetch accounts from both MT5 and cTrader, merged into a single list.
+    MT5 connector handles its own caching internally.
+    cTrader results are saved to the same cache here.
+    """
+    mt5_accounts = mt5_connector.get_all_accounts_summary(use_cache=use_cache)
+
+    # Fetch cTrader accounts
+    try:
+        ctrader_accounts = ctrader_connector.get_all_accounts_summary()
+    except Exception as e:
+        logger.error("cTrader fetch failed, using MT5 only", error=str(e))
+        ctrader_accounts = []
+
+    # Save cTrader accounts to cache (MT5 saves its own in get_all_accounts_summary)
+    if ctrader_accounts:
+        accounts_cache.save_accounts(ctrader_accounts)
+
+    return mt5_accounts + ctrader_accounts
 
 
 @router.get("/accounts", response_model=list[AccountSummary])
@@ -13,10 +35,10 @@ async def get_all_accounts(
     refresh: bool = Query(default=False, description="Forcer le rafraîchissement du cache"),
     force_mt5: bool = Query(default=False, description="Forcer la lecture directe depuis MT5 (synchrone)")
 ):
-    """Récupère la liste de tous les comptes"""
-    # Si force_mt5, lire directement depuis MT5 (synchrone, peut être lent)
+    """Récupère la liste de tous les comptes (MT5 + cTrader)"""
+    # Si force_mt5, lire directement depuis toutes les sources (synchrone)
     if force_mt5:
-        return mt5_connector.get_all_accounts_summary(use_cache=False)
+        return _fetch_all_accounts(use_cache=False)
 
     # Toujours retourner le cache d'abord (même ancien)
     cached = accounts_cache.load_accounts()
@@ -25,9 +47,9 @@ async def get_all_accounts(
     if refresh or not cached:
         # Si cache vide, on doit attendre
         if not cached:
-            return mt5_connector.get_all_accounts_summary(use_cache=False)
+            return _fetch_all_accounts(use_cache=False)
         # Sinon rafraîchir en arrière-plan
-        threading.Thread(target=mt5_connector.get_all_accounts_summary, args=(False,), daemon=True).start()
+        threading.Thread(target=_fetch_all_accounts, args=(False,), daemon=True).start()
 
     return cached if cached else []
 
