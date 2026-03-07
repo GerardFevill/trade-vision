@@ -23,6 +23,8 @@ from ctrader_open_api.messages.OpenApiMessages_pb2 import (
     ProtoOAReconcileRes,
     ProtoOADealListReq,
     ProtoOADealListRes,
+    ProtoOACashFlowHistoryListReq,
+    ProtoOACashFlowHistoryListRes,
     ProtoOAErrorRes,
 )
 from config.logging import logger
@@ -271,6 +273,38 @@ class CTraderClient:
             })
 
         return {"position": positions, "order": list(res.order)}
+
+    def get_cashflow_history(self, ctid_trader_account_id: int,
+                             from_timestamp_ms: int,
+                             to_timestamp_ms: int) -> list[dict]:
+        """Get cash flow history (deposits/withdrawals/copy operations).
+
+        Returns list of dicts with: operationType, delta, externalNote, moneyDigits.
+        Max window: 7 days imposed by the API.
+        """
+        req = ProtoOACashFlowHistoryListReq()
+        req.ctidTraderAccountId = ctid_trader_account_id
+        req.fromTimestamp = from_timestamp_ms
+        req.toTimestamp = to_timestamp_ms
+
+        payload = self._send_request(
+            req, ProtoOACashFlowHistoryListRes().payloadType, timeout=15.0
+        )
+        if not payload:
+            return []
+
+        res = ProtoOACashFlowHistoryListRes()
+        res.ParseFromString(payload)
+
+        items = []
+        for dw in res.depositWithdraw:
+            items.append({
+                "operationType": dw.operationType,
+                "delta": dw.delta,
+                "externalNote": dw.externalNote if dw.HasField("externalNote") else "",
+                "moneyDigits": dw.moneyDigits if dw.HasField("moneyDigits") else 2,
+            })
+        return items
 
     def get_deal_list(self, ctid_trader_account_id: int,
                       from_timestamp_ms: int, to_timestamp_ms: int) -> Optional[dict]:

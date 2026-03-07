@@ -47,6 +47,14 @@ class AccountsCache:
                                        WHERE table_name='accounts_cache' AND column_name='client') THEN
                             ALTER TABLE accounts_cache ADD COLUMN client TEXT;
                         END IF;
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                                       WHERE table_name='accounts_cache' AND column_name='copy_invested') THEN
+                            ALTER TABLE accounts_cache ADD COLUMN copy_invested REAL;
+                        END IF;
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                                       WHERE table_name='accounts_cache' AND column_name='copy_strategy') THEN
+                            ALTER TABLE accounts_cache ADD COLUMN copy_strategy TEXT;
+                        END IF;
                     END $$;
                 """)
 
@@ -59,8 +67,9 @@ class AccountsCache:
                         cur.execute("""
                             INSERT INTO accounts_cache
                             (id, name, broker, server, balance, equity, profit, profit_percent,
-                             drawdown, trades, win_rate, currency, leverage, connected, client, updated_at)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             drawdown, trades, win_rate, currency, leverage, connected, client,
+                             copy_invested, copy_strategy, updated_at)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             ON CONFLICT (id) DO UPDATE SET
                                 name = EXCLUDED.name,
                                 broker = EXCLUDED.broker,
@@ -76,12 +85,15 @@ class AccountsCache:
                                 leverage = EXCLUDED.leverage,
                                 connected = EXCLUDED.connected,
                                 client = EXCLUDED.client,
+                                copy_invested = EXCLUDED.copy_invested,
+                                copy_strategy = EXCLUDED.copy_strategy,
                                 updated_at = EXCLUDED.updated_at
                         """, (
                             acc.id, acc.name, acc.broker, acc.server,
                             acc.balance, acc.equity, acc.profit, acc.profit_percent,
                             acc.drawdown, acc.trades, acc.win_rate,
-                            acc.currency, acc.leverage, acc.connected, acc.client, now
+                            acc.currency, acc.leverage, acc.connected, acc.client,
+                            acc.copy_invested, acc.copy_strategy, now
                         ))
             return True
         except Exception as e:
@@ -94,7 +106,8 @@ class AccountsCache:
                 with conn.cursor() as cur:
                     cur.execute("""
                         SELECT id, name, broker, server, balance, equity, profit, profit_percent,
-                               drawdown, trades, win_rate, currency, leverage, connected, client
+                               drawdown, trades, win_rate, currency, leverage, connected, client,
+                               copy_invested, copy_strategy
                         FROM accounts_cache
                         ORDER BY id
                     """)
@@ -103,7 +116,8 @@ class AccountsCache:
                             id=row[0], name=row[1], broker=row[2], server=row[3],
                             balance=row[4], equity=row[5], profit=row[6], profit_percent=row[7],
                             drawdown=row[8], trades=row[9], win_rate=row[10],
-                            currency=row[11], leverage=row[12], connected=row[13], client=row[14]
+                            currency=row[11], leverage=row[12], connected=row[13], client=row[14],
+                            copy_invested=row[15], copy_strategy=row[16]
                         )
                         for row in cur.fetchall()
                     ]
@@ -137,8 +151,9 @@ class AccountsCache:
                     cur.execute("""
                         INSERT INTO accounts_cache
                         (id, name, broker, server, balance, equity, profit, profit_percent,
-                         drawdown, trades, win_rate, currency, leverage, connected, client, updated_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                         drawdown, trades, win_rate, currency, leverage, connected, client,
+                         copy_invested, copy_strategy, updated_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         ON CONFLICT (id) DO UPDATE SET
                             balance = EXCLUDED.balance,
                             equity = EXCLUDED.equity,
@@ -148,12 +163,15 @@ class AccountsCache:
                             trades = EXCLUDED.trades,
                             win_rate = EXCLUDED.win_rate,
                             connected = EXCLUDED.connected,
+                            copy_invested = EXCLUDED.copy_invested,
+                            copy_strategy = EXCLUDED.copy_strategy,
                             updated_at = EXCLUDED.updated_at
                     """, (
                         account.id, account.name, account.broker, account.server,
                         account.balance, account.equity, account.profit, account.profit_percent,
                         account.drawdown, account.trades, account.win_rate,
-                        account.currency, account.leverage, account.connected, account.client, now
+                        account.currency, account.leverage, account.connected, account.client,
+                        account.copy_invested, account.copy_strategy, now
                     ))
             return True
         except Exception as e:

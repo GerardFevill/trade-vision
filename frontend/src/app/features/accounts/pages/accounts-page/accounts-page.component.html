@@ -25,9 +25,9 @@
           <i class="fa fa-list"></i>
         </button>
       </div>
-      <button class="btn-sync" (click)="syncFromMT5()" [disabled]="syncing()" title="Synchroniser depuis MT5">
+      <button class="btn-sync" (click)="syncFromMT5()" [disabled]="syncing()" title="Synchroniser les comptes">
         <i class="fa fa-download" [class.fa-spin]="syncing()"></i>
-        MT5
+        Sync
       </button>
       <button class="btn-refresh" (click)="refresh()" [disabled]="loading()" title="Actualiser depuis le cache">
         <i class="fa fa-sync" [class.fa-spin]="loading()"></i>
@@ -110,6 +110,9 @@
           <div class="signal-balance">
             <span class="balance-value">{{ fmt.formatCurrency(account.balance, account.currency) }}</span>
             <span class="balance-label">Solde</span>
+            @if (account.copy_invested) {
+              <span class="copy-badge"><i class="fa fa-copy"></i> en copie ({{ account.copy_strategy }}) · {{ fmt.formatCurrency(account.copy_invested, account.currency) }}</span>
+            }
           </div>
 
           <!-- Sparkline -->
@@ -211,7 +214,12 @@
               <td class="td-growth" [class]="fmt.getProfitClass(account.profit_percent)">
                 {{ fmt.formatPercentSigned(account.profit_percent) }}
               </td>
-              <td class="td-balance">{{ fmt.formatCurrency(account.balance, account.currency) }}</td>
+              <td class="td-balance">
+                {{ fmt.formatCurrency(account.balance, account.currency) }}
+                @if (account.copy_invested) {
+                  <span class="copy-badge-sm"><i class="fa fa-copy"></i> {{ account.copy_strategy }}</span>
+                }
+              </td>
               <td class="td-profit" [class]="fmt.getProfitClass(account.profit)">
                 {{ fmt.formatCurrency(account.profit, account.currency) }}
               </td>

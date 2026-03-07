@@ -10,7 +10,7 @@ export const routes: Routes = [
     path: 'accounts',
     loadChildren: () =>
       import('./features/accounts/accounts.routes').then(m => m.ACCOUNTS_ROUTES),
-    title: 'Comptes MT5'
+    title: 'Mes Comptes'
   },
   {
     path: 'accounts/:id',

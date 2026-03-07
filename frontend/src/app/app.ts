@@ -12,7 +12,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
           <div class="brand-icon">
             <i class="fa fa-chart-line"></i>
           </div>
-          <span class="brand-text">MT5</span>
+          <span class="brand-text">Elite</span>
         </div>
         <nav class="sidebar-nav">
           <a routerLink="/accounts" routerLinkActive="active" class="nav-item">

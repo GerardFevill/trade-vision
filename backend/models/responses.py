@@ -37,6 +37,8 @@ class AccountSummary(BaseModel):
     leverage: int
     connected: bool
     client: str | None = None
+    copy_invested: float | None = None
+    copy_strategy: str | None = None
 
 
 class PortefeuilleAccountDetail(BaseModel):

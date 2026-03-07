@@ -376,6 +376,22 @@ $warning: #ff9100;
     text-transform: uppercase;
     margin-top: 4px;
   }
+
+  .copy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 3px 8px;
+    background: linear-gradient(135deg, rgba(41, 98, 255, 0.15), rgba(30, 136, 229, 0.15));
+    border: 1px solid rgba(41, 98, 255, 0.3);
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    color: #64b5f6;
+
+    i { font-size: 9px; }
+  }
 }
 
 // Sparkline
@@ -609,6 +625,18 @@ $warning: #ff9100;
   .id {
     font-size: 11px;
     color: $text-muted;
+  }
+}
+
+.td-balance {
+  .copy-badge-sm {
+    display: block;
+    margin-top: 2px;
+    font-size: 9px;
+    font-weight: 500;
+    color: #64b5f6;
+
+    i { font-size: 8px; margin-right: 3px; }
   }
 }
 

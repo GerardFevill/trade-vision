@@ -46,6 +46,8 @@ export interface AccountSummary {
   leverage: number;
   connected: boolean;
   client: string | null;
+  copy_invested: number | null;
+  copy_strategy: string | null;
 }
 
 export interface ConnectionStatus {
