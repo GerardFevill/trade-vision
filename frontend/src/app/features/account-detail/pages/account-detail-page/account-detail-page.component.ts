@@ -13,15 +13,18 @@ import {
   RadarController, RadialLinearScale
 } from 'chart.js';
 
+import { Timeframe, ChartMode } from '../../charts/chart-helpers';
+import { EQUITY_CHART_TYPE, EQUITY_CHART_OPTIONS, buildEquityChartData } from '../../charts/equity-chart.config';
+import { RADAR_OPTIONS, RADAR_LABELS, buildRadarData } from '../../charts/radar-chart.config';
+import { DRAWDOWN_CHART_OPTIONS, buildDrawdownChartData } from '../../charts/drawdown-chart.config';
+
 Chart.register(
   LineController, LineElement, PointElement, LinearScale, CategoryScale,
   Filler, Tooltip, Legend, RadarController, RadialLinearScale
 );
 
 type TabType = 'account' | 'history' | 'statistics' | 'risks';
-type ChartMode = 'all' | 'growth' | 'drawdown';
 type MonthlyDisplayMode = 'percent' | 'value';
-type Timeframe = '1H' | '1D' | '1W' | '1M' | '1Y' | 'All';
 
 @Component({
   selector: 'app-account-detail-page',
@@ -71,61 +74,19 @@ export class AccountDetailPageComponent implements OnInit {
     return data.reduce((sum, year) => sum + (year.year_total_value ?? 0), 0);
   });
 
-  // Main Chart
-  chartType: ChartType = 'line';
+  // Chart state
+  chartType: ChartType = EQUITY_CHART_TYPE;
   chartData: ChartConfiguration['data'] = { labels: [], datasets: [] };
-  chartOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { intersect: false, mode: 'index' },
-    plugins: {
-      legend: { display: true, position: 'top', labels: { color: '#888', font: { size: 11 } } },
-      tooltip: { backgroundColor: '#1a1a1a', titleColor: '#fff', bodyColor: '#aaa', borderColor: '#333', borderWidth: 1 }
-    },
-    scales: {
-      x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 10 } },
-      y: { type: 'linear', position: 'left', grid: { color: '#1f1f1f' }, ticks: { color: '#22c55e', font: { size: 10 } } },
-      y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#f59e0b', font: { size: 10 } }, reverse: true }
-    }
-  };
+  chartOptions: ChartConfiguration['options'] = EQUITY_CHART_OPTIONS;
 
-  // Radar Chart
   radarData: ChartConfiguration<'radar'>['data'] = {
-    labels: ['Algo trading', 'Bénéfice trades', 'Perte trades', 'Activité', 'Charge dépôt', 'Prélèvement max'],
+    labels: RADAR_LABELS,
     datasets: [{ data: [0, 0, 0, 0, 0, 0], backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: '#3b82f6', borderWidth: 2, pointBackgroundColor: '#3b82f6' }]
   };
+  radarOptions = RADAR_OPTIONS;
 
-  radarOptions: ChartConfiguration<'radar'>['options'] = {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: { legend: { display: false } },
-    scales: {
-      r: {
-        angleLines: { color: '#2a2a2a' },
-        grid: { color: '#2a2a2a' },
-        pointLabels: { color: '#888', font: { size: 10 } },
-        ticks: { display: false, stepSize: 20 },
-        min: 0,
-        max: 100
-      }
-    }
-  };
-
-  // Drawdown Chart
   drawdownChartData: ChartConfiguration['data'] = { labels: [], datasets: [] };
-  drawdownChartOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { intersect: false, mode: 'index' },
-    plugins: {
-      legend: { display: false },
-      tooltip: { backgroundColor: '#1a1a1a', titleColor: '#fff', bodyColor: '#aaa', borderColor: '#333', borderWidth: 1 }
-    },
-    scales: {
-      x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 12 } },
-      y: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } }, reverse: true }
-    }
-  };
+  drawdownChartOptions = DRAWDOWN_CHART_OPTIONS;
 
   constructor(
     private analyticsApi: AnalyticsApiService,
@@ -134,20 +95,28 @@ export class AccountDetailPageComponent implements OnInit {
   ) {
     effect(() => {
       const history = this.analyticsApi.history();
-      this.activeTimeframe();
-      this.activeChart();
-      if (history.length) this.updateChart(history);
+      const tf = this.activeTimeframe();
+      const mode = this.activeChart();
+      if (history.length) {
+        const result = buildEquityChartData(history, tf, mode);
+        this.chartData = result.data;
+        this.chartOptions = result.options;
+      }
     });
 
     effect(() => {
       const ts = this.tradeStats();
       const r = this.risk();
-      if (ts && r) this.updateRadar();
+      if (ts && r) {
+        this.radarData = buildRadarData(ts, r);
+      }
     });
 
     effect(() => {
       const daily = this.analyticsApi.dailyDrawdown();
-      this.updateDrawdownChart(daily);
+      if (daily.length) {
+        this.drawdownChartData = buildDrawdownChartData(daily);
+      }
     });
   }
 
@@ -246,118 +215,5 @@ export class AccountDetailPageComponent implements OnInit {
   getBarPercent(value: number | null | undefined, max: number | null | undefined): number {
     if (!value || !max || max === 0) return 0;
     return Math.min(Math.max((value / max) * 100, 0), 100);
-  }
-
-  private getTimeframeMinutes(tf: Timeframe): number {
-    const map: Record<Timeframe, number> = {
-      '1H': 60, '1D': 1440, '1W': 10080, '1M': 43200, '1Y': 525600, 'All': Infinity
-    };
-    return map[tf];
-  }
-
-  private filterHistoryByTimeframe(history: HistoryPoint[]): HistoryPoint[] {
-    const tf = this.activeTimeframe();
-    if (tf === 'All') return history;
-
-    const minutes = this.getTimeframeMinutes(tf);
-    const cutoff = new Date(Date.now() - minutes * 60 * 1000);
-    const filtered = history.filter(h => new Date(h.timestamp) >= cutoff);
-    return filtered.length === 0 ? history : filtered;
-  }
-
-  private updateChart(history: HistoryPoint[]): void {
-    if (!history.length) return;
-
-    const filtered = this.filterHistoryByTimeframe(history);
-    if (!filtered.length) return;
-
-    const tf = this.activeTimeframe();
-    const formatOptions: Intl.DateTimeFormatOptions =
-      tf === '1H' ? { hour: '2-digit', minute: '2-digit' }
-      : tf === '1D' || tf === '1W' ? { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }
-      : { day: '2-digit', month: '2-digit', year: '2-digit' };
-
-    const labels = filtered.map(h => new Date(h.timestamp).toLocaleString('fr-FR', formatOptions));
-    const mode = this.activeChart();
-
-    if (mode === 'all') {
-      this.chartOptions = {
-        ...this.chartOptions,
-        scales: {
-          x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 10 } },
-          y: { type: 'linear', position: 'left', grid: { color: '#1f1f1f' }, ticks: { color: '#22c55e', font: { size: 10 } } },
-          y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#f59e0b', font: { size: 10 } }, reverse: true }
-        }
-      };
-      this.chartData = {
-        labels,
-        datasets: [
-          { label: 'Solde', data: filtered.map(h => h.balance), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2, yAxisID: 'y' },
-          { label: 'Prélèvement %', data: filtered.map(h => h.drawdown_percent), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2, yAxisID: 'y1' }
-        ]
-      };
-    } else if (mode === 'growth') {
-      this.chartOptions = {
-        ...this.chartOptions,
-        scales: {
-          x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 10 } },
-          y: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } } }
-        }
-      };
-      this.chartData = {
-        labels,
-        datasets: [
-          { label: 'Solde', data: filtered.map(h => h.balance), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 },
-          { label: 'Fonds propres', data: filtered.map(h => h.equity), borderColor: '#3b82f6', backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2 }
-        ]
-      };
-    } else {
-      this.chartOptions = {
-        ...this.chartOptions,
-        scales: {
-          x: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 10 } },
-          y: { grid: { color: '#1f1f1f' }, ticks: { color: '#666', font: { size: 10 } }, reverse: true }
-        }
-      };
-      this.chartData = {
-        labels,
-        datasets: [{ label: 'Prélèvement', data: filtered.map(h => h.drawdown_percent), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 }]
-      };
-    }
-  }
-
-  private updateRadar(): void {
-    const ts = this.tradeStats();
-    const r = this.risk();
-    if (!ts || !r) return;
-
-    this.radarData = {
-      labels: ['Algo trading', 'Bénéfice trades', 'Perte trades', 'Activité', 'Charge dépôt', 'Prélèvement max'],
-      datasets: [{
-        data: [98, Math.min(ts.win_rate, 100), 100 - Math.min(ts.win_rate, 100), Math.min((ts.total_trades / 500) * 100, 100), Math.min(r.max_deposit_load, 100), Math.min(r.max_drawdown_percent, 100)],
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        borderColor: '#3b82f6',
-        borderWidth: 2,
-        pointBackgroundColor: '#3b82f6'
-      }]
-    };
-  }
-
-  private updateDrawdownChart(daily: DailyDrawdown[]): void {
-    if (!daily.length) return;
-
-    this.drawdownChartData = {
-      labels: daily.map(d => d.date),
-      datasets: [{
-        label: 'Drawdown %',
-        data: daily.map(d => d.drawdown_percent),
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239,68,68,0.2)',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 0,
-        borderWidth: 2
-      }]
-    };
   }
 }
