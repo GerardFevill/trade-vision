@@ -43,8 +43,8 @@ jobs:
             ## Docker Images
 
             ```bash
-            docker pull amesika2/trade-vision-frontend:${{ steps.version.outputs.version }}
-            docker pull amesika2/trade-vision-backend:${{ steps.version.outputs.version }}
+            docker pull amesika2/elite-monitor-frontend:${{ steps.version.outputs.version }}
+            docker pull amesika2/elite-monitor-backend:${{ steps.version.outputs.version }}
             ```
 
             ## Quick Start

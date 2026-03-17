@@ -69,12 +69,12 @@ jobs:
           context: ./frontend
           push: true
           tags: |
-            amesika2/trade-vision-frontend:${{ steps.version.outputs.version }}
-            amesika2/trade-vision-frontend:latest
+            amesika2/elite-monitor-frontend:${{ steps.version.outputs.version }}
+            amesika2/elite-monitor-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Summary
         run: |
           echo "### Frontend Published :rocket:" >> $GITHUB_STEP_SUMMARY
-          echo "- Image: \`amesika2/trade-vision-frontend:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Image: \`amesika2/elite-monitor-frontend:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY

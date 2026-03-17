@@ -1,5 +1,5 @@
 [project]
-name = "trade-vision-backend"
+name = "elite-monitor-backend"
 version = "1.1.0"
 
 [tool.ruff]
