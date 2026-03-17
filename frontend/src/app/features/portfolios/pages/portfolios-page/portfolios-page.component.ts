@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
-import { Mt5ApiService } from '@app/data-access';
+import { PortfoliosApiService } from '@app/data-access';
 import { PortfolioSummary, PORTFOLIO_TYPES, PortfolioType } from '@app/data-access/models/portfolio.model';
 import { formatCurrency, formatPercentSigned, getProfitClass } from '@app/shared';
 import { PortfolioCardComponent } from '../../ui/portfolio-card/portfolio-card.component';
@@ -108,7 +108,7 @@ export class PortfoliosPageComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private api: Mt5ApiService
+    private portfoliosApi: PortfoliosApiService
   ) {}
 
   ngOnInit(): void {
@@ -119,7 +119,7 @@ export class PortfoliosPageComponent implements OnInit {
   loadPortfolios(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.api.getPortfolios().subscribe({
+    this.portfoliosApi.getPortfolios().subscribe({
       next: (portfolios) => {
         this.portfolios.set(portfolios);
         this.loading.set(false);
@@ -132,7 +132,7 @@ export class PortfoliosPageComponent implements OnInit {
   }
 
   loadClients(): void {
-    this.api.getPortfolioClients().subscribe({
+    this.portfoliosApi.getPortfolioClients().subscribe({
       next: (clients) => this.clients.set(clients),
       error: () => {}
     });
@@ -168,7 +168,7 @@ export class PortfoliosPageComponent implements OnInit {
     event.stopPropagation();
     if (!confirm(`Supprimer le portefeuille "${portfolio.name}" ?`)) return;
 
-    this.api.deletePortfolio(portfolio.id).subscribe({
+    this.portfoliosApi.deletePortfolio(portfolio.id).subscribe({
       next: () => this.loadPortfolios(),
       error: () => this.error.set('Impossible de supprimer le portefeuille')
     });

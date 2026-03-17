@@ -2,7 +2,7 @@ import { Component, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { Mt5ApiService } from '@app/data-access';
+import { PortfoliosApiService } from '@app/data-access';
 import { PortfolioType, PORTFOLIO_TYPES, CreatePortfolioRequest } from '@app/data-access/models/portfolio.model';
 
 @Component({
@@ -27,7 +27,7 @@ export class PortfolioFormComponent {
   portfolioTypes: PortfolioType[] = ['Securise', 'Conservateur', 'Modere', 'Agressif'];
   clients: string[] = ['Akaj', 'CosmosElite'];
 
-  constructor(private api: Mt5ApiService) {}
+  constructor(private portfoliosApi: PortfoliosApiService) {}
 
   getFactorsForType(type: PortfolioType): number[] {
     return PORTFOLIO_TYPES[type] || [];
@@ -58,7 +58,7 @@ export class PortfolioFormComponent {
       client: this.client()
     };
 
-    this.api.createPortfolio(request).subscribe({
+    this.portfoliosApi.createPortfolio(request).subscribe({
       next: () => {
         this.loading.set(false);
         this.created.emit();

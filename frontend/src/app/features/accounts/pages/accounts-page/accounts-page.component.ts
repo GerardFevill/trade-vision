@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 
-import { Mt5ApiService, AccountSummary, SparklineData, GlobalMonthlyGrowth } from '@app/data-access';
+import { AccountsApiService, AnalyticsApiService, AccountSummary, SparklineData, GlobalMonthlyGrowth } from '@app/data-access';
 import { StorageService } from '@app/core';
 import { SparklineComponent, formatCurrency, formatPercentSigned, getProfitClass, getDrawdownClass, getPerformanceClass } from '@app/shared';
 import { AccountsHeaderComponent } from '../../ui';
@@ -127,7 +127,8 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private api: Mt5ApiService,
+    private accountsApi: AccountsApiService,
+    private analyticsApi: AnalyticsApiService,
     public storage: StorageService
   ) {}
 
@@ -145,7 +146,7 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   loadAccounts(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.api.getAccounts().subscribe({
+    this.accountsApi.getAccounts().subscribe({
       next: (accounts) => {
         this.accounts.set(accounts);
         this.loading.set(false);
@@ -160,14 +161,14 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   }
 
   loadSparklines(): void {
-    this.api.getSparklines(100).subscribe({
+    this.analyticsApi.getSparklines(100).subscribe({
       next: (data) => this.sparklines.set(data),
       error: () => {}
     });
   }
 
   loadMonthlyGrowth(): void {
-    this.api.getGlobalMonthlyGrowth().subscribe({
+    this.analyticsApi.getGlobalMonthlyGrowth().subscribe({
       next: (data) => this.monthlyGrowth.set(data),
       error: () => {}
     });
@@ -199,7 +200,7 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   syncFromMT5(): void {
     this.syncing.set(true);
     // Get accounts directly from MT5 (synchronous, bypasses cache)
-    this.api.getAccounts(true).subscribe({
+    this.accountsApi.getAccounts(true).subscribe({
       next: (accounts) => {
         this.accounts.set(accounts);
         this.lastRefreshTime.set(new Date());
@@ -241,7 +242,7 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
 
   openAccount(account: AccountSummary): void {
     if (!account.connected) return;
-    this.api.connectToAccount(account.id).subscribe({
+    this.accountsApi.connectToAccount(account.id).subscribe({
       next: () => this.router.navigate(['/accounts', account.id]),
       error: () => this.error.set(`Impossible de se connecter au compte ${account.id}`)
     });

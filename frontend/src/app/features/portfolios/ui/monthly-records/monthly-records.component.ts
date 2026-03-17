@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, signal, computed, OnInit } from
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { Mt5ApiService } from '@app/data-access';
+import { MonthlyRecordsApiService } from '@app/data-access';
 import { MonthlySnapshot, CurrentMonthPreview, WITHDRAWAL_PERCENTAGES } from '@app/data-access/models/portfolio.model';
 import { formatCurrency } from '@app/shared';
 
@@ -36,7 +36,7 @@ export class MonthlyRecordsComponent implements OnInit {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  constructor(private api: Mt5ApiService) {}
+  constructor(private monthlyRecordsApi: MonthlyRecordsApiService) {}
 
   ngOnInit(): void {
     this.loadMonthlyHistory();
@@ -44,7 +44,7 @@ export class MonthlyRecordsComponent implements OnInit {
 
   loadMonthlyHistory(): void {
     this.loading.set(true);
-    this.api.getMonthlyHistory(this.portfolioId).subscribe({
+    this.monthlyRecordsApi.getMonthlyHistory(this.portfolioId).subscribe({
       next: (res) => {
         this.months.set(res.months);
         this.loading.set(false);
@@ -63,7 +63,7 @@ export class MonthlyRecordsComponent implements OnInit {
     this.selectedMonth.set('');
     this.snapshot.set(null);
 
-    this.api.getCurrentMonthPreview(this.portfolioId).subscribe({
+    this.monthlyRecordsApi.getCurrentMonthPreview(this.portfolioId).subscribe({
       next: (preview) => {
         this.currentPreview.set(preview);
         this.loading.set(false);
@@ -81,7 +81,7 @@ export class MonthlyRecordsComponent implements OnInit {
     this.currentPreview.set(null);
     this.editMode.set(false);
 
-    this.api.getMonthlySnapshot(this.portfolioId, month).subscribe({
+    this.monthlyRecordsApi.getMonthlySnapshot(this.portfolioId, month).subscribe({
       next: (snap) => {
         this.snapshot.set(snap);
         this.loading.set(false);
@@ -127,7 +127,7 @@ export class MonthlyRecordsComponent implements OnInit {
     }));
 
     this.loading.set(true);
-    this.api.updateMonthlyWithdrawals(this.portfolioId, month, withdrawals).subscribe({
+    this.monthlyRecordsApi.updateMonthlyWithdrawals(this.portfolioId, month, withdrawals).subscribe({
       next: () => {
         this.editMode.set(false);
         this.loadMonth(month);

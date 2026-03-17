@@ -2,7 +2,7 @@ import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule, KeyValuePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { Mt5ApiService, AccountSummary } from '@app/data-access';
+import { AccountsApiService, PortfoliosApiService, MonthlyRecordsApiService, AccountSummary } from '@app/data-access';
 import { PortfolioDetail, PortfolioAccountDetail, CurrentMonthPreview } from '@app/data-access/models/portfolio.model';
 import { formatCurrency, formatPercentSigned, getProfitClass, getDrawdownClass } from '@app/shared';
 import { AccountSelectorComponent } from '../../ui/account-selector/account-selector.component';
@@ -86,7 +86,9 @@ export class PortfolioDetailPageComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private api: Mt5ApiService
+    private accountsApi: AccountsApiService,
+    private portfoliosApi: PortfoliosApiService,
+    private monthlyRecordsApi: MonthlyRecordsApiService
   ) {}
 
   ngOnInit(): void {
@@ -101,7 +103,7 @@ export class PortfolioDetailPageComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.api.getPortfolio(id).subscribe({
+    this.portfoliosApi.getPortfolio(id).subscribe({
       next: (portfolio) => {
         this.portfolio.set(portfolio);
         this.loading.set(false);
@@ -116,18 +118,18 @@ export class PortfolioDetailPageComponent implements OnInit {
   }
 
   loadMonthlyPreview(id: number): void {
-    this.api.getCurrentMonthPreview(id).subscribe({
+    this.monthlyRecordsApi.getCurrentMonthPreview(id).subscribe({
       next: (preview) => this.monthlyPreview.set(preview),
       error: () => {} // Silently fail if no monthly data
     });
   }
 
   loadAvailableAccounts(): void {
-    this.api.getAccounts().subscribe({
+    this.accountsApi.getAccounts().subscribe({
       next: (accounts) => this.availableAccounts.set(accounts),
       error: () => {}
     });
-    this.api.getUsedAccountIds().subscribe({
+    this.portfoliosApi.getUsedAccountIds().subscribe({
       next: (ids) => this.allUsedAccountIds.set(new Set(ids)),
       error: () => {}
     });
@@ -148,7 +150,7 @@ export class PortfolioDetailPageComponent implements OnInit {
     const factor = this.selectedFactor();
     if (!p || !factor) return;
 
-    this.api.addAccountToPortfolio(p.id, { account_id: accountId, lot_factor: factor }).subscribe({
+    this.portfoliosApi.addAccountToPortfolio(p.id, { account_id: accountId, lot_factor: factor }).subscribe({
       next: () => {
         this.closeAccountSelector();
         this.loadPortfolio(p.id);
@@ -167,7 +169,7 @@ export class PortfolioDetailPageComponent implements OnInit {
 
     if (!confirm('Retirer ce compte du portefeuille ?')) return;
 
-    this.api.removeAccountFromPortfolio(p.id, accountId).subscribe({
+    this.portfoliosApi.removeAccountFromPortfolio(p.id, accountId).subscribe({
       next: () => {
         this.loadPortfolio(p.id);
         this.loadAvailableAccounts(); // Refresh used accounts list
@@ -234,7 +236,7 @@ export class PortfolioDetailPageComponent implements OnInit {
       return;
     }
 
-    this.api.updateStartingBalance(p.id, accountId, balance).subscribe({
+    this.monthlyRecordsApi.updateStartingBalance(p.id, accountId, balance).subscribe({
       next: () => {
         this.editingStartingBalance.set(null);
         this.loadMonthlyPreview(p.id);
@@ -258,7 +260,7 @@ export class PortfolioDetailPageComponent implements OnInit {
     if (!confirm(confirmMsg)) return;
 
     this.closingMonth.set(true);
-    this.api.closeCurrentMonth(p.id).subscribe({
+    this.monthlyRecordsApi.closeCurrentMonth(p.id).subscribe({
       next: (result) => {
         this.closingMonth.set(false);
         this.loadMonthlyHistory(p.id);
@@ -273,7 +275,7 @@ export class PortfolioDetailPageComponent implements OnInit {
 
   // Load monthly history
   loadMonthlyHistory(portfolioId: number): void {
-    this.api.getMonthlyHistory(portfolioId).subscribe({
+    this.monthlyRecordsApi.getMonthlyHistory(portfolioId).subscribe({
       next: (result) => this.monthlyHistory.set(result.months || []),
       error: () => {}
     });
@@ -294,12 +296,12 @@ export class PortfolioDetailPageComponent implements OnInit {
     this.selectedHistoryMonth.set(month);
 
     if (p.type === 'Conservateur') {
-      this.api.getEliteMonthlyHistory(p.id, month).subscribe({
+      this.monthlyRecordsApi.getEliteMonthlyHistory(p.id, month).subscribe({
         next: (data) => this.historyData.set(data),
         error: () => this.error.set('Erreur chargement historique')
       });
     } else {
-      this.api.getMonthlySnapshot(p.id, month).subscribe({
+      this.monthlyRecordsApi.getMonthlySnapshot(p.id, month).subscribe({
         next: (data) => this.historyData.set(data),
         error: () => this.error.set('Erreur chargement historique')
       });

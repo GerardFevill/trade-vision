@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
 
-import { Mt5ApiService, HistoryPoint, DailyDrawdown } from '@app/data-access';
+import { AnalyticsApiService, AccountsApiService, HistoryPoint, DailyDrawdown } from '@app/data-access';
 import { SparklineComponent } from '@app/shared';
 
 import {
@@ -42,22 +42,22 @@ export class AccountDetailPageComponent implements OnInit {
   monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   // Computed from service
-  loading = computed(() => this.api.loading());
-  lastUpdate = computed(() => this.api.lastUpdate());
-  dashboard = computed(() => this.api.dashboard());
+  loading = computed(() => this.analyticsApi.loading());
+  lastUpdate = computed(() => this.analyticsApi.lastUpdate());
+  dashboard = computed(() => this.analyticsApi.dashboard());
   account = computed(() => this.dashboard()?.account);
   stats = computed(() => this.dashboard()?.stats);
   tradeStats = computed(() => this.dashboard()?.trade_stats);
   risk = computed(() => this.dashboard()?.risk_metrics);
   positions = computed(() => this.dashboard()?.open_positions || []);
   monthlyGrowth = computed(() => this.dashboard()?.monthly_growth || []);
-  trades = computed(() => this.api.trades());
-  status = computed(() => this.api.connectionStatus());
-  error = computed(() => this.api.error());
+  trades = computed(() => this.analyticsApi.trades());
+  status = computed(() => this.analyticsApi.connectionStatus());
+  error = computed(() => this.analyticsApi.error());
   isConnected = computed(() => this.status()?.connected ?? false);
   currency = computed(() => this.account()?.currency || 'EUR');
-  dailyDrawdown = computed(() => this.api.dailyDrawdown());
-  sparklineData = computed(() => this.api.sparkline());
+  dailyDrawdown = computed(() => this.analyticsApi.dailyDrawdown());
+  sparklineData = computed(() => this.analyticsApi.sparkline());
 
   totalGrowth = computed(() => {
     const data = this.monthlyGrowth();
@@ -128,11 +128,12 @@ export class AccountDetailPageComponent implements OnInit {
   };
 
   constructor(
-    private api: Mt5ApiService,
+    private analyticsApi: AnalyticsApiService,
+    private accountsApi: AccountsApiService,
     private router: Router
   ) {
     effect(() => {
-      const history = this.api.history();
+      const history = this.analyticsApi.history();
       this.activeTimeframe();
       this.activeChart();
       if (history.length) this.updateChart(history);
@@ -145,13 +146,13 @@ export class AccountDetailPageComponent implements OnInit {
     });
 
     effect(() => {
-      const daily = this.api.dailyDrawdown();
+      const daily = this.analyticsApi.dailyDrawdown();
       this.updateDrawdownChart(daily);
     });
   }
 
   ngOnInit(): void {
-    this.api.startPolling();
+    this.analyticsApi.startPolling();
   }
 
   goBack(): void {
@@ -176,7 +177,7 @@ export class AccountDetailPageComponent implements OnInit {
 
   // Refresh from cache/DB
   refresh(): void {
-    this.api.refresh();
+    this.analyticsApi.refresh();
   }
 
   // Sync from MT5 (force refresh from MetaTrader)
@@ -187,10 +188,10 @@ export class AccountDetailPageComponent implements OnInit {
     if (!status?.account) return;
 
     this.syncing.set(true);
-    this.api.syncAccount(status.account, true).subscribe({
+    this.accountsApi.syncAccount(status.account, true).subscribe({
       next: () => {
         // After sync, refresh from DB
-        this.api.refresh();
+        this.analyticsApi.refresh();
         this.syncing.set(false);
       },
       error: () => {
@@ -200,7 +201,7 @@ export class AccountDetailPageComponent implements OnInit {
   }
 
   resetDrawdown(): void {
-    this.api.resetDrawdown().subscribe();
+    this.analyticsApi.resetDrawdown().subscribe();
   }
 
   // Formatters
