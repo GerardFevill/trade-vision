@@ -1,44 +1,66 @@
 <div class="portfolios-page">
   <!-- Header -->
   <header class="page-header">
-    <div class="header-left">
-      <h1 class="page-title"><i class="fa fa-briefcase"></i> Portefeuilles</h1>
-      <span class="portfolio-count">{{ filteredPortfolios().length }} portefeuilles</span>
-    </div>
-    <div class="header-right">
-      <div class="client-filter">
-        <button class="btn-filter" [class.active]="clientFilter() === 'all'" (click)="setClientFilter('all')">
-          Tous
-        </button>
-        @for (client of clients(); track client) {
-          <button class="btn-filter" [class.active]="clientFilter() === client" (click)="setClientFilter(client)">
-            {{ client }}
-          </button>
-        }
+    <div class="header-top">
+      <div class="header-left">
+        <h1 class="page-title"><i class="fa fa-briefcase"></i> Portefeuilles</h1>
+        <span class="portfolio-count">{{ filteredPortfolios().length }}</span>
       </div>
-      <button class="btn-create" (click)="openCreateModal()">
-        <i class="fa fa-plus"></i> Nouveau Portefeuille
-      </button>
+      <div class="header-right">
+        <div class="client-filter">
+          <button class="btn-filter" [class.active]="clientFilter() === 'all'" (click)="setClientFilter('all')">
+            Tous
+          </button>
+          @for (client of clients(); track client) {
+            <button class="btn-filter" [class.active]="clientFilter() === client" (click)="setClientFilter(client)">
+              {{ client }}
+            </button>
+          }
+        </div>
+        <button class="btn-create" (click)="openCreateModal()">
+          <i class="fa fa-plus"></i>
+          <span class="btn-label">Nouveau</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Summary Row -->
-  <div class="summary-row">
-    <div class="summary-item trading">
-      <i class="fa fa-chart-bar"></i>
-      <span class="label">Trading</span>
-      <span class="value">{{ fmt.formatCurrency(tradingBalance(), 'EUR') }}</span>
+  <!-- Summary Cards -->
+  <div class="summary-strip">
+    <div class="summary-card total">
+      <div class="summary-icon"><i class="fa fa-wallet"></i></div>
+      <div class="summary-info">
+        <span class="summary-label">Total</span>
+        <span class="summary-value">{{ fmt.formatCurrency(tradingBalance() + securiseBalance(), 'EUR') }}</span>
+      </div>
     </div>
-    <div class="summary-item securise">
-      <i class="fa fa-shield-alt"></i>
-      <span class="label">Securise</span>
-      <span class="value">{{ fmt.formatCurrency(securiseBalance(), 'EUR') }}</span>
+    <div class="summary-card trading">
+      <div class="summary-icon"><i class="fa fa-chart-bar"></i></div>
+      <div class="summary-info">
+        <span class="summary-label">Trading</span>
+        <span class="summary-value">{{ fmt.formatCurrency(tradingBalance(), 'EUR') }}</span>
+        <span class="summary-sub" [class]="fmt.getProfitClass(tradingProfit())">
+          {{ fmt.formatCurrency(tradingProfit(), 'EUR') }}
+          <span class="summary-count">· {{ tradingAccounts() }} comptes</span>
+        </span>
+      </div>
+    </div>
+    <div class="summary-card securise">
+      <div class="summary-icon"><i class="fa fa-shield-alt"></i></div>
+      <div class="summary-info">
+        <span class="summary-label">Sécurisé</span>
+        <span class="summary-value">{{ fmt.formatCurrency(securiseBalance(), 'EUR') }}</span>
+        <span class="summary-sub" [class]="fmt.getProfitClass(securiseProfit())">
+          {{ fmt.formatCurrency(securiseProfit(), 'EUR') }}
+          <span class="summary-count">· {{ securiseAccounts() }} comptes</span>
+        </span>
+      </div>
     </div>
     <div class="view-toggle">
-      <button class="btn-view" [class.active]="viewMode() === 'cards'" (click)="setViewMode('cards')">
+      <button class="btn-view" [class.active]="viewMode() === 'cards'" (click)="setViewMode('cards')" title="Vue grille">
         <i class="fa fa-th-large"></i>
       </button>
-      <button class="btn-view" [class.active]="viewMode() === 'list'" (click)="setViewMode('list')">
+      <button class="btn-view" [class.active]="viewMode() === 'list'" (click)="setViewMode('list')" title="Vue liste">
         <i class="fa fa-list"></i>
       </button>
     </div>
@@ -51,11 +73,14 @@
 
   <!-- Loading -->
   @if (loading() && portfolios().length === 0) {
-    <div class="loading-state"><i class="fa fa-spinner fa-spin"></i><p>Chargement des portefeuilles...</p></div>
+    <div class="loading-state">
+      <div class="loader"></div>
+      <p>Chargement des portefeuilles...</p>
+    </div>
   }
 
   <!-- Portfolios Grid View -->
-  @if (viewMode() === 'cards') {
+  @if (viewMode() === 'cards' && filteredPortfolios().length > 0) {
     <div class="portfolios-grid">
       @for (portfolio of filteredPortfolios(); track portfolio.id) {
         <app-portfolio-card
@@ -68,7 +93,7 @@
   }
 
   <!-- Portfolios List View -->
-  @if (viewMode() === 'list') {
+  @if (viewMode() === 'list' && filteredPortfolios().length > 0) {
     <div class="portfolios-list">
       <table class="portfolio-table">
         <thead>
@@ -108,10 +133,11 @@
   <!-- Empty State -->
   @if (!loading() && filteredPortfolios().length === 0 && !error()) {
     <div class="empty-state">
-      <i class="fa fa-briefcase"></i>
-      <p>Aucun portefeuille</p>
+      <div class="empty-icon"><i class="fa fa-briefcase"></i></div>
+      <h3>Aucun portefeuille</h3>
+      <p>Créez votre premier portefeuille pour commencer à organiser vos comptes de trading.</p>
       <button class="btn-create-empty" (click)="openCreateModal()">
-        <i class="fa fa-plus"></i> Creer un portefeuille
+        <i class="fa fa-plus"></i> Créer un portefeuille
       </button>
     </div>
   }

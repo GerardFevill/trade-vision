@@ -1,17 +1,17 @@
 @use 'sass:color';
 
 // Theme
-$bg-card: #141414;
-$bg-card-hover: #1a1a1a;
-$bg-input: #1c1c1c;
-$border: #252525;
+$bg-card: #111;
+$bg-card-hover: #161616;
+$bg-input: #1a1a1a;
+$border: #1e1e1e;
+$border-light: #2a2a2a;
 $text: #e8e8e8;
 $text-secondary: #999;
-$text-muted: #666;
+$text-muted: #555;
 $accent: #2962ff;
 $positive: #00c853;
 $negative: #ff1744;
-$warning: #ff9100;
 
 // Type colors
 $securise: #3b82f6;
@@ -19,43 +19,55 @@ $conservateur: #10b981;
 $modere: #f59e0b;
 $agressif: #ef4444;
 
+:host {
+  display: block;
+}
+
 .portfolio-card {
   position: relative;
   background: $bg-card;
   border: 1px solid $border;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
 
   &:hover {
-    border-color: $accent;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    border-color: $border-light;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 
-    .btn-delete {
-      opacity: 1;
-    }
-
-    .view-link {
-      color: $accent;
-    }
+    .btn-delete { opacity: 1; }
+    .view-link { color: $accent; }
+    .type-strip { opacity: 1; }
   }
+}
 
+// Type accent strip
+.type-strip {
+  height: 3px;
+  opacity: 0.6;
+  transition: opacity 0.25s ease;
+
+  &.type-securise { background: linear-gradient(90deg, $securise, color.adjust($securise, $lightness: 15%)); }
+  &.type-conservateur { background: linear-gradient(90deg, $conservateur, color.adjust($conservateur, $lightness: 15%)); }
+  &.type-modere { background: linear-gradient(90deg, $modere, color.adjust($modere, $lightness: 15%)); }
+  &.type-agressif { background: linear-gradient(90deg, $agressif, color.adjust($agressif, $lightness: 15%)); }
 }
 
 .btn-delete {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
+  top: 14px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: $text-muted;
   cursor: pointer;
   opacity: 0;
@@ -66,6 +78,8 @@ $agressif: #ef4444;
     color: $negative;
     background: rgba($negative, 0.2);
   }
+
+  i { font-size: 12px; }
 }
 
 // Header
@@ -73,18 +87,19 @@ $agressif: #ef4444;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 16px 12px;
+  padding: 16px 16px 0;
 }
 
 .type-icon {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 
-  i { font-size: 18px; color: #fff; }
+  i { font-size: 16px; color: #fff; }
 
   &.type-securise { background: linear-gradient(135deg, $securise, color.adjust($securise, $lightness: 10%)); }
   &.type-conservateur { background: linear-gradient(135deg, $conservateur, color.adjust($conservateur, $lightness: 10%)); }
@@ -98,13 +113,21 @@ $agressif: #ef4444;
 }
 
 .portfolio-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: $text;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
 }
 
 .portfolio-client {
@@ -113,120 +136,68 @@ $agressif: #ef4444;
 }
 
 .type-badge {
-  padding: 4px 10px;
+  padding: 2px 8px;
   border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 9px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
-  &.type-securise {
-    background: rgba($securise, 0.15);
-    color: $securise;
-  }
-
-  &.type-conservateur {
-    background: rgba($conservateur, 0.15);
-    color: $conservateur;
-  }
-
-  &.type-modere {
-    background: rgba($modere, 0.15);
-    color: $modere;
-  }
-
-  &.type-agressif {
-    background: rgba($agressif, 0.15);
-    color: $agressif;
-  }
+  &.type-securise { background: rgba($securise, 0.12); color: $securise; }
+  &.type-conservateur { background: rgba($conservateur, 0.12); color: $conservateur; }
+  &.type-modere { background: rgba($modere, 0.12); color: $modere; }
+  &.type-agressif { background: rgba($agressif, 0.12); color: $agressif; }
 }
 
 // Balance
 .portfolio-balance {
+  padding: 20px 16px 16px;
   text-align: center;
-  padding: 18px;
-  margin: 0 16px;
-  background: $bg-input;
-  border-radius: 8px;
+}
 
-  .balance-value {
-    display: block;
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.1;
-    color: $text;
-  }
-
-  .balance-label {
-    display: block;
-    font-size: 10px;
-    color: $text-muted;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
+.balance-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: $text;
+  letter-spacing: -0.5px;
 }
 
 // Stats
 .portfolio-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: $border;
-  margin: 14px 16px 0;
-  border-radius: 6px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  margin: 0 16px;
+  padding: 12px 0;
+  border-top: 1px solid $border;
+  border-bottom: 1px solid $border;
 }
 
 .stat-item {
-  background: $bg-input;
-  padding: 12px;
+  flex: 1;
   text-align: center;
-
-  .stat-value {
-    display: block;
-    font-size: 15px;
-    font-weight: 600;
-    color: $text;
-  }
-
-  .stat-label {
-    display: block;
-    font-size: 9px;
-    color: $text-muted;
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
-}
-
-// Factors
-.factors-preview {
-  padding: 12px 16px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.factors-label {
-  font-size: 10px;
+.stat-label {
+  font-size: 9px;
+  font-weight: 600;
   color: $text-muted;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.factors-list {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.factor-chip {
-  padding: 3px 8px;
-  background: $bg-input;
-  border: 1px solid $border;
-  border-radius: 4px;
-  font-size: 10px;
+.stat-value {
+  font-size: 14px;
   font-weight: 600;
-  color: $text-secondary;
+  color: $text;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 28px;
+  background: $border;
 }
 
 // Footer
@@ -234,9 +205,7 @@ $agressif: #ef4444;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
-  background: rgba(0,0,0,0.3);
-  border-top: 1px solid $border;
+  padding: 12px 16px;
   font-size: 11px;
   color: $text-muted;
 }
@@ -246,17 +215,21 @@ $agressif: #ef4444;
   align-items: center;
   gap: 6px;
 
-  i { font-size: 10px; }
+  i { font-size: 10px; opacity: 0.6; }
 }
 
 .view-link {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-weight: 500;
   transition: color 0.2s;
 
-  i { font-size: 10px; }
+  i { font-size: 9px; transition: transform 0.2s; }
+
+  .portfolio-card:hover & i {
+    transform: translateX(2px);
+  }
 }
 
 // Utilities

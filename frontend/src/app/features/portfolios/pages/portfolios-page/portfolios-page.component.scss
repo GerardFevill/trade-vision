@@ -1,10 +1,12 @@
-// MQL5 Unified Theme
+@use 'sass:color';
+
+// Theme
 $bg-page: #0a0a0a;
-$bg-card: #141414;
-$bg-card-hover: #1a1a1a;
-$bg-input: #1c1c1c;
-$border: #252525;
-$border-light: #333;
+$bg-card: #111;
+$bg-card-hover: #181818;
+$bg-input: #1a1a1a;
+$border: #1e1e1e;
+$border-light: #2a2a2a;
 $text: #e8e8e8;
 $text-secondary: #999;
 $text-muted: #666;
@@ -12,6 +14,10 @@ $accent: #2962ff;
 $positive: #00c853;
 $negative: #ff1744;
 $warning: #ff9100;
+
+// Type colors
+$securise: #3b82f6;
+$trading-color: #f59e0b;
 
 // ==================== PAGE LAYOUT ====================
 .portfolios-page {
@@ -23,23 +29,25 @@ $warning: #ff9100;
 
 // ==================== HEADER ====================
 .page-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid $border;
+}
+
+.header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid $border;
-  background: $bg-card;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .page-title {
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
   color: $text;
   margin: 0;
   display: flex;
@@ -51,10 +59,13 @@ $warning: #ff9100;
 
 .portfolio-count {
   font-size: 12px;
-  color: $text-muted;
-  padding: 4px 10px;
-  background: $bg-input;
-  border-radius: 12px;
+  font-weight: 600;
+  color: $accent;
+  background: rgba($accent, 0.1);
+  padding: 3px 10px;
+  border-radius: 10px;
+  min-width: 24px;
+  text-align: center;
 }
 
 .header-right {
@@ -67,28 +78,29 @@ $warning: #ff9100;
 .client-filter {
   display: flex;
   background: $bg-input;
-  border-radius: 6px;
-  padding: 2px;
+  border-radius: 8px;
+  padding: 3px;
   gap: 2px;
 }
 
 .btn-filter {
-  padding: 8px 14px;
+  padding: 7px 14px;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: $text-muted;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 
-  &:hover { color: $text; background: rgba(255,255,255,0.05); }
+  &:hover { color: $text; background: rgba(255,255,255,0.04); }
 
   &.active {
     background: $accent;
     color: #fff;
+    box-shadow: 0 2px 8px rgba($accent, 0.3);
   }
 }
 
@@ -96,109 +108,167 @@ $warning: #ff9100;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 9px 18px;
   background: $accent;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #fff;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba($accent, 0.25);
 
-  &:hover { background: lighten($accent, 8%); }
-  i { font-size: 12px; }
+  &:hover {
+    background: color.adjust($accent, $lightness: 6%);
+    box-shadow: 0 4px 16px rgba($accent, 0.35);
+    transform: translateY(-1px);
+  }
+
+  i { font-size: 11px; }
 }
 
-// ==================== SUMMARY ROW ====================
-.summary-row {
+// ==================== SUMMARY STRIP ====================
+.summary-strip {
   display: flex;
-  align-items: center;
-  gap: 24px;
+  align-items: stretch;
+  gap: 16px;
   padding: 16px 24px;
   border-bottom: 1px solid $border;
-  background: $bg-card;
+  overflow-x: auto;
 }
 
-.summary-item {
+.summary-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
+  gap: 14px;
+  padding: 14px 20px;
   background: $bg-input;
-  border-radius: 8px;
-  border-left: 3px solid $accent;
+  border-radius: 10px;
+  border: 1px solid $border;
+  min-width: 180px;
+  transition: all 0.2s;
 
-  i {
-    font-size: 16px;
-    color: $accent;
+  &:hover {
+    border-color: $border-light;
+  }
+}
+
+.summary-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i { font-size: 16px; color: #fff; }
+
+  .total & {
+    background: linear-gradient(135deg, $accent, color.adjust($accent, $lightness: 10%));
   }
 
-  .label {
-    font-size: 11px;
-    color: $text-muted;
-    text-transform: uppercase;
+  .trading & {
+    background: linear-gradient(135deg, $trading-color, color.adjust($trading-color, $lightness: 8%));
   }
 
-  .value {
-    font-size: 18px;
-    font-weight: 700;
-    color: $text;
+  .securise & {
+    background: linear-gradient(135deg, $securise, color.adjust($securise, $lightness: 8%));
   }
+}
 
-  &.securise {
-    border-left-color: #3b82f6;
-    i { color: #3b82f6; }
-  }
+.summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.summary-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.summary-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: $text;
+  white-space: nowrap;
+}
+
+.summary-sub {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.summary-count {
+  color: $text-muted;
+  font-weight: 400;
 }
 
 .view-toggle {
   margin-left: auto;
   display: flex;
+  align-self: center;
   background: $bg-input;
-  border-radius: 6px;
-  padding: 2px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 3px;
+  flex-shrink: 0;
 }
 
 .btn-view {
   padding: 8px 12px;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: $text-muted;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 13px;
 
   &:hover { color: $text; }
 
   &.active {
-    background: $accent;
-    color: #fff;
+    background: rgba($accent, 0.15);
+    color: $accent;
   }
 }
 
 // ==================== PORTFOLIOS GRID ====================
 .portfolios-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-  padding: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 20px 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 // ==================== PORTFOLIOS LIST ====================
 .portfolios-list {
-  padding: 24px;
+  padding: 20px 24px;
+  animation: fadeIn 0.3s ease;
 }
 
 .portfolio-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 13px;
 
   th, td {
     padding: 12px 16px;
     text-align: left;
-    border-bottom: 1px solid $border;
   }
 
   th {
@@ -206,21 +276,33 @@ $warning: #ff9100;
     font-weight: 600;
     color: $text-muted;
     text-transform: uppercase;
-    background: $bg-card;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid $border-light;
+    position: sticky;
+    top: 0;
+    background: $bg-page;
+    z-index: 1;
   }
 
   tbody tr {
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.15s;
 
     &:hover {
-      background: $bg-card-hover;
+      background: rgba(255, 255, 255, 0.02);
+
+      .col-name { color: $accent; }
+    }
+
+    td {
+      border-bottom: 1px solid $border;
     }
   }
 
   .col-name {
     font-weight: 600;
     color: $text;
+    transition: color 0.15s;
   }
 
   .col-client {
@@ -229,7 +311,8 @@ $warning: #ff9100;
 
   .col-number {
     text-align: right;
-    font-family: 'SF Mono', Monaco, monospace;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 12px;
   }
 
   .col-actions {
@@ -241,15 +324,16 @@ $warning: #ff9100;
 .type-badge {
   display: inline-block;
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 
-  &.type-securise { background: rgba(#3b82f6, 0.15); color: #3b82f6; }
-  &.type-conservateur { background: rgba(#10b981, 0.15); color: #10b981; }
-  &.type-modere { background: rgba(#f59e0b, 0.15); color: #f59e0b; }
-  &.type-agressif { background: rgba(#ef4444, 0.15); color: #ef4444; }
+  &.type-securise { background: rgba($securise, 0.12); color: $securise; }
+  &.type-conservateur { background: rgba(#10b981, 0.12); color: #10b981; }
+  &.type-modere { background: rgba(#f59e0b, 0.12); color: #f59e0b; }
+  &.type-agressif { background: rgba(#ef4444, 0.12); color: #ef4444; }
 }
 
 .btn-delete {
@@ -258,8 +342,11 @@ $warning: #ff9100;
   border: none;
   color: $text-muted;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: all 0.2s;
+  opacity: 0;
+
+  tr:hover & { opacity: 1; }
 
   &:hover {
     background: rgba($negative, 0.1);
@@ -272,42 +359,96 @@ $warning: #ff9100;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 20px 24px;
+  margin: 16px 24px;
   padding: 14px 18px;
-  background: rgba($negative, 0.1);
-  border: 1px solid rgba($negative, 0.3);
-  border-radius: 8px;
+  background: rgba($negative, 0.08);
+  border: 1px solid rgba($negative, 0.2);
+  border-radius: 10px;
   color: $negative;
   font-size: 13px;
 }
 
-.loading-state, .empty-state {
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+  color: $text-muted;
+
+  p { font-size: 13px; margin: 20px 0 0; }
+}
+
+.loader {
+  width: 36px;
+  height: 36px;
+  border: 3px solid $border-light;
+  border-top-color: $accent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  color: $text-muted;
+  text-align: center;
 
-  i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
-  p { font-size: 14px; margin: 0 0 20px; }
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: $text-secondary;
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 13px;
+    color: $text-muted;
+    margin: 0 0 24px;
+    max-width: 360px;
+    line-height: 1.5;
+  }
+}
+
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: $bg-input;
+  border: 1px solid $border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+
+  i { font-size: 28px; color: $text-muted; opacity: 0.4; }
 }
 
 .btn-create-empty {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 12px 24px;
   background: $accent;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   color: #fff;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba($accent, 0.3);
 
-  &:hover { background: lighten($accent, 8%); }
+  &:hover {
+    background: color.adjust($accent, $lightness: 6%);
+    transform: translateY(-1px);
+  }
 }
 
 // ==================== MODAL ====================
@@ -317,23 +458,61 @@ $warning: #ff9100;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.2s ease;
 }
 
 .modal-content {
   background: $bg-card;
-  border: 1px solid $border;
-  border-radius: 12px;
+  border: 1px solid $border-light;
+  border-radius: 16px;
   width: 90%;
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 // ==================== UTILITIES ====================
 .positive { color: $positive !important; }
 .negative { color: $negative !important; }
+
+// ==================== RESPONSIVE ====================
+@media (max-width: 768px) {
+  .page-header { padding: 16px; }
+
+  .header-top { flex-wrap: wrap; gap: 12px; }
+
+  .btn-label { display: none; }
+
+  .summary-strip {
+    padding: 12px 16px;
+    gap: 10px;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .summary-card { min-width: 150px; padding: 10px 14px; }
+  .summary-value { font-size: 15px; }
+
+  .portfolios-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .portfolios-list { padding: 12px; }
+
+  .view-toggle { display: none; }
+}

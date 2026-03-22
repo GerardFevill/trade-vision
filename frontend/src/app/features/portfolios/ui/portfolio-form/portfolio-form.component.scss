@@ -1,11 +1,13 @@
+@use 'sass:color';
+
 // Theme
-$bg-card: #141414;
-$bg-input: #1c1c1c;
-$border: #252525;
-$border-light: #333;
+$bg-card: #111;
+$bg-input: #1a1a1a;
+$border: #1e1e1e;
+$border-light: #2a2a2a;
 $text: #e8e8e8;
 $text-secondary: #999;
-$text-muted: #666;
+$text-muted: #555;
 $accent: #2962ff;
 $positive: #00c853;
 $negative: #ff1744;
@@ -29,14 +31,14 @@ $agressif: #ef4444;
 
   h2 {
     margin: 0;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 17px;
+    font-weight: 700;
     color: $text;
     display: flex;
     align-items: center;
     gap: 10px;
 
-    i { color: $accent; }
+    i { color: $accent; font-size: 16px; }
   }
 }
 
@@ -47,15 +49,16 @@ $agressif: #ef4444;
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid $border;
+  border-radius: 8px;
   color: $text-muted;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     color: $text;
+    border-color: $border-light;
   }
 }
 
@@ -66,14 +69,14 @@ form {
 .form-group {
   margin-bottom: 20px;
 
-  label {
+  label, legend {
     display: block;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 11px;
+    font-weight: 600;
     color: $text-secondary;
     margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
   }
 
   input, select {
@@ -81,7 +84,7 @@ form {
     padding: 12px 14px;
     background: $bg-input;
     border: 1px solid $border;
-    border-radius: 8px;
+    border-radius: 10px;
     color: $text;
     font-size: 14px;
     transition: all 0.2s;
@@ -89,6 +92,7 @@ form {
     &:focus {
       outline: none;
       border-color: $accent;
+      box-shadow: 0 0 0 3px rgba($accent, 0.1);
     }
 
     &::placeholder {
@@ -106,11 +110,17 @@ form {
   }
 }
 
+fieldset.form-group {
+  border: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
 // Type options
 .type-options {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .type-option {
@@ -118,7 +128,7 @@ form {
   padding: 14px 16px;
   background: $bg-input;
   border: 2px solid $border;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
 
@@ -131,31 +141,32 @@ form {
 
   &:hover {
     border-color: $border-light;
+    background: color.adjust($bg-input, $lightness: 2%);
   }
 
   &.selected {
     border-color: $accent;
-    background: rgba($accent, 0.05);
+    background: rgba($accent, 0.04);
   }
 
   &.type-securise.selected {
     border-color: $securise;
-    background: rgba($securise, 0.05);
+    background: rgba($securise, 0.04);
   }
 
   &.type-conservateur.selected {
     border-color: $conservateur;
-    background: rgba($conservateur, 0.05);
+    background: rgba($conservateur, 0.04);
   }
 
   &.type-modere.selected {
     border-color: $modere;
-    background: rgba($modere, 0.05);
+    background: rgba($modere, 0.04);
   }
 
   &.type-agressif.selected {
     border-color: $agressif;
-    background: rgba($agressif, 0.05);
+    background: rgba($agressif, 0.04);
   }
 }
 
@@ -174,6 +185,7 @@ form {
 .type-desc {
   font-size: 11px;
   color: $text-muted;
+  line-height: 1.3;
 }
 
 .type-factors {
@@ -184,8 +196,9 @@ form {
 }
 
 .factor {
-  padding: 2px 6px;
-  background: rgba(255,255,255,0.05);
+  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid $border;
   border-radius: 4px;
   font-size: 10px;
   font-weight: 600;
@@ -198,9 +211,9 @@ form {
   align-items: center;
   gap: 8px;
   padding: 12px 14px;
-  background: rgba($negative, 0.1);
-  border: 1px solid rgba($negative, 0.3);
-  border-radius: 8px;
+  background: rgba($negative, 0.08);
+  border: 1px solid rgba($negative, 0.2);
+  border-radius: 10px;
   color: $negative;
   font-size: 13px;
   margin-bottom: 20px;
@@ -209,8 +222,8 @@ form {
 // Actions
 .form-actions {
   display: flex;
-  gap: 12px;
-  padding-top: 10px;
+  gap: 10px;
+  padding-top: 16px;
   border-top: 1px solid $border;
   margin-top: 24px;
 }
@@ -220,7 +233,7 @@ form {
   padding: 12px;
   background: transparent;
   border: 1px solid $border;
-  border-radius: 8px;
+  border-radius: 10px;
   color: $text-secondary;
   font-size: 13px;
   font-weight: 500;
@@ -230,6 +243,7 @@ form {
   &:hover {
     border-color: $border-light;
     color: $text;
+    background: rgba(255, 255, 255, 0.02);
   }
 }
 
@@ -242,19 +256,21 @@ form {
   padding: 12px;
   background: $accent;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #fff;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba($accent, 0.25);
 
   &:hover:not(:disabled) {
-    background: lighten($accent, 8%);
+    background: color.adjust($accent, $lightness: 6%);
+    box-shadow: 0 4px 16px rgba($accent, 0.35);
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 }
