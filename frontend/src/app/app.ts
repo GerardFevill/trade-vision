@@ -21,16 +21,13 @@ interface NavItem {
       <aside class="sidebar" [class.collapsed]="collapsed()">
 
         <!-- Brand -->
-        <div class="sidebar-brand">
+        <div class="sidebar-brand" (click)="toggleCollapse()" [attr.title]="collapsed() ? 'Ouvrir le menu' : 'Réduire le menu'">
           <div class="brand-icon">
             <i class="fa fa-chart-line"></i>
           </div>
           @if (!collapsed()) {
             <span class="brand-text">Elite Monitor</span>
           }
-          <button class="collapse-toggle" (click)="toggleCollapse()" [attr.title]="collapsed() ? 'Ouvrir' : 'Réduire'">
-            <i class="fa" [class.fa-chevron-left]="!collapsed()" [class.fa-chevron-right]="collapsed()"></i>
-          </button>
         </div>
 
         <!-- Navigation -->
@@ -136,7 +133,12 @@ interface NavItem {
       padding: 16px;
       border-bottom: 1px solid var(--border-color);
       min-height: 64px;
-      position: relative;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .sidebar-brand:hover {
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .brand-icon {
@@ -167,40 +169,6 @@ interface NavItem {
 
     .sidebar.collapsed .brand-text {
       opacity: 0;
-    }
-
-    .collapse-toggle {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 28px;
-      height: 28px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.03);
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      padding: 0;
-    }
-
-    .collapse-toggle:hover {
-      color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.08);
-      border-color: var(--text-muted);
-    }
-
-    .collapse-toggle i {
-      font-size: 11px;
-    }
-
-    .sidebar.collapsed .collapse-toggle {
-      right: 50%;
-      transform: translate(50%, -50%);
     }
 
     /* ==================== NAV ==================== */
@@ -437,9 +405,6 @@ interface NavItem {
         width: 3px;
         background: var(--accent);
         border-radius: 0 2px 2px 0;
-      }
-      .collapse-toggle {
-        display: none;
       }
       .main-content {
         margin-left: var(--sidebar-collapsed-width) !important;
