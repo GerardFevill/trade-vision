@@ -1,19 +1,33 @@
 """Elite Monitor API - Entry Point"""
+import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from services import mt5_connector, ctrader_connector
 from api import api_router
 from config.settings import settings
+from config.logging import logger
 
 __version__ = "1.0.0"
 
 
+def _connect_brokers():
+    """Connect to brokers in background thread to avoid blocking API startup"""
+    try:
+        mt5_connector.connect()
+    except Exception as e:
+        logger.warning("MT5 connection failed (will retry on demand)", error=str(e))
+    try:
+        ctrader_connector.connect()
+    except Exception as e:
+        logger.warning("cTrader connection failed (will retry on demand)", error=str(e))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan - connect/disconnect MT5 and cTrader"""
-    mt5_connector.connect()
-    ctrader_connector.connect()
+    """Application lifespan - connect brokers in background, API available immediately"""
+    bg = threading.Thread(target=_connect_brokers, daemon=True)
+    bg.start()
     yield
     ctrader_connector.disconnect()
     mt5_connector.disconnect()

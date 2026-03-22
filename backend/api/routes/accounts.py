@@ -13,8 +13,24 @@ def _fetch_all_accounts(use_cache: bool = True) -> list[AccountSummary]:
     """Fetch accounts from both MT5 and cTrader, merged into a single list.
     MT5 connector handles its own caching internally.
     cTrader results are saved to the same cache here.
+    Non-blocking: if MT5 bridge is unavailable, returns cTrader accounts only.
     """
-    mt5_accounts = mt5_connector.get_all_accounts_summary(use_cache=use_cache)
+    # MT5 accounts (non-blocking with timeout)
+    mt5_accounts = []
+    try:
+        mt5_result = [None]
+        t = threading.Thread(
+            target=lambda: mt5_result.__setitem__(0, mt5_connector.get_all_accounts_summary(use_cache=use_cache)),
+            daemon=True
+        )
+        t.start()
+        t.join(timeout=10)  # max 10s for MT5
+        if mt5_result[0] is not None:
+            mt5_accounts = mt5_result[0]
+        else:
+            logger.warning("MT5 fetch timed out, skipping MT5 accounts")
+    except Exception as e:
+        logger.error("MT5 fetch failed", error=str(e))
 
     # Fetch cTrader accounts
     try:
