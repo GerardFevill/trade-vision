@@ -1,34 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a237e"/>
-      <stop offset="100%" style="stop-color:#0d47a1"/>
-    </linearGradient>
-    <linearGradient id="chartGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" style="stop-color:#4caf50"/>
-      <stop offset="100%" style="stop-color:#81c784"/>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a3a8f"/>
+      <stop offset="50%" stop-color="#2962ff"/>
+      <stop offset="100%" stop-color="#00e5ff"/>
     </linearGradient>
   </defs>
-
-  <!-- Background circle -->
-  <circle cx="32" cy="32" r="30" fill="url(#bgGrad)"/>
-
-  <!-- Chart line (upward trend) -->
-  <polyline
-    points="12,44 22,38 32,42 42,28 52,20"
-    fill="none"
-    stroke="url(#chartGrad)"
-    stroke-width="4"
-    stroke-linecap="round"
-    stroke-linejoin="round"/>
-
-  <!-- Chart dots -->
-  <circle cx="12" cy="44" r="3" fill="#81c784"/>
-  <circle cx="22" cy="38" r="3" fill="#81c784"/>
-  <circle cx="32" cy="42" r="3" fill="#81c784"/>
-  <circle cx="42" cy="28" r="3" fill="#81c784"/>
-  <circle cx="52" cy="20" r="3" fill="#4caf50"/>
-
-  <!-- Arrow indicator pointing up -->
-  <polygon points="52,20 48,26 52,24 56,26" fill="#4caf50"/>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
+        font-family="Inter, Segoe UI, sans-serif" font-size="42" font-weight="900"
+        fill="#fff" letter-spacing="-2">E</text>
 </svg>

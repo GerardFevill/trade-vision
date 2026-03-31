@@ -14,6 +14,7 @@ import { formatCurrency, formatPercentSigned, getProfitClass } from '@app/shared
 export class PortfolioCardComponent {
   @Input({ required: true }) portfolio!: PortfolioSummary;
   @Output() delete = new EventEmitter<Event>();
+  @Output() hide = new EventEmitter<Event>();
 
   fmt = { formatCurrency, formatPercentSigned, getProfitClass };
 
@@ -43,5 +44,10 @@ export class PortfolioCardComponent {
 
   onDelete(event: Event): void {
     this.delete.emit(event);
+  }
+
+  onHide(event: Event): void {
+    event.stopPropagation();
+    this.hide.emit(event);
   }
 }

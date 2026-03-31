@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Query, Path
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
-from db.repositories import PortefeuilleRepository
+from db.repositories import PortefeuilleRepository, FirmRepository
 from services import mt5_connector
 from services.portfolio import (
     WITHDRAWAL_PERCENTAGES, get_phase, get_level_from_lot_factor,
@@ -17,6 +17,7 @@ from models import (
 
 router = APIRouter()
 repo = PortefeuilleRepository()
+firm_repo = FirmRepository()
 monthly_calc = MonthlyCalculator(repo)
 
 
@@ -65,8 +66,8 @@ async def get_portfolio_types():
 
 @router.get("/portefeuilles/clients")
 async def get_clients():
-    """Get list of unique clients"""
-    return repo.get_clients()
+    """Get list of unique clients (from profiles)"""
+    return firm_repo.list_profile_names()
 
 
 @router.get("/portefeuilles/used-accounts", response_model=list[int])

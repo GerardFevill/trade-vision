@@ -1,5 +1,6 @@
 services:
   frontend:
+    build: ./frontend
     image: amesika2/elite-monitor-frontend:${VERSION:-latest}
     container_name: elite-monitor-frontend
     restart: unless-stopped
@@ -9,6 +10,7 @@ services:
       - backend
 
   backend:
+    build: ./backend
     image: amesika2/elite-monitor-backend:${VERSION:-latest}
     container_name: elite-monitor-backend
     restart: unless-stopped

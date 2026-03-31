@@ -61,6 +61,35 @@ $warning: #ff9100;
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+// Search Box
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 38px;
+  background: $bg-input;
+  border: 1px solid $border;
+  border-radius: 6px;
+  transition: border-color 0.2s;
+
+  &:focus-within { border-color: $accent; }
+
+  i { font-size: 12px; color: $text-muted; }
+
+  input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: $text;
+    font-size: 12px;
+    width: 140px;
+
+    &::placeholder { color: $text-muted; }
+  }
 }
 
 .view-toggle {
@@ -111,29 +140,6 @@ $warning: #ff9100;
   i { font-size: 12px; }
 }
 
-.btn-refresh {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  background: $bg-input;
-  border: 1px solid $border;
-  border-radius: 6px;
-  color: $text-secondary;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover:not(:disabled) {
-    background: $bg-card-hover;
-    border-color: $border-light;
-    color: $text;
-  }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-  i { font-size: 14px; }
-}
-
 // Client Filter
 .client-filter {
   display: flex;
@@ -162,121 +168,91 @@ $warning: #ff9100;
     color: #fff;
   }
 
-  &.cosmos.active {
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
+  &.fevill.active {
+    background: linear-gradient(135deg, #2962ff, #448aff);
   }
 
   &.akaj.active {
     background: linear-gradient(135deg, #059669, #10b981);
   }
-}
 
-
-// ==================== SUMMARY CARDS ====================
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 20px 24px;
-  border-bottom: 1px solid $border;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
+  &.vitogbe.active {
+    background: linear-gradient(135deg, #e65100, #ff9100);
   }
 }
 
-.summary-card {
+
+// ==================== STATS STRIP ====================
+.stats-strip {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
+  padding: 14px 24px;
   background: $bg-card;
-  border: 1px solid $border;
-  border-radius: 10px;
-  transition: all 0.2s;
+  border-bottom: 1px solid $border;
+  gap: 0;
+  overflow-x: auto;
 
-  &:hover {
-    border-color: $border-light;
-    background: $bg-card-hover;
+  @media (max-width: 600px) {
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .stat-divider { display: none; }
   }
 }
 
-.summary-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  i { font-size: 18px; color: #fff; }
-
-  &.eur { background: linear-gradient(135deg, #2962ff, #1e88e5); }
-  &.usd { background: linear-gradient(135deg, #00c853, #00e676); }
-  &.trades { background: linear-gradient(135deg, #ff9100, #ffb300); }
-}
-
-.summary-content {
+.stat {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 120px;
   gap: 2px;
 }
 
-.summary-label {
-  font-size: 11px;
+.stat-label {
+  font-size: 10px;
   color: $text-muted;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  font-weight: 500;
 }
 
-.summary-value {
-  font-size: 20px;
+.stat-value {
+  font-size: 18px;
   font-weight: 700;
   color: $text;
 }
 
-.summary-growth {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-
-  i { font-size: 10px; }
-}
-
-.summary-sub {
-  font-size: 12px;
-  color: $text-secondary;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  i { color: $warning; }
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: $border;
+  flex-shrink: 0;
 }
 
 // ==================== SIGNALS GRID ====================
 .signals-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  padding: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  padding: 20px 24px;
 }
 
-// ==================== SIGNAL CARD ====================
+// ==================== SIGNAL CARD (Compact) ====================
 .signal-card {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   background: $bg-card;
   border: 1px solid $border;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
     border-color: $accent;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
 
   &.disconnected {
@@ -285,195 +261,151 @@ $warning: #ff9100;
   }
 }
 
-.btn-favorite {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.5);
-  border: none;
-  border-radius: 50%;
-  color: $text-muted;
-  cursor: pointer;
-  transition: all 0.2s;
-  z-index: 2;
-
-  &:hover { color: $warning; background: rgba($warning, 0.2); }
-  &.active { color: $warning; }
-}
-
-// Card Header
-.signal-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 16px 12px;
-}
-
-.signal-avatar {
-  width: 38px;
-  height: 38px;
-  background: linear-gradient(135deg, $accent, #1e88e5);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  i { font-size: 16px; color: #fff; }
-}
-
-.signal-identity {
-  flex: 1;
-  min-width: 0;
-}
-
-.signal-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: $text;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.signal-id {
-  font-size: 11px;
-  color: $text-muted;
-}
-
-.signal-status {
-  font-size: 8px;
-  color: $negative;
-
-  &.online { color: $positive; }
-}
-
-// Balance (Hero)
-.signal-balance {
-  text-align: center;
-  padding: 16px;
-  margin: 0 16px;
-  background: $bg-input;
-  border-radius: 8px;
-
-  .balance-value {
-    display: block;
-    font-size: 26px;
-    font-weight: 700;
-    line-height: 1.1;
-    color: $text;
-  }
-
-  .balance-label {
-    display: block;
-    font-size: 10px;
-    color: $text-muted;
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
-
-  .copy-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 6px;
-    padding: 3px 8px;
-    background: linear-gradient(135deg, rgba(41, 98, 255, 0.15), rgba(30, 136, 229, 0.15));
-    border: 1px solid rgba(41, 98, 255, 0.3);
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 500;
-    color: #64b5f6;
-
-    i { font-size: 9px; }
-  }
-}
-
-// Sparkline
-.signal-sparkline {
-  padding: 8px 16px;
-  height: 50px;
-}
-
-// Key Stats
-.signal-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: $border;
-  margin: 12px 16px 0;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.signal-stats .stat-item {
-  background: $bg-input;
-  padding: 12px;
-  text-align: center;
-
-  .stat-value {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: $text;
-  }
-
-  .stat-label {
-    display: block;
-    font-size: 9px;
-    color: $text-muted;
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
-}
-
-// Metrics Row
-.signal-metrics {
-  display: flex;
-  justify-content: space-around;
-  padding: 14px 16px;
-  border-top: 1px solid $border;
-  margin-top: 12px;
-}
-
-.signal-metrics .metric {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: $text-secondary;
-
-  i { font-size: 11px; color: $text-muted; }
-  span { font-weight: 500; }
-}
-
-// Footer
-.signal-footer {
+// Card Header — status + name + fav + ID on one line
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
-  background: rgba(0,0,0,0.3);
-  border-top: 1px solid $border;
-  font-size: 10px;
-  color: $text-muted;
+  padding: 10px 12px;
+  gap: 8px;
+}
 
-  .broker {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    i { font-size: 9px; }
+.header-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: $negative;
+    flex-shrink: 0;
+
+    &.online { background: $positive; }
   }
 
-  .leverage {
-    background: $bg-input;
-    padding: 3px 8px;
-    border-radius: 4px;
+  .account-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: $text;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-favorite {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 11px;
+
+  &:hover { color: $warning; background: rgba($warning, 0.1); }
+  &.active { color: $warning; }
+}
+
+.account-id {
+  font-size: 10px;
+  color: $text-muted;
+  font-weight: 500;
+}
+
+// Card Body — Balance + Growth + Sparkline
+.card-body {
+  padding: 0 12px 8px;
+}
+
+.balance-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+
+  .balance-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: $text;
+    line-height: 1.2;
+  }
+
+  .growth-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    i { font-size: 9px; }
+  }
+}
+
+.sparkline-row {
+  height: 38px;
+  margin-top: 4px;
+}
+
+// Card Metrics — profit, win rate, drawdown in one row
+.card-metrics {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-top: 1px solid $border;
+  gap: 4px;
+
+  .metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+
+    .metric-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: $text;
+    }
+
+    .metric-label {
+      font-size: 9px;
+      color: $text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 1px;
+    }
+  }
+}
+
+// Card Footer — client + broker
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.2);
+  border-top: 1px solid $border;
+
+  .broker-name {
+    font-size: 10px;
+    color: $text-muted;
     font-weight: 500;
   }
 }
@@ -573,7 +505,7 @@ $warning: #ff9100;
 .th-fav, .td-fav { width: 40px; text-align: center; }
 .th-name { min-width: 180px; }
 .th-growth, .th-balance, .th-profit { min-width: 100px; }
-.th-winrate, .th-dd, .th-trades { min-width: 80px; }
+.th-winrate, .th-dd { min-width: 80px; }
 .th-sparkline { min-width: 120px; }
 .th-broker { min-width: 100px; }
 
@@ -670,10 +602,16 @@ $warning: #ff9100;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
-  &.cosmos {
-    background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(168,85,247,0.2));
-    color: #a855f7;
-    border: 1px solid rgba(168,85,247,0.3);
+  &.fevill {
+    background: linear-gradient(135deg, rgba(41,98,255,0.2), rgba(68,138,255,0.2));
+    color: #448aff;
+    border: 1px solid rgba(68,138,255,0.3);
+  }
+
+  &.vitogbe {
+    background: linear-gradient(135deg, rgba(230,81,0,0.2), rgba(255,145,0,0.2));
+    color: #ff9100;
+    border: 1px solid rgba(255,145,0,0.3);
   }
 
   &.akaj {

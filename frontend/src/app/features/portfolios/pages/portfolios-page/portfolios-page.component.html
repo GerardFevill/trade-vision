@@ -11,12 +11,17 @@
           <button class="btn-filter" [class.active]="clientFilter() === 'all'" (click)="setClientFilter('all')">
             Tous
           </button>
-          @for (client of clients(); track client) {
+          @for (client of profiles(); track client) {
             <button class="btn-filter" [class.active]="clientFilter() === client" (click)="setClientFilter(client)">
               {{ client }}
             </button>
           }
         </div>
+        @if (hiddenIds().size > 0) {
+          <button class="btn-filter" [class.active]="showHidden()" (click)="toggleShowHidden()">
+            <i class="fa fa-eye-slash"></i> {{ hiddenIds().size }} masqué{{ hiddenIds().size > 1 ? 's' : '' }}
+          </button>
+        }
         <button class="btn-create" (click)="openCreateModal()">
           <i class="fa fa-plus"></i>
           <span class="btn-label">Nouveau</span>
@@ -86,7 +91,8 @@
         <app-portfolio-card
           [portfolio]="portfolio"
           (click)="openPortfolio(portfolio)"
-          (delete)="deletePortfolio(portfolio, $event)">
+          (delete)="deletePortfolio(portfolio, $event)"
+          (hide)="hidePortfolio(portfolio, $event)">
         </app-portfolio-card>
       }
     </div>
@@ -119,6 +125,9 @@
               </td>
               <td class="col-number">{{ p.account_count }}</td>
               <td class="col-actions">
+                <button class="btn-hide-list" (click)="hidePortfolio(p, $event)" title="Masquer">
+                  <i class="fa fa-eye-slash"></i>
+                </button>
                 <button class="btn-delete" (click)="deletePortfolio(p, $event)">
                   <i class="fa fa-trash"></i>
                 </button>

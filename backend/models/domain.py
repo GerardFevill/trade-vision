@@ -131,7 +131,7 @@ class Portefeuille(BaseModel):
     id: int
     name: str  # "Conservateur", "Modere", "Agressif" or custom name
     type: str  # "Conservateur", "Modere", "Agressif"
-    client: str  # "Akaj", "CosmosElite"
+    client: str  # "Fevill", "Akaj", "Vitogbe"
     created_at: datetime
     updated_at: datetime
 
@@ -165,6 +165,31 @@ class PortefeuilleMonthlySnapshot(BaseModel):
     total_profit: float
     total_withdrawal: float
     accounts: list["PortefeuilleAccountMonthly"]
+
+
+class Alert(BaseModel):
+    """Alert configuration"""
+    id: int
+    account_id: int
+    alert_type: str
+    condition: str
+    threshold: float
+    message: str | None = None
+    status: str = "active"
+    created_at: datetime | None = None
+    triggered_at: datetime | None = None
+
+
+class AlertHistory(BaseModel):
+    """Alert trigger history"""
+    id: int
+    alert_id: int
+    account_id: int
+    alert_type: str
+    threshold: float
+    actual_value: float
+    message: str
+    triggered_at: datetime
 
 
 class PortefeuilleAccountMonthly(BaseModel):

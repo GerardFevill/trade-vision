@@ -5,3 +5,4 @@ export * from './trade.model';
 export * from './analytics.model';
 export * from './dashboard.model';
 export * from './pagination.model';
+export * from './firm.model';

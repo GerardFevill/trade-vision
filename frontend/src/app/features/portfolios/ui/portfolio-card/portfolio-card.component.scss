@@ -37,7 +37,7 @@ $agressif: #ef4444;
     transform: translateY(-2px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 
-    .btn-delete { opacity: 1; }
+    .btn-action { opacity: 1; }
     .view-link { color: $accent; }
     .type-strip { opacity: 1; }
   }
@@ -55,10 +55,9 @@ $agressif: #ef4444;
   &.type-agressif { background: linear-gradient(90deg, $agressif, color.adjust($agressif, $lightness: 15%)); }
 }
 
-.btn-delete {
+.btn-action {
   position: absolute;
   top: 14px;
-  right: 12px;
   width: 30px;
   height: 30px;
   display: flex;
@@ -74,12 +73,25 @@ $agressif: #ef4444;
   transition: all 0.2s;
   z-index: 2;
 
+  i { font-size: 12px; }
+}
+
+.btn-delete {
+  right: 12px;
+
   &:hover {
     color: $negative;
     background: rgba($negative, 0.2);
   }
+}
 
-  i { font-size: 12px; }
+.btn-hide {
+  right: 48px;
+
+  &:hover {
+    color: $modere;
+    background: rgba($modere, 0.2);
+  }
 }
 
 // Header

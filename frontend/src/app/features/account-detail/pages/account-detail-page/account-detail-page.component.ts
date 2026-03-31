@@ -1,6 +1,7 @@
-import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { FirmStateService } from '@app/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
 
@@ -124,8 +125,11 @@ export class AccountDetailPageComponent implements OnInit {
     this.analyticsApi.startPolling();
   }
 
+  private readonly firmState = inject(FirmStateService);
+
   goBack(): void {
-    this.router.navigate(['/accounts']);
+    const slug = this.firmState.selectedFirmSlug();
+    this.router.navigate([`/${slug}/accounts`]);
   }
 
   setTab(tab: TabType): void {

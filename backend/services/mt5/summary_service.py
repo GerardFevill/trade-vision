@@ -26,7 +26,7 @@ class SummaryService:
             account_id = acc_config["id"]
             account_name = acc_config["name"]
             terminal_key = acc_config.get("terminal", "roboforex")
-            broker_name = "IC Markets" if terminal_key == "icmarkets" else "RoboForex"
+            broker_name = acc_config.get("broker") or ("IC Markets" if terminal_key == "icmarkets" else "RoboForex")
             client = acc_config.get("client")
 
             try:
@@ -109,7 +109,7 @@ class SummaryService:
 
         account_name = acc_config["name"]
         terminal_key = acc_config.get("terminal", "roboforex")
-        broker_name = "IC Markets" if terminal_key == "icmarkets" else "RoboForex"
+        broker_name = acc_config.get("broker") or ("IC Markets" if terminal_key == "icmarkets" else "RoboForex")
         client = acc_config.get("client")
 
         try:

@@ -1,7 +1,8 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
+import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule, KeyValuePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { FirmStateService } from '@app/core';
 import { AccountsApiService, PortfoliosApiService, MonthlyRecordsApiService, AccountSummary } from '@app/data-access';
 import { PortfolioDetail, PortfolioAccountDetail, CurrentMonthPreview } from '@app/data-access/models/portfolio.model';
 import { formatCurrency, formatPercentSigned, getProfitClass, getDrawdownClass } from '@app/shared';
@@ -15,6 +16,9 @@ import { AccountSelectorComponent } from '../../ui/account-selector/account-sele
   styleUrl: './portfolio-detail-page.component.scss'
 })
 export class PortfolioDetailPageComponent implements OnInit {
+  private readonly firmState = inject(FirmStateService);
+  backLink = computed(() => `/${this.firmState.selectedFirmSlug()}/portfolios`);
+
   portfolio = signal<PortfolioDetail | null>(null);
   availableAccounts = signal<AccountSummary[]>([]);
   allUsedAccountIds = signal<Set<number>>(new Set());

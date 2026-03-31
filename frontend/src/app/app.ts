@@ -1,8 +1,9 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { StorageService } from './core';
+import { Router, NavigationEnd, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { StorageService, FirmStateService } from './core';
 import { AccountsApiService } from './data-access';
-import { Subscription } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
+import packageJson from '../../package.json';
 
 interface NavItem {
   icon: string;
@@ -10,6 +11,8 @@ interface NavItem {
   route: string | null;
   badge?: () => number | null;
   section: string;
+  requiresFirm?: boolean;
+  requiresNoFirm?: boolean;
 }
 
 @Component({
@@ -22,17 +25,68 @@ interface NavItem {
 
         <!-- Brand -->
         <div class="sidebar-brand" (click)="toggleCollapse()" [attr.title]="collapsed() ? 'Ouvrir le menu' : 'Réduire le menu'">
-          <div class="brand-icon">
-            <i class="fa fa-chart-line"></i>
+          <div class="brand-logo">
+            <span class="logo-letter">E</span>
           </div>
           @if (!collapsed()) {
-            <span class="brand-text">Elite Monitor</span>
+            <div class="brand-title">
+              <span class="brand-text">Elite<span class="brand-highlight">Monitor</span></span>
+              <span class="brand-tagline">Trading Intelligence</span>
+            </div>
+          }
+        </div>
+
+        <!-- Firm Selector -->
+        <div class="firm-selector">
+          @if (!collapsed()) {
+            <div class="firm-dropdown" (click)="toggleFirmDropdown()">
+              <i class="fa fa-building firm-dropdown-icon"></i>
+              <span class="firm-dropdown-label">{{ selectedFirmLabel() }}</span>
+              <i class="fa fa-chevron-down firm-dropdown-arrow" [class.open]="firmDropdownOpen()"></i>
+            </div>
+            @if (firmDropdownOpen()) {
+              <div class="firm-dropdown-menu">
+                <div class="firm-option" [class.active]="firmState.selectedFirmId() === null" (click)="onSelectFirm(null)">
+                  <i class="fa fa-globe"></i> Toutes les firms
+                </div>
+                @for (firm of firmState.firms(); track firm.id) {
+                  <div class="firm-option" [class.active]="firmState.selectedFirmId() === firm.id" (click)="onSelectFirm(firm.id)">
+                    <i class="fa fa-building"></i> {{ firm.name }}
+                  </div>
+                }
+                <div class="firm-option-divider"></div>
+                <div class="firm-option manage" (click)="goToFirms()">
+                  <i class="fa fa-cog"></i> Gérer les firms
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="firm-badge" [attr.title]="selectedFirmLabel()" (click)="toggleFirmDropdown()">
+              {{ firmInitial() }}
+            </div>
+            @if (firmDropdownOpen()) {
+              <div class="firm-dropdown-menu collapsed-menu">
+                <div class="firm-option" [class.active]="firmState.selectedFirmId() === null" (click)="onSelectFirm(null)">
+                  <i class="fa fa-globe"></i> Toutes les firms
+                </div>
+                @for (firm of firmState.firms(); track firm.id) {
+                  <div class="firm-option" [class.active]="firmState.selectedFirmId() === firm.id" (click)="onSelectFirm(firm.id)">
+                    <i class="fa fa-building"></i> {{ firm.name }}
+                  </div>
+                }
+                <div class="firm-option-divider"></div>
+                <div class="firm-option manage" (click)="goToFirms()">
+                  <i class="fa fa-cog"></i> Gérer les firms
+                </div>
+              </div>
+            }
           }
         </div>
 
         <!-- Navigation -->
         <nav class="sidebar-nav">
           @for (section of sections; track section) {
+            @if (getItemsBySection(section).length > 0) {
             <div class="nav-section">
               @if (!collapsed()) {
                 <span class="section-label">{{ section }}</span>
@@ -61,6 +115,7 @@ interface NavItem {
                 }
               }
             </div>
+            }
           }
         </nav>
 
@@ -73,7 +128,7 @@ interface NavItem {
             }
           </div>
           @if (!collapsed()) {
-            <span class="version">v1.0.0</span>
+            <span class="version">v{{ appVersion }}</span>
           }
         </div>
 
@@ -141,34 +196,197 @@ interface NavItem {
       background: rgba(255, 255, 255, 0.03);
     }
 
-    .brand-icon {
+    .brand-logo {
       width: 36px;
       height: 36px;
       min-width: 36px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      background: linear-gradient(135deg, #1a3a8f, var(--accent), #00e5ff);
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 12px rgba(41, 98, 255, 0.3);
+      box-shadow: 0 2px 16px rgba(41, 98, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
     }
 
-    .brand-icon i {
-      color: var(--text-primary);
-      font-size: 16px;
+    .logo-letter {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      letter-spacing: -1px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      line-height: 1;
     }
 
-    .brand-text {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-primary);
-      white-space: nowrap;
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
       opacity: 1;
       transition: opacity calc(var(--transition-speed) * 0.6) ease;
     }
 
-    .sidebar.collapsed .brand-text {
+    .sidebar.collapsed .brand-title {
       opacity: 0;
+    }
+
+    .brand-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-highlight {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .brand-tagline {
+      font-size: 9px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ==================== FIRM SELECTOR ==================== */
+    .firm-selector {
+      padding: 8px;
+      border-bottom: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .firm-dropdown {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+    }
+
+    .firm-dropdown:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .firm-dropdown-icon {
+      font-size: 12px;
+      color: var(--accent);
+      min-width: 14px;
+      text-align: center;
+    }
+
+    .firm-dropdown-label {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .firm-dropdown-arrow {
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .firm-dropdown-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    .firm-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 8px;
+      right: 8px;
+      background: #141414;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 4px;
+      z-index: 200;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      margin-top: 4px;
+    }
+
+    .firm-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+    }
+
+    .firm-option:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+    }
+
+    .firm-option.active {
+      background: rgba(41, 98, 255, 0.15);
+      color: var(--accent);
+    }
+
+    .firm-option i {
+      font-size: 11px;
+      width: 14px;
+      text-align: center;
+    }
+
+    .firm-option-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 4px 0;
+    }
+
+    .firm-option.manage {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .firm-option.manage:hover {
+      color: var(--accent);
+    }
+
+    .firm-badge {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(41, 98, 255, 0.15);
+      color: var(--accent);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .firm-badge:hover {
+      background: rgba(41, 98, 255, 0.25);
+    }
+
+    .collapsed-menu {
+      position: fixed;
+      left: var(--sidebar-collapsed-width);
+      top: auto;
+      right: auto;
+      width: 200px;
+      margin-top: -40px;
     }
 
     /* ==================== NAV ==================== */
@@ -384,7 +602,10 @@ interface NavItem {
       .sidebar {
         width: var(--sidebar-collapsed-width) !important;
       }
-      .brand-text, .nav-label, .status-text, .section-label, .badge, .version {
+      .brand-title, .nav-label, .status-text, .section-label, .badge, .version {
+        display: none !important;
+      }
+      .firm-dropdown, .firm-dropdown-menu {
         display: none !important;
       }
       .sidebar-brand {
@@ -421,28 +642,58 @@ interface NavItem {
 export class App implements OnInit, OnDestroy {
   private readonly storage = inject(StorageService);
   private readonly accountsApi = inject(AccountsApiService);
+  private readonly router = inject(Router);
+  readonly firmState = inject(FirmStateService);
   private sub?: Subscription;
+  private routerSub?: Subscription;
 
   private readonly COLLAPSED_KEY = 'sidebar_collapsed';
 
+  readonly appVersion = packageJson.version;
   collapsed = signal(false);
   connectedCount = signal<number | null>(null);
+  firmDropdownOpen = signal(false);
 
-  readonly sections = ['TRADING', 'SYSTÈME'];
+  selectedFirmLabel = computed(() => {
+    const firm = this.firmState.selectedFirm();
+    return firm ? firm.name : 'Toutes les firms';
+  });
 
-  readonly navItems: NavItem[] = [
-    { icon: 'fa-chart-line', label: 'Signaux', route: '/accounts', badge: () => this.connectedCount(), section: 'TRADING' },
-    { icon: 'fa-briefcase', label: 'Portfolios', route: '/portfolios', section: 'TRADING' },
-    { icon: 'fa-cog', label: 'Paramètres', route: null, section: 'SYSTÈME' },
-  ];
+  firmInitial = computed(() => {
+    const firm = this.firmState.selectedFirm();
+    return firm ? firm.name.charAt(0).toUpperCase() : '*';
+  });
+
+  readonly sections = ['PRINCIPAL', 'GESTION'];
+
+  navItems = computed<NavItem[]>(() => {
+    const slug = this.firmState.selectedFirmSlug();
+    const prefix = slug ? `/${slug}` : '';
+    return [
+      { icon: 'fa-th-large', label: 'Dashboard', route: '/dashboard', section: 'PRINCIPAL', requiresNoFirm: true },
+      { icon: 'fa-chart-line', label: 'Signaux', route: `${prefix}/accounts`, badge: () => this.connectedCount(), section: 'PRINCIPAL', requiresFirm: true },
+      { icon: 'fa-briefcase', label: 'Portfolios', route: `${prefix}/portfolios`, section: 'PRINCIPAL', requiresFirm: true },
+      { icon: 'fa-cog', label: 'Paramètres', route: null, section: 'GESTION' },
+    ];
+  });
 
   ngOnInit(): void {
     this.collapsed.set(this.storage.get<boolean>(this.COLLAPSED_KEY, false));
     this.loadConnectedCount();
+
+    // Sync firm selection from URL path
+    this.routerSub = this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd)
+    ).subscribe(e => {
+      this.syncFirmFromUrl(e.urlAfterRedirects || e.url);
+    });
+    // Initial sync
+    this.syncFirmFromUrl(this.router.url);
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.routerSub?.unsubscribe();
   }
 
   toggleCollapse(): void {
@@ -451,8 +702,47 @@ export class App implements OnInit, OnDestroy {
     this.storage.set(this.COLLAPSED_KEY, next);
   }
 
+  toggleFirmDropdown(): void {
+    this.firmDropdownOpen.update(v => !v);
+  }
+
+  onSelectFirm(id: number | null): void {
+    this.firmState.selectFirm(id);
+    this.firmDropdownOpen.set(false);
+    if (id === null) {
+      this.router.navigate(['/dashboard']);
+    } else {
+      const firm = this.firmState.selectedFirm();
+      if (firm) {
+        this.router.navigate([`/${this.firmState.selectedFirmSlug()}/accounts`]);
+      }
+    }
+  }
+
+  goToFirms(): void {
+    this.firmDropdownOpen.set(false);
+    this.router.navigate(['/firms']);
+  }
+
+  private syncFirmFromUrl(url: string): void {
+    const segments = url.split('?')[0].split('/').filter(Boolean);
+    const firstSegment = segments[0];
+    const reserved = ['dashboard', 'firms'];
+    if (firstSegment && !reserved.includes(firstSegment)) {
+      this.firmState.selectFirmBySlug(firstSegment);
+    } else if (firstSegment === 'dashboard') {
+      this.firmState.selectFirm(null);
+    }
+  }
+
   getItemsBySection(section: string): NavItem[] {
-    return this.navItems.filter(item => item.section === section);
+    const hasFirm = this.firmState.selectedFirmId() !== null;
+    return this.navItems().filter(item => {
+      if (item.section !== section) return false;
+      if (item.requiresFirm && !hasFirm) return false;
+      if (item.requiresNoFirm && hasFirm) return false;
+      return true;
+    });
   }
 
   private loadConnectedCount(): void {

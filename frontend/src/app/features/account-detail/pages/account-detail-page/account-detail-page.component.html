@@ -20,11 +20,8 @@
         <span class="leverage">1:{{ account()?.leverage }}</span>
       </div>
       <button class="btn-sync" (click)="syncFromMT5()" [disabled]="syncing()" title="Synchroniser le compte">
-        <i class="fa fa-download" [class.fa-spin]="syncing()"></i>
+        <i class="fa fa-sync" [class.fa-spin]="syncing()"></i>
         <span>Sync</span>
-      </button>
-      <button class="btn-refresh" (click)="refresh()" [disabled]="loading()" title="Actualiser">
-        <i class="fa fa-sync" [class.fa-spin]="loading()"></i>
       </button>
     </div>
   </header>

@@ -30,7 +30,7 @@ backend/
 ### MetaTrader 5 (MT5)
 
 - Direct connection via `MetaTrader5` Python package
-- Multiple terminals supported (RoboForex, IC Markets)
+- Multiple terminals supported (RoboForex, IC Markets, Deriv)
 - Full trade history, open positions, account stats
 - Bridge mode available for Docker deployment
 
@@ -58,7 +58,7 @@ Both platforms return `AccountSummary` with identical fields:
 
 - Real-time balance/equity tracking
 - Grid and table view with sorting and filtering
-- Client-based filtering (CosmosElite, Akaj)
+- Client-based filtering (Fevill, Akaj, Vitogbe)
 - Sparkline charts for balance evolution
 - Favorites system (local storage)
 
@@ -173,8 +173,10 @@ CTRADER_HOST, CTRADER_PORT
 
 ### Account Configuration
 
-- MT5: `backend/config/accounts_local.py` (list of account dicts)
+- MT5: `backend/config/accounts_local.py` (list of account dicts with id, password, server, name, terminal, broker, client)
 - cTrader: `backend/config/ctrader_accounts_local.py` (credentials + account list)
+- Clients/Profiles: `Fevill`, `Akaj`, `Vitogbe`
+- Brokers supportés: RoboForex, IC Markets, Deriv (SVG) LLC, Fusion Markets
 
 ## Running Locally
 

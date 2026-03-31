@@ -1,16 +1,16 @@
-import { Component, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, signal, computed, OnInit, OnDestroy, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 
 import { AccountsApiService, AnalyticsApiService, AccountSummary, SparklineData, GlobalMonthlyGrowth } from '@app/data-access';
-import { StorageService } from '@app/core';
+import { StorageService, FirmStateService } from '@app/core';
 import { SparklineComponent, formatCurrency, formatPercentSigned, getProfitClass, getDrawdownClass, getPerformanceClass } from '@app/shared';
 import { AccountsHeaderComponent } from '../../ui';
 
 type ViewMode = 'grid' | 'list';
-type ClientFilter = 'all' | 'CosmosElite' | 'Akaj';
-type SortColumn = 'name' | 'balance' | 'profit' | 'profit_percent' | 'win_rate' | 'drawdown' | 'trades';
+type ClientFilter = 'all' | string;
+type SortColumn = 'name' | 'balance' | 'profit' | 'profit_percent' | 'win_rate' | 'drawdown';
 
 /**
  * Accounts Page - Smart/Container component
@@ -28,6 +28,8 @@ type SortColumn = 'name' | 'balance' | 'profit' | 'profit_percent' | 'win_rate' 
   styleUrl: './accounts-page.component.scss'
 })
 export class AccountsPageComponent implements OnInit, OnDestroy {
+  private readonly firmState = inject(FirmStateService);
+
   // State
   accounts = signal<AccountSummary[]>([]);
   loading = signal<boolean>(false);
@@ -49,12 +51,27 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   fmt = { formatCurrency, formatPercentSigned, getProfitClass, getDrawdownClass, getPerformanceClass };
   Math = Math;
 
+  // Dynamic profiles from FirmStateService
+  profiles = computed(() => this.firmState.profileNames());
+
+  profileCounts = computed(() => {
+    const counts: Record<string, number> = {};
+    for (const name of this.profiles()) {
+      counts[name] = this.accounts().filter(a => a.client === name).length;
+    }
+    return counts;
+  });
+
   // Computed
   filteredAccounts = computed(() => {
     let result = this.accounts();
     const clientF = this.clientFilter();
+    const profileList = this.profiles();
+
     if (clientF !== 'all') {
       result = result.filter(a => a.client === clientF);
+    } else if (profileList.length > 0) {
+      result = result.filter(a => profileList.includes(a.client || ''));
     }
 
     const query = this.searchQuery().toLowerCase().trim();
@@ -78,7 +95,6 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
         case 'profit_percent': valA = a.profit_percent; valB = b.profit_percent; break;
         case 'win_rate': valA = a.win_rate; valB = b.win_rate; break;
         case 'drawdown': valA = a.drawdown; valB = b.drawdown; break;
-        case 'trades': valA = a.trades; valB = b.trades; break;
         default: valA = a.balance; valB = b.balance;
       }
       if (valA < valB) return dir === 'asc' ? -1 : 1;
@@ -92,45 +108,21 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   });
 
   connectedCount = computed(() => this.filteredAccounts().filter(a => a.connected).length);
-  totalEUR = computed(() => this.filteredAccounts().filter(a => a.currency === 'EUR' && a.connected).reduce((s, a) => s + a.balance, 0));
-  totalUSD = computed(() => this.filteredAccounts().filter(a => a.currency === 'USD' && a.connected).reduce((s, a) => s + a.balance, 0));
-  totalProfitEUR = computed(() => this.filteredAccounts().filter(a => a.currency === 'EUR' && a.connected).reduce((s, a) => s + a.profit, 0));
-  totalProfitUSD = computed(() => this.filteredAccounts().filter(a => a.currency === 'USD' && a.connected).reduce((s, a) => s + a.profit, 0));
-  totalTrades = computed(() => this.filteredAccounts().filter(a => a.connected).reduce((s, a) => s + a.trades, 0));
-
-  globalWinRate = computed(() => {
-    const connected = this.filteredAccounts().filter(a => a.connected && a.trades > 0);
-    if (!connected.length) return 0;
-    const totalW = connected.reduce((s, a) => s + (a.win_rate * a.trades), 0);
-    const totalT = connected.reduce((s, a) => s + a.trades, 0);
-    return totalT > 0 ? totalW / totalT : 0;
-  });
-
-  globalGrowthEUR = computed(() => {
-    const eur = this.filteredAccounts().filter(a => a.currency === 'EUR' && a.connected);
-    if (!eur.length) return 0;
-    const dep = eur.reduce((s, a) => s + (a.balance - a.profit), 0);
-    const prof = eur.reduce((s, a) => s + a.profit, 0);
-    return dep > 0 ? (prof / dep) * 100 : 0;
-  });
-
-  globalGrowthUSD = computed(() => {
-    const usd = this.filteredAccounts().filter(a => a.currency === 'USD' && a.connected);
-    if (!usd.length) return 0;
-    const dep = usd.reduce((s, a) => s + (a.balance - a.profit), 0);
-    const prof = usd.reduce((s, a) => s + a.profit, 0);
-    return dep > 0 ? (prof / dep) * 100 : 0;
-  });
-
-  cosmosEliteCount = computed(() => this.accounts().filter(a => a.client === 'CosmosElite').length);
-  akajCount = computed(() => this.accounts().filter(a => a.client === 'Akaj').length);
+  totalEquityEUR = computed(() => this.filteredAccounts().filter(a => a.currency === 'EUR' && a.connected).reduce((s, a) => s + a.equity, 0));
+  totalEquityUSD = computed(() => this.filteredAccounts().filter(a => a.currency === 'USD' && a.connected).reduce((s, a) => s + a.equity, 0));
 
   constructor(
     private router: Router,
     private accountsApi: AccountsApiService,
     private analyticsApi: AnalyticsApiService,
     public storage: StorageService
-  ) {}
+  ) {
+    // Reset filter when firm changes
+    effect(() => {
+      this.firmState.selectedFirmId();
+      this.clientFilter.set('all');
+    });
+  }
 
   ngOnInit(): void {
     this.loadAccounts();
@@ -214,7 +206,7 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   }
 
   setViewMode(mode: ViewMode): void { this.viewMode.set(mode); }
-  setClientFilter(filter: ClientFilter): void { this.clientFilter.set(filter); }
+  setClientFilter(filter: string): void { this.clientFilter.set(filter); }
   setSearchQuery(query: string): void { this.searchQuery.set(query); }
 
   sortBy(column: SortColumn): void {
@@ -243,7 +235,10 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   openAccount(account: AccountSummary): void {
     if (!account.connected) return;
     this.accountsApi.connectToAccount(account.id).subscribe({
-      next: () => this.router.navigate(['/accounts', account.id]),
+      next: () => {
+        const slug = this.firmState.selectedFirmSlug();
+        this.router.navigate([`/${slug}/accounts`, account.id]);
+      },
       error: () => this.error.set(`Impossible de se connecter au compte ${account.id}`)
     });
   }

@@ -25,6 +25,7 @@ class CTraderConnector:
         self.client: Optional[CTraderClient] = None
         self._app_authenticated = False
         self._account_map: dict[int, int] = {}  # login -> ctidTraderAccountId
+        self._asset_map: Optional[dict[int, str]] = None  # assetId -> currency name (e.g. "USD", "EUR")
         self._last_connect_attempt = 0
         self._connect_cooldown = 30  # seconds between reconnect attempts
 
@@ -69,6 +70,13 @@ class CTraderConnector:
                                  login=login, ctid=ctid,
                                  is_live=acc.get("isLive"))
 
+            # Pre-fetch asset list (currency mapping) once per session
+            if self._asset_map is None and self._account_map:
+                first_ctid = next(iter(self._account_map.values()))
+                if self.client.account_auth(first_ctid, creds["access_token"]):
+                    self._asset_map = self.client.get_asset_list(first_ctid) or {}
+                    logger.info("cTrader asset map loaded", assets=len(self._asset_map))
+
             logger.info("cTrader connected",
                          accounts_discovered=len(self._account_map))
             return True
@@ -84,6 +92,7 @@ class CTraderConnector:
             self.client.disconnect()
         self._app_authenticated = False
         self._account_map.clear()
+        self._asset_map = None
 
     def _ensure_connected(self) -> bool:
         """Reconnect fresh to avoid stale TCP connections."""
@@ -199,6 +208,12 @@ class CTraderConnector:
         leverage_cents = int(trader.get("leverageInCents", 10000))
         leverage = leverage_cents // 100
 
+        # Resolve deposit currency from depositAssetId (pre-fetched at connect time)
+        deposit_asset_id = int(trader.get("depositAssetId", 0))
+        currency = "USD"  # fallback
+        if deposit_asset_id and self._asset_map:
+            currency = self._asset_map.get(deposit_asset_id, "USD")
+
         # Get open positions to calculate unrealized P/L
         reconcile = self.client.get_reconcile(ctid)
         unrealized_pnl = 0.0
@@ -302,7 +317,7 @@ class CTraderConnector:
             drawdown=round(drawdown_pct, 2),
             trades=trades_count,
             win_rate=round(win_rate, 1),
-            currency="USD",
+            currency=currency,
             leverage=leverage,
             connected=True,
             client=account_config.get("client"),

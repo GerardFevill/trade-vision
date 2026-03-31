@@ -1,9 +1,10 @@
-import { Component, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Output, EventEmitter, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { PortfoliosApiService } from '@app/data-access';
 import { PortfolioType, PORTFOLIO_TYPES, CreatePortfolioRequest } from '@app/data-access/models/portfolio.model';
+import { FirmStateService } from '@app/core';
 
 @Component({
   selector: 'app-portfolio-form',
@@ -16,6 +17,8 @@ export class PortfolioFormComponent {
   @Output() created = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 
+  private readonly firmState = inject(FirmStateService);
+
   // Form state
   name = signal<string>('');
   type = signal<PortfolioType>('Securise');
@@ -25,9 +28,11 @@ export class PortfolioFormComponent {
 
   // Options
   portfolioTypes: PortfolioType[] = ['Securise', 'Conservateur', 'Modere', 'Agressif'];
-  clients: string[] = ['Akaj', 'CosmosElite'];
+  clients = computed(() => this.firmState.profileNames());
 
-  constructor(private portfoliosApi: PortfoliosApiService) {}
+  constructor(
+    private portfoliosApi: PortfoliosApiService
+  ) {}
 
   getFactorsForType(type: PortfolioType): number[] {
     return PORTFOLIO_TYPES[type] || [];

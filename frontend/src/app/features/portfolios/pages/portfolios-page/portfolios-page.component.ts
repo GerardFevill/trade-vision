@@ -1,4 +1,4 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
+import { Component, signal, computed, OnInit, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { PortfoliosApiService } from '@app/data-access';
 import { PortfolioSummary, PORTFOLIO_TYPES, PortfolioType } from '@app/data-access/models/portfolio.model';
 import { formatCurrency, formatPercentSigned, getProfitClass } from '@app/shared';
+import { FirmStateService } from '@app/core';
 import { PortfolioCardComponent } from '../../ui/portfolio-card/portfolio-card.component';
 import { PortfolioFormComponent } from '../../ui/portfolio-form/portfolio-form.component';
 
@@ -36,24 +37,40 @@ function getTypeOrder(type: string): number {
   styleUrl: './portfolios-page.component.scss'
 })
 export class PortfoliosPageComponent implements OnInit {
+  private readonly firmState = inject(FirmStateService);
+
   // State
   portfolios = signal<PortfolioSummary[]>([]);
-  clients = signal<string[]>([]);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
   clientFilter = signal<ClientFilter>('all');
   showCreateModal = signal<boolean>(false);
   viewMode = signal<'cards' | 'list'>('cards');
+  hiddenIds = signal<Set<number>>(new Set());
+  showHidden = signal<boolean>(false);
 
   // Template helpers
   fmt = { formatCurrency, formatPercentSigned, getProfitClass };
 
+  // Dynamic profiles from FirmStateService
+  profiles = computed(() => this.firmState.profileNames());
+
   // Computed
   filteredPortfolios = computed(() => {
     const filter = this.clientFilter();
+    const hidden = this.hiddenIds();
+    const showAll = this.showHidden();
+    const profileList = this.profiles();
     let list = this.portfolios();
+
     if (filter !== 'all') {
       list = list.filter(p => p.client === filter);
+    } else if (profileList.length > 0) {
+      list = list.filter(p => profileList.includes(p.client));
+    }
+
+    if (!showAll && hidden.size > 0) {
+      list = list.filter(p => !hidden.has(p.id));
     }
     // Sort by type: Agressif → Modere → Conservateur → Securise
     return [...list].sort((a, b) => getTypeOrder(a.type) - getTypeOrder(b.type));
@@ -109,11 +126,17 @@ export class PortfoliosPageComponent implements OnInit {
   constructor(
     private router: Router,
     private portfoliosApi: PortfoliosApiService
-  ) {}
+  ) {
+    // Reset filter when firm changes
+    effect(() => {
+      this.firmState.selectedFirmId();
+      this.clientFilter.set('all');
+    });
+  }
 
   ngOnInit(): void {
+    this.loadHiddenIds();
     this.loadPortfolios();
-    this.loadClients();
   }
 
   loadPortfolios(): void {
@@ -131,13 +154,6 @@ export class PortfoliosPageComponent implements OnInit {
     });
   }
 
-  loadClients(): void {
-    this.portfoliosApi.getPortfolioClients().subscribe({
-      next: (clients) => this.clients.set(clients),
-      error: () => {}
-    });
-  }
-
   setClientFilter(filter: ClientFilter): void {
     this.clientFilter.set(filter);
   }
@@ -147,7 +163,8 @@ export class PortfoliosPageComponent implements OnInit {
   }
 
   openPortfolio(portfolio: PortfolioSummary): void {
-    this.router.navigate(['/portfolios', portfolio.id]);
+    const slug = this.firmState.selectedFirmSlug();
+    this.router.navigate([`/${slug}/portfolios`, portfolio.id]);
   }
 
   openCreateModal(): void {
@@ -161,7 +178,7 @@ export class PortfoliosPageComponent implements OnInit {
   onPortfolioCreated(): void {
     this.closeCreateModal();
     this.loadPortfolios();
-    this.loadClients();
+    this.firmState.loadFirms();
   }
 
   deletePortfolio(portfolio: PortfolioSummary, event: Event): void {
@@ -172,6 +189,35 @@ export class PortfoliosPageComponent implements OnInit {
       next: () => this.loadPortfolios(),
       error: () => this.error.set('Impossible de supprimer le portefeuille')
     });
+  }
+
+  hidePortfolio(portfolio: PortfolioSummary, event: Event): void {
+    event.stopPropagation();
+    const ids = new Set(this.hiddenIds());
+    if (ids.has(portfolio.id)) {
+      ids.delete(portfolio.id);
+    } else {
+      ids.add(portfolio.id);
+    }
+    this.hiddenIds.set(ids);
+    this.saveHiddenIds(ids);
+  }
+
+  toggleShowHidden(): void {
+    this.showHidden.update(v => !v);
+  }
+
+  private loadHiddenIds(): void {
+    try {
+      const stored = localStorage.getItem('elite_hidden_portfolios');
+      if (stored) {
+        this.hiddenIds.set(new Set(JSON.parse(stored)));
+      }
+    } catch {}
+  }
+
+  private saveHiddenIds(ids: Set<number>): void {
+    localStorage.setItem('elite_hidden_portfolios', JSON.stringify([...ids]));
   }
 
   getTypeClass(type: string): string {

@@ -2,8 +2,11 @@
   <!-- Type accent strip -->
   <div class="type-strip" [class]="getTypeClass()"></div>
 
-  <!-- Delete Button -->
-  <button class="btn-delete" (click)="onDelete($event)" title="Supprimer">
+  <!-- Action Buttons -->
+  <button class="btn-action btn-hide" (click)="onHide($event)" title="Masquer">
+    <i class="fa fa-eye-slash"></i>
+  </button>
+  <button class="btn-action btn-delete" (click)="onDelete($event)" title="Supprimer">
     <i class="fa fa-trash"></i>
   </button>
 

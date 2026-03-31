@@ -1,0 +1,459 @@
+@use 'sass:color';
+
+// MQL5 Unified Theme (aligned with accounts/portfolios)
+$bg-page: #0a0a0a;
+$bg-card: #141414;
+$bg-card-hover: #1a1a1a;
+$bg-input: #1c1c1c;
+$border: #252525;
+$border-light: #333;
+$text: #e8e8e8;
+$text-secondary: #999;
+$text-muted: #666;
+$accent: #2962ff;
+$accent-light: #448aff;
+$positive: #00c853;
+$negative: #ff1744;
+$warning: #ff9100;
+
+// ==================== PAGE ====================
+.firms-page {
+  min-height: 100vh;
+  background: $bg-page;
+  color: $text;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+// ==================== HEADER ====================
+.page-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid $border;
+  background: $bg-card;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: $text;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  i { color: $accent; font-size: 18px; }
+}
+
+.count-badge {
+  font-size: 12px;
+  color: $text-muted;
+  padding: 4px 10px;
+  background: $bg-input;
+  border-radius: 12px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// ==================== BUTTONS ====================
+.btn-primary {
+  background: $accent;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+
+  &:hover { background: color.adjust($accent, $lightness: 8%); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid $border;
+  color: $text-muted;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:hover { background: rgba(255, 255, 255, 0.05); color: $text; border-color: $border-light; }
+  &.btn-danger:hover { background: rgba($negative, 0.08); color: $negative; border-color: rgba($negative, 0.25); }
+}
+
+.btn-icon-sm {
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: all 0.2s;
+  opacity: 0;
+
+  &.btn-danger:hover { background: rgba($negative, 0.1); color: $negative; }
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &.btn-primary { background: $accent; color: #fff; &:hover { background: color.adjust($accent, $lightness: 8%); } }
+  &.btn-cancel { background: transparent; color: $text-muted; &:hover { color: $text; } }
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid $border;
+  color: $text-secondary;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover { background: $bg-card-hover; border-color: $border-light; }
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+
+  &:hover { color: $text; }
+}
+
+.btn-dismiss {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  margin-left: auto;
+  opacity: 0.7;
+
+  &:hover { opacity: 1; }
+}
+
+// ==================== FIRMS GRID ====================
+.firms-grid {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 16px;
+}
+
+.firm-card {
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: rgba($accent, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+    .btn-icon-sm { opacity: 1; }
+  }
+}
+
+.firm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, rgba($accent, 0.04), transparent);
+  border-bottom: 1px solid $border;
+}
+
+.firm-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.firm-icon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, rgba($accent, 0.15), rgba($accent, 0.05));
+  border: 1px solid rgba($accent, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $accent-light;
+  font-size: 16px;
+}
+
+.firm-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: $text;
+}
+
+.firm-meta {
+  font-size: 11px;
+  color: $text-muted;
+  margin-top: 2px;
+}
+
+.firm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+// ==================== PROFILES ====================
+.profiles-list {
+  padding: 6px 8px;
+}
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  transition: background 0.2s;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.025);
+
+    .btn-icon-sm { opacity: 1; }
+  }
+
+  &.default {
+    border-left-color: $accent;
+    background: rgba($accent, 0.03);
+
+    .profile-name { color: $text; font-weight: 500; }
+    .profile-info i { color: $accent; }
+  }
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  i {
+    font-size: 12px;
+    color: $text-muted;
+    width: 16px;
+    text-align: center;
+  }
+}
+
+.profile-name {
+  font-size: 13px;
+  color: $text-secondary;
+}
+
+.default-badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: $accent-light;
+  background: rgba($accent, 0.1);
+  border: 1px solid rgba($accent, 0.15);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+// ==================== INLINE FORM ====================
+.inline-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 14px;
+}
+
+.input-inline {
+  flex: 1;
+  background: $bg-input;
+  border: 1px solid $border;
+  color: $text;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus { border-color: $accent; }
+  &::placeholder { color: $text-muted; }
+}
+
+// ==================== MODAL ====================
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: $bg-card;
+  border: 1px solid $border-light;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid $border;
+
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    i { color: $accent; font-size: 16px; }
+  }
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid $border;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.form-group {
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+}
+
+.input-field {
+  width: 100%;
+  background: $bg-input;
+  border: 1px solid $border;
+  color: $text;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+
+  &:focus { border-color: $accent; box-shadow: 0 0 0 3px rgba($accent, 0.1); }
+  &::placeholder { color: $text-muted; }
+}
+
+// ==================== STATES ====================
+.error-banner {
+  margin: 16px 24px 0;
+  padding: 12px 16px;
+  background: rgba($negative, 0.08);
+  border: 1px solid rgba($negative, 0.2);
+  border-radius: 8px;
+  color: $negative;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  color: $text-muted;
+
+  i { font-size: 24px; margin-bottom: 12px; }
+  p { font-size: 14px; }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  color: $text-muted;
+
+  i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  p { font-size: 14px; margin-bottom: 16px; }
+}
+
+// ==================== RESPONSIVE ====================
+@media (max-width: 600px) {
+  .firms-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .header-top {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+}

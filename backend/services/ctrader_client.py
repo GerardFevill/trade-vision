@@ -19,6 +19,8 @@ from ctrader_open_api.messages.OpenApiMessages_pb2 import (
     ProtoOAGetAccountListByAccessTokenRes,
     ProtoOATraderReq,
     ProtoOATraderRes,
+    ProtoOAAssetListReq,
+    ProtoOAAssetListRes,
     ProtoOAReconcileReq,
     ProtoOAReconcileRes,
     ProtoOADealListReq,
@@ -246,6 +248,20 @@ class CTraderClient:
             "depositAssetId": trader.depositAssetId,
             "registrationTimestamp": trader.registrationTimestamp,
         }
+
+    def get_asset_list(self, ctid_trader_account_id: int) -> dict[int, str]:
+        """Get asset list for the account. Returns mapping of assetId -> name (e.g. 'USD', 'EUR')."""
+        req = ProtoOAAssetListReq()
+        req.ctidTraderAccountId = ctid_trader_account_id
+
+        payload = self._send_request(req, ProtoOAAssetListRes().payloadType)
+        if not payload:
+            return {}
+
+        res = ProtoOAAssetListRes()
+        res.ParseFromString(payload)
+
+        return {asset.assetId: asset.name for asset in res.asset}
 
     def get_reconcile(self, ctid_trader_account_id: int) -> Optional[dict]:
         """Get open positions and pending orders.

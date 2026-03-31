@@ -9,7 +9,7 @@ import threading
 router = APIRouter()
 
 
-def _fetch_all_accounts(use_cache: bool = True) -> list[AccountSummary]:
+def _fetch_all_accounts(use_cache: bool = True, timeout: int = 10) -> list[AccountSummary]:
     """Fetch accounts from both MT5 and cTrader, merged into a single list.
     MT5 connector handles its own caching internally.
     cTrader results are saved to the same cache here.
@@ -24,11 +24,14 @@ def _fetch_all_accounts(use_cache: bool = True) -> list[AccountSummary]:
             daemon=True
         )
         t.start()
-        t.join(timeout=10)  # max 10s for MT5
+        t.join(timeout=timeout)
         if mt5_result[0] is not None:
             mt5_accounts = mt5_result[0]
         else:
-            logger.warning("MT5 fetch timed out, skipping MT5 accounts")
+            logger.warning("MT5 fetch timed out, using cached MT5 accounts")
+            cached = accounts_cache.load_accounts()
+            if cached:
+                mt5_accounts = [a for a in cached if a.copy_strategy is None and a.copy_invested is None]
     except Exception as e:
         logger.error("MT5 fetch failed", error=str(e))
 
@@ -39,11 +42,12 @@ def _fetch_all_accounts(use_cache: bool = True) -> list[AccountSummary]:
         logger.error("cTrader fetch failed, using MT5 only", error=str(e))
         ctrader_accounts = []
 
-    # Save cTrader accounts to cache (MT5 saves its own in get_all_accounts_summary)
-    if ctrader_accounts:
-        accounts_cache.save_accounts(ctrader_accounts)
+    # Save combined accounts to cache (not just cTrader)
+    all_accounts = mt5_accounts + ctrader_accounts
+    if all_accounts:
+        accounts_cache.save_accounts(all_accounts)
 
-    return mt5_accounts + ctrader_accounts
+    return all_accounts
 
 
 @router.get("/accounts", response_model=list[AccountSummary])
@@ -52,9 +56,9 @@ async def get_all_accounts(
     force_mt5: bool = Query(default=False, description="Forcer la lecture directe depuis MT5 (synchrone)")
 ):
     """Récupère la liste de tous les comptes (MT5 + cTrader)"""
-    # Si force_mt5, lire directement depuis toutes les sources (synchrone)
+    # Si force_mt5, lire directement depuis toutes les sources (synchrone, timeout long)
     if force_mt5:
-        return _fetch_all_accounts(use_cache=False)
+        return _fetch_all_accounts(use_cache=False, timeout=300)
 
     # Toujours retourner le cache d'abord (même ancien)
     cached = accounts_cache.load_accounts()

@@ -32,7 +32,7 @@
         required
       >
         <option value="" disabled>Choisir un client</option>
-        @for (c of clients; track c) {
+        @for (c of clients(); track c) {
           <option [value]="c">{{ c }}</option>
         }
       </select>
