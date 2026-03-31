@@ -8,6 +8,7 @@ from .domain import (
 )
 from .responses import (
     ConnectionStatus, FullDashboard, AccountSummary,
+    CurrencyBalance,
     PortefeuilleSummary, PortefeuilleDetail, PortefeuilleAccountDetail,
     MonthlyAccountRecord, MonthlySnapshot, MonthlyHistory
 )
@@ -26,7 +27,7 @@ __all__ = [
     # Firm models
     'Firm', 'FirmCreate', 'Profile', 'ProfileCreate', 'FirmWithProfiles',
     # Response models
-    'ConnectionStatus', 'FullDashboard', 'AccountSummary',
+    'ConnectionStatus', 'FullDashboard', 'AccountSummary', 'CurrencyBalance',
     'PortefeuilleSummary', 'PortefeuilleDetail', 'PortefeuilleAccountDetail',
     'MonthlyAccountRecord', 'MonthlySnapshot', 'MonthlyHistory',
 ]

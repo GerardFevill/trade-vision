@@ -1,5 +1,11 @@
 import { PortfolioType } from './portfolio.constants';
 
+export interface CurrencyBalance {
+  currency: string;
+  balance: number;
+  profit: number;
+}
+
 export interface Portfolio {
   id: number;
   name: string;
@@ -17,6 +23,7 @@ export interface PortfolioSummary {
   total_balance: number;
   total_profit: number;
   account_count: number;
+  balances_by_currency: CurrencyBalance[];
   created_at: string;
   updated_at: string;
 }

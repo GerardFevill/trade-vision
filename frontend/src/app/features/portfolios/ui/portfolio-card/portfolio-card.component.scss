@@ -165,6 +165,25 @@ $agressif: #ef4444;
 .portfolio-balance {
   padding: 20px 16px 16px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  &.multi-currency {
+    gap: 6px;
+
+    .balance-value {
+      font-size: 20px;
+    }
+  }
+}
+
+.balance-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: center;
 }
 
 .balance-value {
@@ -172,6 +191,18 @@ $agressif: #ef4444;
   font-weight: 700;
   color: $text;
   letter-spacing: -0.5px;
+}
+
+.currency-tag {
+  font-size: 9px;
+  font-weight: 700;
+  color: $text-muted;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  vertical-align: middle;
 }
 
 // Stats
@@ -204,6 +235,13 @@ $agressif: #ef4444;
   font-size: 14px;
   font-weight: 600;
   color: $text;
+}
+
+.stat-line {
+  & + .stat-line {
+    margin-top: 2px;
+    padding-top: 2px;
+  }
 }
 
 .stat-divider {

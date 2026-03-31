@@ -130,23 +130,21 @@ $trading-color: #f59e0b;
 
 // ==================== SUMMARY STRIP ====================
 .summary-strip {
-  display: flex;
-  align-items: stretch;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   padding: 16px 24px;
   border-bottom: 1px solid $border;
-  overflow-x: auto;
 }
 
 .summary-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
-  padding: 14px 20px;
+  padding: 16px 20px;
   background: $bg-input;
   border-radius: 10px;
   border: 1px solid $border;
-  min-width: 180px;
   transition: all 0.2s;
 
   &:hover {
@@ -162,6 +160,7 @@ $trading-color: #f59e0b;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 2px;
 
   i { font-size: 16px; color: #fff; }
 
@@ -181,7 +180,7 @@ $trading-color: #f59e0b;
 .summary-info {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
 }
 
@@ -191,6 +190,34 @@ $trading-color: #f59e0b;
   color: $text-muted;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+}
+
+.summary-currencies {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.currency-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+
+  & + .currency-row {
+    padding-top: 3px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+  }
+}
+
+.currency-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: $text-muted;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 .summary-value {
@@ -207,12 +234,13 @@ $trading-color: #f59e0b;
 }
 
 .summary-count {
+  font-size: 11px;
   color: $text-muted;
   font-weight: 400;
+  margin-top: 2px;
 }
 
 .view-toggle {
-  margin-left: auto;
   display: flex;
   align-self: center;
   background: $bg-input;
@@ -484,6 +512,36 @@ $trading-color: #f59e0b;
   to { opacity: 1; transform: translateY(0); }
 }
 
+// ==================== TABLE MULTI-CURRENCY ====================
+.cell-currencies {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cell-currency-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+
+  & + .cell-currency-row {
+    padding-top: 2px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.06);
+  }
+}
+
+.cell-currency-tag {
+  font-size: 9px;
+  font-weight: 600;
+  color: $text-muted;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
 // ==================== UTILITIES ====================
 .positive { color: $positive !important; }
 .negative { color: $negative !important; }
@@ -497,13 +555,12 @@ $trading-color: #f59e0b;
   .btn-label { display: none; }
 
   .summary-strip {
+    grid-template-columns: 1fr;
     padding: 12px 16px;
     gap: 10px;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
   }
 
-  .summary-card { min-width: 150px; padding: 10px 14px; }
+  .summary-card { padding: 10px 14px; }
   .summary-value { font-size: 15px; }
 
   .portfolios-grid {

@@ -4,7 +4,8 @@ from typing import Optional
 from ..connection import get_connection
 from models import (
     Portefeuille, PortefeuilleAccount, PORTFOLIO_TYPES,
-    PortefeuilleSummary, PortefeuilleDetail, PortefeuilleAccountDetail, AccountSummary
+    PortefeuilleSummary, PortefeuilleDetail, PortefeuilleAccountDetail, AccountSummary,
+    CurrencyBalance
 )
 from config.logging import logger
 from .balance_history import AccountBalanceHistory
@@ -180,7 +181,7 @@ class PortefeuilleRepository:
                             ORDER BY p.id
                         """)
 
-                    return [
+                    portfolios = [
                         PortefeuilleSummary(
                             id=row[0], name=row[1], type=row[2], client=row[3],
                             created_at=row[4].isoformat() if row[4] else "",
@@ -191,6 +192,37 @@ class PortefeuilleRepository:
                         )
                         for row in cur.fetchall()
                     ]
+
+                    if not portfolios:
+                        return portfolios
+
+                    # Fetch currency breakdown for all portfolios
+                    portfolio_ids = [p.id for p in portfolios]
+                    cur.execute("""
+                        SELECT pa.portfolio_id, COALESCE(ac.currency, 'USD') as currency,
+                               COALESCE(SUM(ac.balance), 0) as balance,
+                               COALESCE(SUM(ac.profit), 0) as profit
+                        FROM portefeuille_accounts pa
+                        JOIN accounts_cache ac ON pa.account_id = ac.id
+                        WHERE pa.portfolio_id = ANY(%s)
+                        GROUP BY pa.portfolio_id, ac.currency
+                        ORDER BY pa.portfolio_id, ac.currency
+                    """, (portfolio_ids,))
+
+                    # Build lookup: portfolio_id -> list[CurrencyBalance]
+                    currency_map: dict[int, list[CurrencyBalance]] = {}
+                    for row in cur.fetchall():
+                        pid = row[0]
+                        if pid not in currency_map:
+                            currency_map[pid] = []
+                        currency_map[pid].append(CurrencyBalance(
+                            currency=row[1], balance=row[2] or 0, profit=row[3] or 0
+                        ))
+
+                    for p in portfolios:
+                        p.balances_by_currency = currency_map.get(p.id, [])
+
+                    return portfolios
         except Exception as e:
             logger.error("Error listing portfolios", error=str(e))
             return []

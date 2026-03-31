@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 import { PortfoliosApiService } from '@app/data-access';
-import { PortfolioSummary, PORTFOLIO_TYPES, PortfolioType } from '@app/data-access/models/portfolio.model';
+import { PortfolioSummary, CurrencyBalance, PORTFOLIO_TYPES, PortfolioType } from '@app/data-access/models/portfolio.model';
 import { formatCurrency, formatPercentSigned, getProfitClass } from '@app/shared';
 import { FirmStateService } from '@app/core';
 import { PortfolioCardComponent } from '../../ui/portfolio-card/portfolio-card.component';
@@ -81,16 +81,12 @@ export class PortfoliosPageComponent implements OnInit {
     this.filteredPortfolios().filter(p => p.type.toLowerCase() === 'securise')
   );
 
-  securiseBalance = computed(() =>
-    this.securisePortfolios().reduce((sum, p) => sum + p.total_balance, 0)
-  );
-
-  securiseProfit = computed(() =>
-    this.securisePortfolios().reduce((sum, p) => sum + p.total_profit, 0)
-  );
-
   securiseAccounts = computed(() =>
     this.securisePortfolios().reduce((sum, p) => sum + p.account_count, 0)
+  );
+
+  securiseBalancesByCurrency = computed(() =>
+    this.aggregateByCurrency(this.securisePortfolios())
   );
 
   // Trading portfolios (Agressif, Modere, Conservateur)
@@ -98,16 +94,16 @@ export class PortfoliosPageComponent implements OnInit {
     this.filteredPortfolios().filter(p => p.type.toLowerCase() !== 'securise')
   );
 
-  tradingBalance = computed(() =>
-    this.tradingPortfolios().reduce((sum, p) => sum + p.total_balance, 0)
-  );
-
-  tradingProfit = computed(() =>
-    this.tradingPortfolios().reduce((sum, p) => sum + p.total_profit, 0)
-  );
-
   tradingAccounts = computed(() =>
     this.tradingPortfolios().reduce((sum, p) => sum + p.account_count, 0)
+  );
+
+  tradingBalancesByCurrency = computed(() =>
+    this.aggregateByCurrency(this.tradingPortfolios())
+  );
+
+  totalBalancesByCurrency = computed(() =>
+    this.aggregateByCurrency(this.filteredPortfolios())
   );
 
   portfoliosByClient = computed(() => {
@@ -122,6 +118,35 @@ export class PortfoliosPageComponent implements OnInit {
     }
     return grouped;
   });
+
+  private aggregateByCurrency(portfolios: PortfolioSummary[]): CurrencyBalance[] {
+    const map = new Map<string, { balance: number; profit: number }>();
+    for (const p of portfolios) {
+      if (p.balances_by_currency?.length) {
+        for (const cb of p.balances_by_currency) {
+          const existing = map.get(cb.currency);
+          if (existing) {
+            existing.balance += cb.balance;
+            existing.profit += cb.profit;
+          } else {
+            map.set(cb.currency, { balance: cb.balance, profit: cb.profit });
+          }
+        }
+      } else {
+        // Fallback: use total with EUR
+        const existing = map.get('EUR');
+        if (existing) {
+          existing.balance += p.total_balance;
+          existing.profit += p.total_profit;
+        } else {
+          map.set('EUR', { balance: p.total_balance, profit: p.total_profit });
+        }
+      }
+    }
+    return Array.from(map.entries()).map(([currency, v]) => ({
+      currency, balance: v.balance, profit: v.profit
+    }));
+  }
 
   constructor(
     private router: Router,
@@ -164,7 +189,7 @@ export class PortfoliosPageComponent implements OnInit {
 
   openPortfolio(portfolio: PortfolioSummary): void {
     const slug = this.firmState.selectedFirmSlug();
-    this.router.navigate([`/${slug}/portfolios`, portfolio.id]);
+    this.router.navigate([`/${slug}/portifs`, portfolio.id]);
   }
 
   openCreateModal(): void {

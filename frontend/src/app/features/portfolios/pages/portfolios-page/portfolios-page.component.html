@@ -3,7 +3,7 @@
   <header class="page-header">
     <div class="header-top">
       <div class="header-left">
-        <h1 class="page-title"><i class="fa fa-briefcase"></i> Portefeuilles</h1>
+        <h1 class="page-title"><i class="fa-solid fa-briefcase"></i> Portefeuilles</h1>
         <span class="portfolio-count">{{ filteredPortfolios().length }}</span>
       </div>
       <div class="header-right">
@@ -19,11 +19,19 @@
         </div>
         @if (hiddenIds().size > 0) {
           <button class="btn-filter" [class.active]="showHidden()" (click)="toggleShowHidden()">
-            <i class="fa fa-eye-slash"></i> {{ hiddenIds().size }} masqué{{ hiddenIds().size > 1 ? 's' : '' }}
+            <i class="fa-solid fa-eye-slash"></i> {{ hiddenIds().size }} masqué{{ hiddenIds().size > 1 ? 's' : '' }}
           </button>
         }
+        <div class="view-toggle">
+          <button class="btn-view" [class.active]="viewMode() === 'cards'" (click)="setViewMode('cards')" title="Vue grille">
+            <i class="fa-solid fa-th-large"></i>
+          </button>
+          <button class="btn-view" [class.active]="viewMode() === 'list'" (click)="setViewMode('list')" title="Vue liste">
+            <i class="fa-solid fa-list"></i>
+          </button>
+        </div>
         <button class="btn-create" (click)="openCreateModal()">
-          <i class="fa fa-plus"></i>
+          <i class="fa-solid fa-plus"></i>
           <span class="btn-label">Nouveau</span>
         </button>
       </div>
@@ -33,47 +41,66 @@
   <!-- Summary Cards -->
   <div class="summary-strip">
     <div class="summary-card total">
-      <div class="summary-icon"><i class="fa fa-wallet"></i></div>
+      <div class="summary-icon"><i class="fa-solid fa-wallet"></i></div>
       <div class="summary-info">
         <span class="summary-label">Total</span>
-        <span class="summary-value">{{ fmt.formatCurrency(tradingBalance() + securiseBalance(), 'EUR') }}</span>
+        <div class="summary-currencies">
+          @for (cb of totalBalancesByCurrency(); track cb.currency) {
+            <div class="currency-row">
+              <span class="summary-value">{{ fmt.formatCurrency(cb.balance, cb.currency) }}</span>
+              @if (totalBalancesByCurrency().length > 1) {
+                <span class="currency-badge">{{ cb.currency }}</span>
+              }
+            </div>
+          }
+        </div>
       </div>
     </div>
     <div class="summary-card trading">
-      <div class="summary-icon"><i class="fa fa-chart-bar"></i></div>
+      <div class="summary-icon"><i class="fa-solid fa-chart-bar"></i></div>
       <div class="summary-info">
         <span class="summary-label">Trading</span>
-        <span class="summary-value">{{ fmt.formatCurrency(tradingBalance(), 'EUR') }}</span>
-        <span class="summary-sub" [class]="fmt.getProfitClass(tradingProfit())">
-          {{ fmt.formatCurrency(tradingProfit(), 'EUR') }}
-          <span class="summary-count">· {{ tradingAccounts() }} comptes</span>
-        </span>
+        <div class="summary-currencies">
+          @for (cb of tradingBalancesByCurrency(); track cb.currency) {
+            <div class="currency-row">
+              <span class="summary-value">{{ fmt.formatCurrency(cb.balance, cb.currency) }}</span>
+              <span class="summary-sub" [class]="fmt.getProfitClass(cb.profit)">
+                {{ fmt.formatCurrency(cb.profit, cb.currency) }}
+              </span>
+              @if (tradingBalancesByCurrency().length > 1) {
+                <span class="currency-badge">{{ cb.currency }}</span>
+              }
+            </div>
+          }
+        </div>
+        <span class="summary-count">{{ tradingAccounts() }} comptes</span>
       </div>
     </div>
     <div class="summary-card securise">
-      <div class="summary-icon"><i class="fa fa-shield-alt"></i></div>
+      <div class="summary-icon"><i class="fa-solid fa-shield-alt"></i></div>
       <div class="summary-info">
         <span class="summary-label">Sécurisé</span>
-        <span class="summary-value">{{ fmt.formatCurrency(securiseBalance(), 'EUR') }}</span>
-        <span class="summary-sub" [class]="fmt.getProfitClass(securiseProfit())">
-          {{ fmt.formatCurrency(securiseProfit(), 'EUR') }}
-          <span class="summary-count">· {{ securiseAccounts() }} comptes</span>
-        </span>
+        <div class="summary-currencies">
+          @for (cb of securiseBalancesByCurrency(); track cb.currency) {
+            <div class="currency-row">
+              <span class="summary-value">{{ fmt.formatCurrency(cb.balance, cb.currency) }}</span>
+              <span class="summary-sub" [class]="fmt.getProfitClass(cb.profit)">
+                {{ fmt.formatCurrency(cb.profit, cb.currency) }}
+              </span>
+              @if (securiseBalancesByCurrency().length > 1) {
+                <span class="currency-badge">{{ cb.currency }}</span>
+              }
+            </div>
+          }
+        </div>
+        <span class="summary-count">{{ securiseAccounts() }} comptes</span>
       </div>
-    </div>
-    <div class="view-toggle">
-      <button class="btn-view" [class.active]="viewMode() === 'cards'" (click)="setViewMode('cards')" title="Vue grille">
-        <i class="fa fa-th-large"></i>
-      </button>
-      <button class="btn-view" [class.active]="viewMode() === 'list'" (click)="setViewMode('list')" title="Vue liste">
-        <i class="fa fa-list"></i>
-      </button>
     </div>
   </div>
 
   <!-- Error -->
   @if (error()) {
-    <div class="error-banner"><i class="fa fa-exclamation-triangle"></i> {{ error() }}</div>
+    <div class="error-banner"><i class="fa-solid fa-exclamation-triangle"></i> {{ error() }}</div>
   }
 
   <!-- Loading -->
@@ -119,17 +146,45 @@
               <td class="col-name">{{ p.name }}</td>
               <td><span class="type-badge" [class]="getTypeClass(p.type)">{{ p.type }}</span></td>
               <td class="col-client">{{ p.client }}</td>
-              <td class="col-number">{{ fmt.formatCurrency(p.total_balance, 'EUR') }}</td>
-              <td class="col-number" [class]="fmt.getProfitClass(p.total_profit)">
-                {{ fmt.formatCurrency(p.total_profit, 'EUR') }}
+              <td class="col-number">
+                @if (p.balances_by_currency.length) {
+                  <div class="cell-currencies">
+                    @for (cb of p.balances_by_currency; track cb.currency) {
+                      <div class="cell-currency-row">
+                        <span>{{ fmt.formatCurrency(cb.balance, cb.currency) }}</span>
+                        @if (p.balances_by_currency.length > 1) {
+                          <span class="cell-currency-tag">{{ cb.currency }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  {{ fmt.formatCurrency(p.total_balance, 'EUR') }}
+                }
+              </td>
+              <td class="col-number">
+                @if (p.balances_by_currency.length) {
+                  <div class="cell-currencies">
+                    @for (cb of p.balances_by_currency; track cb.currency) {
+                      <div class="cell-currency-row">
+                        <span [class]="fmt.getProfitClass(cb.profit)">{{ fmt.formatCurrency(cb.profit, cb.currency) }}</span>
+                        @if (p.balances_by_currency.length > 1) {
+                          <span class="cell-currency-tag">{{ cb.currency }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <span [class]="fmt.getProfitClass(p.total_profit)">{{ fmt.formatCurrency(p.total_profit, 'EUR') }}</span>
+                }
               </td>
               <td class="col-number">{{ p.account_count }}</td>
               <td class="col-actions">
                 <button class="btn-hide-list" (click)="hidePortfolio(p, $event)" title="Masquer">
-                  <i class="fa fa-eye-slash"></i>
+                  <i class="fa-solid fa-eye-slash"></i>
                 </button>
                 <button class="btn-delete" (click)="deletePortfolio(p, $event)">
-                  <i class="fa fa-trash"></i>
+                  <i class="fa-solid fa-trash"></i>
                 </button>
               </td>
             </tr>
@@ -142,11 +197,11 @@
   <!-- Empty State -->
   @if (!loading() && filteredPortfolios().length === 0 && !error()) {
     <div class="empty-state">
-      <div class="empty-icon"><i class="fa fa-briefcase"></i></div>
+      <div class="empty-icon"><i class="fa-solid fa-briefcase"></i></div>
       <h3>Aucun portefeuille</h3>
       <p>Créez votre premier portefeuille pour commencer à organiser vos comptes de trading.</p>
       <button class="btn-create-empty" (click)="openCreateModal()">
-        <i class="fa fa-plus"></i> Créer un portefeuille
+        <i class="fa-solid fa-plus"></i> Créer un portefeuille
       </button>
     </div>
   }

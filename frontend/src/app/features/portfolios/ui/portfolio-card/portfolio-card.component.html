@@ -4,10 +4,10 @@
 
   <!-- Action Buttons -->
   <button class="btn-action btn-hide" (click)="onHide($event)" title="Masquer">
-    <i class="fa fa-eye-slash"></i>
+    <i class="fa-solid fa-eye-slash"></i>
   </button>
   <button class="btn-action btn-delete" (click)="onDelete($event)" title="Supprimer">
-    <i class="fa fa-trash"></i>
+    <i class="fa-solid fa-trash"></i>
   </button>
 
   <!-- Header -->
@@ -25,17 +25,40 @@
   </header>
 
   <!-- Balance -->
-  <div class="portfolio-balance">
-    <span class="balance-value">{{ fmt.formatCurrency(portfolio.total_balance, 'EUR') }}</span>
+  <div class="portfolio-balance" [class.multi-currency]="portfolio.balances_by_currency.length > 1">
+    @if (portfolio.balances_by_currency.length) {
+      @for (cb of portfolio.balances_by_currency; track cb.currency) {
+        <div class="balance-line">
+          <span class="balance-value">{{ fmt.formatCurrency(cb.balance, cb.currency) }}</span>
+          @if (portfolio.balances_by_currency.length > 1) {
+            <span class="currency-tag">{{ cb.currency }}</span>
+          }
+        </div>
+      }
+    } @else {
+      <div class="balance-line">
+        <span class="balance-value">{{ fmt.formatCurrency(portfolio.total_balance, 'EUR') }}</span>
+      </div>
+    }
   </div>
 
   <!-- Stats Row -->
   <div class="portfolio-stats">
     <div class="stat-item">
       <span class="stat-label">Profit</span>
-      <span class="stat-value" [class]="fmt.getProfitClass(portfolio.total_profit)">
-        {{ fmt.formatCurrency(portfolio.total_profit, 'EUR') }}
-      </span>
+      @if (portfolio.balances_by_currency.length) {
+        @for (cb of portfolio.balances_by_currency; track cb.currency) {
+          <div class="stat-line">
+            <span class="stat-value" [class]="fmt.getProfitClass(cb.profit)">
+              {{ fmt.formatCurrency(cb.profit, cb.currency) }}
+            </span>
+          </div>
+        }
+      } @else {
+        <span class="stat-value" [class]="fmt.getProfitClass(portfolio.total_profit)">
+          {{ fmt.formatCurrency(portfolio.total_profit, 'EUR') }}
+        </span>
+      }
     </div>
     <div class="stat-divider"></div>
     <div class="stat-item">
@@ -47,11 +70,11 @@
   <!-- Footer -->
   <footer class="card-footer">
     <span class="created-date">
-      <i class="fa fa-calendar-alt"></i>
+      <i class="fa-solid fa-calendar-alt"></i>
       {{ portfolio.created_at | date:'dd MMM yyyy' }}
     </span>
     <span class="view-link">
-      Détails <i class="fa fa-chevron-right"></i>
+      Détails <i class="fa-solid fa-chevron-right"></i>
     </span>
   </footer>
 </article>

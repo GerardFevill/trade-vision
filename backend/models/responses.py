@@ -48,6 +48,13 @@ class PortefeuilleAccountDetail(BaseModel):
     account: AccountSummary | None = None
 
 
+class CurrencyBalance(BaseModel):
+    """Balance and profit for a single currency"""
+    currency: str
+    balance: float
+    profit: float
+
+
 class PortefeuilleSummary(BaseModel):
     """Summary of a portfolio for list views"""
     id: int
@@ -57,6 +64,7 @@ class PortefeuilleSummary(BaseModel):
     total_balance: float
     total_profit: float
     account_count: int
+    balances_by_currency: list[CurrencyBalance] = []
     created_at: str
     updated_at: str
 
