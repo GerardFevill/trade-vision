@@ -317,6 +317,9 @@ class CTraderClient:
             items.append({
                 "operationType": dw.operationType,
                 "delta": dw.delta,
+                "balance": dw.balance,
+                "equity": dw.equity if dw.HasField("equity") else 0,
+                "changeBalanceTimestamp": dw.changeBalanceTimestamp if dw.HasField("changeBalanceTimestamp") else 0,
                 "externalNote": dw.externalNote if dw.HasField("externalNote") else "",
                 "moneyDigits": dw.moneyDigits if dw.HasField("moneyDigits") else 2,
             })

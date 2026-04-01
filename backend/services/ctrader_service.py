@@ -117,11 +117,14 @@ class CTraderConnector:
             "copy_strategies": [{"strategy": "spark", "net_invested": 100.0}],
             "total_deposits": 500.0,
             "total_withdrawals": 100.0,
+            "last_equity": 1234.56,  # equity from the most recent cashflow entry
         }
         """
         strategies: dict[str, float] = {}
         total_deposits = 0.0
         total_withdrawals = 0.0
+        last_equity: float | None = None
+        last_ts = 0
         window_ms = 7 * 24 * 3600 * 1000  # 7 days in ms
         now_ms = int(time.time() * 1000)
         cursor = registration_ts
@@ -140,6 +143,13 @@ class CTraderConnector:
                 op_type = item.get("operationType", 0)
                 delta = self._money_to_float(int(item.get("delta", 0)), money_digits)
                 note = item.get("externalNote", "")
+
+                # Track the most recent equity value
+                item_ts = int(item.get("changeBalanceTimestamp", 0))
+                item_equity = int(item.get("equity", 0))
+                if item_ts >= last_ts and item_equity != 0:
+                    last_ts = item_ts
+                    last_equity = self._money_to_float(item_equity, money_digits)
 
                 if op_type in (30, 33):
                     # Copy invest/withdraw — extract strategy name
@@ -179,6 +189,7 @@ class CTraderConnector:
             "copy_strategies": copy_list,
             "total_deposits": round(total_deposits, 2),
             "total_withdrawals": round(total_withdrawals, 2),
+            "last_equity": round(last_equity, 2) if last_equity is not None else None,
         }
 
     def _get_account_summary(self, login: int, account_config: dict) -> Optional[AccountSummary]:
@@ -248,12 +259,24 @@ class CTraderConnector:
                 if copy_strategies:
                     total_copy = sum(s["net_invested"] for s in copy_strategies)
                     if total_copy > 0.01:
-                        copy_invested = round(total_copy, 2)
                         copy_strategy = ", ".join(s["strategy"] for s in copy_strategies)
-                        balance = round(balance + total_copy, 2)
-                        equity = round(equity + total_copy, 2)
+
+                        # Use last_equity from cashflow as the real account value
+                        # (includes copy investment gains, not just initial deposit)
+                        cf_equity = cf_data.get("last_equity")
+                        if cf_equity is not None and cf_equity > 0:
+                            copy_invested = round(cf_equity - balance, 2)
+                            balance = round(cf_equity, 2)
+                            equity = round(cf_equity + unrealized_pnl, 2)
+                        else:
+                            # Fallback: use net invested from cashflow deltas
+                            copy_invested = round(total_copy, 2)
+                            balance = round(balance + total_copy, 2)
+                            equity = round(equity + total_copy, 2)
+
                         logger.info("cTrader copy detected",
                                     login=login, copy_invested=copy_invested,
+                                    cf_equity=cf_equity,
                                     strategies=copy_strategy)
 
                 total_deposits = cf_data["total_deposits"]
