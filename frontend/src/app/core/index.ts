@@ -3,3 +3,4 @@
 
 export { StorageService } from './services/storage.service';
 export { FirmStateService } from './services/firm-state.service';
+export { ConnectionStateService } from './services/connection-state.service';

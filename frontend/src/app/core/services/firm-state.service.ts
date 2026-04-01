@@ -13,6 +13,7 @@ export class FirmStateService {
   private readonly firmsApi: FirmsApiService;
 
   firms = signal<FirmWithProfiles[]>([]);
+  firmsError = signal<string | null>(null);
   selectedFirmId = signal<number | null>(null);
 
   selectedFirm = computed(() => {
@@ -70,7 +71,7 @@ export class FirmStateService {
           });
         }
       },
-      error: () => {}
+      error: () => this.firmsError.set('Impossible de charger les firms')
     });
   }
 

@@ -39,7 +39,7 @@ export const routes: Routes = [
         title: 'Détails du compte'
       },
       {
-        path: 'portfolios',
+        path: 'portifs',
         loadChildren: () =>
           import('./features/portfolios/portfolios.routes').then(m => m.PORTFOLIOS_ROUTES),
         title: 'Portefeuilles'
