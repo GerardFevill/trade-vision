@@ -6,8 +6,6 @@ import { interval, Subscription } from 'rxjs';
 import { AccountsApiService, AnalyticsApiService, AccountSummary, SparklineData, GlobalMonthlyGrowth } from '@app/data-access';
 import { StorageService, FirmStateService } from '@app/core';
 import { SparklineComponent, formatCurrency, formatPercentSigned, getProfitClass, getDrawdownClass, getPerformanceClass } from '@app/shared';
-import { AccountsHeaderComponent } from '../../ui';
-
 type ViewMode = 'grid' | 'list';
 type ClientFilter = 'all' | string;
 type SortColumn = 'name' | 'balance' | 'profit' | 'profit_percent' | 'win_rate' | 'drawdown';
@@ -21,7 +19,6 @@ type SortColumn = 'name' | 'balance' | 'profit' | 'profit_percent' | 'win_rate' 
   standalone: true,
   imports: [
     CommonModule,
-    AccountsHeaderComponent,
     SparklineComponent
   ],
   templateUrl: './accounts-page.component.html',
@@ -67,10 +64,12 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     let result = this.accounts();
     const clientF = this.clientFilter();
     const profileList = this.profiles();
+    const hasFirm = this.firmState.selectedFirmId() !== null;
 
     if (clientF !== 'all') {
       result = result.filter(a => a.client === clientF);
-    } else if (profileList.length > 0) {
+    } else if (hasFirm) {
+      // Always filter by firm profiles, even if list is empty (shows 0 accounts)
       result = result.filter(a => profileList.includes(a.client || ''));
     }
 

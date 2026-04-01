@@ -1,11 +1,11 @@
 <div class="monthly-records">
   <header class="records-header">
     <div class="header-left">
-      <h3><i class="fa fa-calendar-alt"></i> Ajustements Mensuels</h3>
+      <h3><i class="fa-solid fa-calendar-alt"></i> Ajustements Mensuels</h3>
       <span class="withdrawal-badge">{{ withdrawalPct() }}% des gains</span>
     </div>
     <button class="btn-close" (click)="onClose()">
-      <i class="fa fa-times"></i>
+      <i class="fa-solid fa-times"></i>
     </button>
   </header>
 
@@ -15,7 +15,7 @@
       class="tab"
       [class.active]="!selectedMonth()"
       (click)="loadCurrentPreview()">
-      <i class="fa fa-clock"></i> En cours
+      <i class="fa-solid fa-clock"></i> En cours
     </button>
     @for (month of months(); track month) {
       <button
@@ -30,14 +30,14 @@
   <!-- Loading -->
   @if (loading()) {
     <div class="loading-state">
-      <i class="fa fa-spinner fa-spin"></i>
+      <i class="fa-solid fa-spinner fa-spin"></i>
     </div>
   }
 
   <!-- Error -->
   @if (error()) {
     <div class="error-banner">
-      <i class="fa fa-exclamation-triangle"></i> {{ error() }}
+      <i class="fa-solid fa-exclamation-triangle"></i> {{ error() }}
     </div>
   }
 
@@ -47,7 +47,7 @@
       <div class="preview-header">
         <h4>{{ formatMonth(preview.month) }} - Mois en cours</h4>
         <div class="date-range">
-          <i class="fa fa-calendar"></i>
+          <i class="fa-solid fa-calendar"></i>
           {{ preview.month_start }} → {{ preview.current_date }}
           <span class="days-progress">({{ preview.days_elapsed }}/{{ preview.days_in_month }} jours)</span>
         </div>
@@ -119,17 +119,17 @@
         <div class="header-actions">
           @if (!editMode()) {
             <button class="btn-secondary" (click)="toggleEditMode()">
-              <i class="fa fa-edit"></i> Modifier
+              <i class="fa-solid fa-edit"></i> Modifier
             </button>
           } @else {
             <button class="btn-ghost" (click)="applySuggested()">
-              <i class="fa fa-magic"></i> Appliquer suggere
+              <i class="fa-solid fa-magic"></i> Appliquer suggere
             </button>
             <button class="btn-ghost" (click)="toggleEditMode()">
-              <i class="fa fa-times"></i> Annuler
+              <i class="fa-solid fa-times"></i> Annuler
             </button>
             <button class="btn-primary" (click)="saveWithdrawals()">
-              <i class="fa fa-save"></i> Sauvegarder
+              <i class="fa-solid fa-save"></i> Sauvegarder
             </button>
           }
         </div>
@@ -203,7 +203,7 @@
 
       @if (snap.is_closed) {
         <div class="closed-badge">
-          <i class="fa fa-check-circle"></i> Retraits enregistres
+          <i class="fa-solid fa-check-circle"></i> Retraits enregistres
         </div>
       }
     </div>

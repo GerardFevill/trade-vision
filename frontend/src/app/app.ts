@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { StorageService, FirmStateService } from './core';
+import { StorageService, FirmStateService, ConnectionStateService } from './core';
 import { AccountsApiService } from './data-access';
 import { Subscription, filter } from 'rxjs';
 import packageJson from '../../package.json';
@@ -40,23 +40,23 @@ interface NavItem {
         <div class="firm-selector">
           @if (!collapsed()) {
             <div class="firm-dropdown" (click)="toggleFirmDropdown()">
-              <i class="fa fa-building firm-dropdown-icon"></i>
+              <i class="fa-solid fa-building firm-dropdown-icon"></i>
               <span class="firm-dropdown-label">{{ selectedFirmLabel() }}</span>
-              <i class="fa fa-chevron-down firm-dropdown-arrow" [class.open]="firmDropdownOpen()"></i>
+              <i class="fa-solid fa-chevron-down firm-dropdown-arrow" [class.open]="firmDropdownOpen()"></i>
             </div>
             @if (firmDropdownOpen()) {
               <div class="firm-dropdown-menu">
                 <div class="firm-option" [class.active]="firmState.selectedFirmId() === null" (click)="onSelectFirm(null)">
-                  <i class="fa fa-globe"></i> Toutes les firms
+                  <i class="fa-solid fa-globe"></i> Toutes les firms
                 </div>
                 @for (firm of firmState.firms(); track firm.id) {
                   <div class="firm-option" [class.active]="firmState.selectedFirmId() === firm.id" (click)="onSelectFirm(firm.id)">
-                    <i class="fa fa-building"></i> {{ firm.name }}
+                    <i class="fa-solid fa-building"></i> {{ firm.name }}
                   </div>
                 }
                 <div class="firm-option-divider"></div>
                 <div class="firm-option manage" (click)="goToFirms()">
-                  <i class="fa fa-cog"></i> Gérer les firms
+                  <i class="fa-solid fa-cog"></i> Gérer les firms
                 </div>
               </div>
             }
@@ -67,16 +67,16 @@ interface NavItem {
             @if (firmDropdownOpen()) {
               <div class="firm-dropdown-menu collapsed-menu">
                 <div class="firm-option" [class.active]="firmState.selectedFirmId() === null" (click)="onSelectFirm(null)">
-                  <i class="fa fa-globe"></i> Toutes les firms
+                  <i class="fa-solid fa-globe"></i> Toutes les firms
                 </div>
                 @for (firm of firmState.firms(); track firm.id) {
                   <div class="firm-option" [class.active]="firmState.selectedFirmId() === firm.id" (click)="onSelectFirm(firm.id)">
-                    <i class="fa fa-building"></i> {{ firm.name }}
+                    <i class="fa-solid fa-building"></i> {{ firm.name }}
                   </div>
                 }
                 <div class="firm-option-divider"></div>
                 <div class="firm-option manage" (click)="goToFirms()">
-                  <i class="fa fa-cog"></i> Gérer les firms
+                  <i class="fa-solid fa-cog"></i> Gérer les firms
                 </div>
               </div>
             }
@@ -121,10 +121,10 @@ interface NavItem {
 
         <!-- Footer -->
         <div class="sidebar-footer">
-          <div class="status-indicator online">
+          <div class="status-indicator" [class.online]="connectionState.backendOnline()" [class.offline]="!connectionState.backendOnline()">
             <span class="dot"></span>
             @if (!collapsed()) {
-              <span class="status-text">En ligne</span>
+              <span class="status-text">{{ connectionState.backendOnline() ? 'En ligne' : 'Hors ligne' }}</span>
             }
           </div>
           @if (!collapsed()) {
@@ -134,6 +134,12 @@ interface NavItem {
 
       </aside>
       <main class="main-content" [class.collapsed]="collapsed()">
+        @if (!connectionState.backendOnline()) {
+          <div class="backend-banner">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            Backend indisponible — Vérifiez que le serveur est démarré
+          </div>
+        }
         <router-outlet></router-outlet>
       </main>
     </div>
@@ -574,6 +580,16 @@ interface NavItem {
       white-space: nowrap;
     }
 
+    .status-indicator.offline .dot {
+      background: #ff1744;
+      box-shadow: 0 0 8px rgba(255, 23, 68, 0.5);
+    }
+
+    .status-indicator.offline .status-text {
+      color: #ff1744;
+      white-space: nowrap;
+    }
+
     .version {
       font-size: 10px;
       color: var(--text-muted);
@@ -583,6 +599,23 @@ interface NavItem {
     @keyframes pulse {
       0%, 100% { box-shadow: 0 0 4px rgba(0, 200, 83, 0.3); }
       50% { box-shadow: 0 0 12px rgba(0, 200, 83, 0.6); }
+    }
+
+    /* ==================== BACKEND BANNER ==================== */
+    .backend-banner {
+      background: rgba(255, 23, 68, 0.12);
+      border-bottom: 1px solid rgba(255, 23, 68, 0.3);
+      color: #ff1744;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .backend-banner i {
+      font-size: 14px;
     }
 
     /* ==================== MAIN CONTENT ==================== */
@@ -644,6 +677,7 @@ export class App implements OnInit, OnDestroy {
   private readonly accountsApi = inject(AccountsApiService);
   private readonly router = inject(Router);
   readonly firmState = inject(FirmStateService);
+  readonly connectionState = inject(ConnectionStateService);
   private sub?: Subscription;
   private routerSub?: Subscription;
 
@@ -651,8 +685,18 @@ export class App implements OnInit, OnDestroy {
 
   readonly appVersion = packageJson.version;
   collapsed = signal(false);
-  connectedCount = signal<number | null>(null);
+  private allAccounts = signal<{connected: boolean; client: string | null}[]>([]);
   firmDropdownOpen = signal(false);
+
+  connectedCount = computed(() => {
+    const profileNames = this.firmState.profileNames();
+    const accounts = this.allAccounts();
+    if (accounts.length === 0) return null;
+    const filtered = accounts.filter(a =>
+      a.connected && a.client !== null && profileNames.includes(a.client)
+    );
+    return filtered.length > 0 ? filtered.length : null;
+  });
 
   selectedFirmLabel = computed(() => {
     const firm = this.firmState.selectedFirm();
@@ -671,8 +715,8 @@ export class App implements OnInit, OnDestroy {
     const prefix = slug ? `/${slug}` : '';
     return [
       { icon: 'fa-th-large', label: 'Dashboard', route: '/dashboard', section: 'PRINCIPAL', requiresNoFirm: true },
-      { icon: 'fa-chart-line', label: 'Signaux', route: `${prefix}/accounts`, badge: () => this.connectedCount(), section: 'PRINCIPAL', requiresFirm: true },
-      { icon: 'fa-briefcase', label: 'Portfolios', route: `${prefix}/portfolios`, section: 'PRINCIPAL', requiresFirm: true },
+      { icon: 'fa-chart-line', label: 'Comptes', route: `${prefix}/accounts`, badge: () => this.connectedCount(), section: 'PRINCIPAL', requiresFirm: true },
+      { icon: 'fa-briefcase', label: 'Portifs', route: `${prefix}/portifs`, section: 'PRINCIPAL', requiresFirm: true },
       { icon: 'fa-cog', label: 'Paramètres', route: null, section: 'GESTION' },
     ];
   });
@@ -747,11 +791,8 @@ export class App implements OnInit, OnDestroy {
 
   private loadConnectedCount(): void {
     this.sub = this.accountsApi.getAccounts().subscribe({
-      next: (accounts) => {
-        const count = accounts.filter(a => a.connected).length;
-        this.connectedCount.set(count > 0 ? count : null);
-      },
-      error: () => this.connectedCount.set(null)
+      next: (accounts) => this.allAccounts.set(accounts),
+      error: () => this.allAccounts.set([])
     });
   }
 }

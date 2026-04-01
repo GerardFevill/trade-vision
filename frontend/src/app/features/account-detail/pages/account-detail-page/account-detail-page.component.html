@@ -3,7 +3,7 @@
   <header class="page-header">
     <div class="header-left">
       <button class="btn-back" (click)="goBack()">
-        <i class="fa fa-arrow-left"></i>
+        <i class="fa-solid fa-arrow-left"></i>
       </button>
       <div class="account-identity">
         <h1 class="account-name">{{ account()?.name }}</h1>
@@ -20,7 +20,7 @@
         <span class="leverage">1:{{ account()?.leverage }}</span>
       </div>
       <button class="btn-sync" (click)="syncFromMT5()" [disabled]="syncing()" title="Synchroniser le compte">
-        <i class="fa fa-sync" [class.fa-spin]="syncing()"></i>
+        <i class="fa-solid fa-sync" [class.fa-spin]="syncing()"></i>
         <span>Sync</span>
       </button>
     </div>
@@ -29,7 +29,7 @@
   <!-- Key Metrics -->
   <div class="metrics-grid">
     <div class="metric-card hero">
-      <div class="metric-icon growth"><i class="fa fa-chart-line"></i></div>
+      <div class="metric-icon growth"><i class="fa-solid fa-chart-line"></i></div>
       <div class="metric-data">
         <span class="metric-value" [class]="getProfitClass(stats()?.growth_percent)">
           {{ fmtPct(stats()?.growth_percent) }}
@@ -111,16 +111,16 @@
   <!-- Tabs -->
   <nav class="tabs-nav">
     <button [class.active]="activeTab() === 'account'" (click)="setTab('account')">
-      <i class="fa fa-wallet"></i> Compte
+      <i class="fa-solid fa-wallet"></i> Compte
     </button>
     <button [class.active]="activeTab() === 'history'" (click)="setTab('history')">
-      <i class="fa fa-history"></i> Historique
+      <i class="fa-solid fa-history"></i> Historique
     </button>
     <button [class.active]="activeTab() === 'statistics'" (click)="setTab('statistics')">
-      <i class="fa fa-chart-bar"></i> Statistiques
+      <i class="fa-solid fa-chart-bar"></i> Statistiques
     </button>
     <button [class.active]="activeTab() === 'risks'" (click)="setTab('risks')">
-      <i class="fa fa-shield-alt"></i> Risques
+      <i class="fa-solid fa-shield-alt"></i> Risques
     </button>
   </nav>
 
@@ -130,7 +130,7 @@
     @if (activeTab() === 'account') {
       <!-- Open Positions -->
       <section class="content-section">
-        <h3><i class="fa fa-crosshairs"></i> Positions ouvertes</h3>
+        <h3><i class="fa-solid fa-crosshairs"></i> Positions ouvertes</h3>
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
@@ -168,7 +168,7 @@
       <!-- Monthly Growth -->
       <section class="content-section">
         <div class="section-header">
-          <h3><i class="fa fa-calendar-alt"></i> Croissance mensuelle</h3>
+          <h3><i class="fa-solid fa-calendar-alt"></i> Croissance mensuelle</h3>
           <div class="toggle-group">
             <button [class.active]="monthlyDisplayMode() === 'percent'" (click)="setMonthlyDisplay('percent')">%</button>
             <button [class.active]="monthlyDisplayMode() === 'value'" (click)="setMonthlyDisplay('value')">€</button>
@@ -220,7 +220,7 @@
     <!-- HISTORY TAB -->
     @if (activeTab() === 'history') {
       <section class="content-section">
-        <h3><i class="fa fa-list"></i> Historique des trades</h3>
+        <h3><i class="fa-solid fa-list"></i> Historique des trades</h3>
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
@@ -313,7 +313,7 @@
 
       <!-- Drawdown Chart -->
       <section class="content-section">
-        <h3><i class="fa fa-chart-area"></i> Historique Drawdown</h3>
+        <h3><i class="fa-solid fa-chart-area"></i> Historique Drawdown</h3>
         <div class="chart-container">
           <canvas baseChart [type]="chartType" [data]="drawdownChartData" [options]="drawdownChartOptions"></canvas>
         </div>
@@ -321,7 +321,7 @@
 
       <div class="actions-row">
         <button class="btn-action" (click)="resetDrawdown()">
-          <i class="fa fa-redo"></i> Réinitialiser Drawdown
+          <i class="fa-solid fa-redo"></i> Réinitialiser Drawdown
         </button>
       </div>
     }

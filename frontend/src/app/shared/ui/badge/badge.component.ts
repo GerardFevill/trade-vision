@@ -14,7 +14,7 @@ export type BadgeSize = 'sm' | 'md' | 'lg';
       [class]="badgeClasses()"
     >
       @if (icon()) {
-        <i [class]="'fa fa-' + icon()"></i>
+        <i [class]="'fa-solid fa-' + icon()"></i>
       }
       <ng-content></ng-content>
     </span>

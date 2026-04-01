@@ -17,7 +17,7 @@ import { AccountSelectorComponent } from '../../ui/account-selector/account-sele
 })
 export class PortfolioDetailPageComponent implements OnInit {
   private readonly firmState = inject(FirmStateService);
-  backLink = computed(() => `/${this.firmState.selectedFirmSlug()}/portfolios`);
+  backLink = computed(() => `/${this.firmState.selectedFirmSlug()}/portifs`);
 
   portfolio = signal<PortfolioDetail | null>(null);
   availableAccounts = signal<AccountSummary[]>([]);

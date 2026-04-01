@@ -33,13 +33,13 @@ function groupByCurrency(accounts: AccountSummary[]): CurrencyBalance[] {
   template: `
     <div class="dashboard-page">
       <header class="page-header">
-        <h1 class="page-title"><i class="fa fa-th-large"></i> Dashboard</h1>
+        <h1 class="page-title"><i class="fa-solid fa-th-large"></i> Dashboard</h1>
         <span class="count-badge">{{ firmState.firms().length }} firms</span>
       </header>
 
       @if (loading()) {
         <div class="loading-state">
-          <i class="fa fa-spinner fa-spin"></i>
+          <i class="fa-solid fa-spinner fa-spin"></i>
           <p>Chargement...</p>
         </div>
       }
@@ -69,13 +69,13 @@ function groupByCurrency(accounts: AccountSummary[]): CurrencyBalance[] {
             <div class="firm-card" (click)="goToFirm(s.firm)">
               <div class="firm-card-header">
                 <div class="firm-icon">
-                  <i class="fa fa-building"></i>
+                  <i class="fa-solid fa-building"></i>
                 </div>
                 <div class="firm-title">
                   <h2>{{ s.firm.name }}</h2>
                   <span class="firm-meta">{{ s.connectedCount }}/{{ s.totalCount }} comptes</span>
                 </div>
-                <i class="fa fa-chevron-right card-arrow"></i>
+                <i class="fa-solid fa-chevron-right card-arrow"></i>
               </div>
               <div class="firm-card-body">
                 @for (b of s.balances; track b.currency) {
@@ -92,10 +92,10 @@ function groupByCurrency(accounts: AccountSummary[]): CurrencyBalance[] {
 
       @if (!loading() && firmSummaries().length === 0) {
         <div class="empty-state">
-          <i class="fa fa-building"></i>
+          <i class="fa-solid fa-building"></i>
           <p>Aucune firm configuree</p>
           <button class="btn-primary" (click)="goToFirms()">
-            <i class="fa fa-plus"></i> Configurer les firms
+            <i class="fa-solid fa-plus"></i> Configurer les firms
           </button>
         </div>
       }
